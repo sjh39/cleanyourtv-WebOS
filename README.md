@@ -1,161 +1,167 @@
 # CleanYourTV for LG webOS
 
-An Apple TV-style home screen for **rooted LG webOS TVs**, plus a debloat of LG's ads and telemetry.
-It replaces LG's Home app with a clean launcher: a dock of four favourite apps, a top shelf naming the
-focused app with an ambient glow taken from its artwork, an app grid, an Inputs picker, a Settings
-shortcut, a built-in Live TV player for your own M3U playlist and a clock, all customisable from the remote. It reads your installed apps live, so new apps show up on their own.
+A clean home screen for rooted LG webOS TVs, with an optional debloat of LG's ads and telemetry.
 
-Everything is **RAM-only**. Nothing under `/usr`, `/etc` or the firmware is modified, and a reboot
-without the boot scripts brings LG's stock Home back.
+- **Launcher:** replaces LG's Home with a dock of four apps, a top shelf with the focused app's name and an ambient
+  glow taken from its icon, an app grid, an Inputs picker, a Settings shortcut and a clock.
+- **Live TV:** plays your own M3U playlist, with channel list, programme guide and number entry.
+- **Picture notifications:** shows a card with a photo on top of any app, triggered from your network.
+- **Debloat:** stops LG's ad and telemetry services and blocks a few ad servers.
 
-> Inspired by [CleanYourTV](https://github.com/Gathin23/cleanyourtv) (Android TV, MIT licensed), whose home-screen design this follows.
-> Developed and tested on an LG OLED65G26LA (G2), webOS 10.2.2 / webOS 25. Other models and firmware
-> versions should work if they are rooted, but are untested; please report what you find.
+Everything runs from RAM at boot. Nothing under `/usr`, `/etc` or the firmware is modified, and a reboot without
+the boot scripts brings LG's Home back. Tested on an LG OLED65G26LA (G2) with webOS 25; other rooted models are
+untested.
 
-<p align="center"><img src="docs/screenshots/home.jpg" alt="The home screen: a dock of four apps, the focused app's name on the top shelf and an ambient glow in its colour, then the app grid" width="900"></p>
+<p align="center"><img src="docs/screenshots/home.jpg" alt="Home screen with the dock, the focused app's name and the app grid" width="900"></p>
 
-<p align="center"><img src="docs/screenshots/live.jpg" alt="Live TV: press OK for the guide, with what is on now and next for every channel and the details of the selected programme" width="900"></p>
+<p align="center"><img src="docs/screenshots/live.jpg" alt="Live TV guide: now and next for every channel and the selected programme's details" width="900"></p>
 
 <table>
 <tr>
-<td><img src="docs/screenshots/grid.jpg" alt="Focus moved into the app grid; the glow changes to the focused app's colour" width="440"></td>
-<td><img src="docs/screenshots/options.jpg" alt="Hold OK on an app for its options: move it in the dock, remove it or hide it" width="440"></td>
+<td><img src="docs/screenshots/grid.jpg" alt="Focus in the app grid" width="440"></td>
+<td><img src="docs/screenshots/options.jpg" alt="Options menu for an app" width="440"></td>
 </tr>
 <tr>
-<td><img src="docs/screenshots/customise.jpg" alt="The Customise menu: top buttons, hidden apps and reset" width="440"></td>
-<td><img src="docs/screenshots/inputs.jpg" alt="The Inputs picker listing the TV's HDMI inputs" width="440"></td>
+<td><img src="docs/screenshots/customise.jpg" alt="Customise menu" width="440"></td>
+<td><img src="docs/screenshots/inputs.jpg" alt="Inputs picker" width="440"></td>
 </tr>
 </table>
 
 ## Requirements
 
-- An LG webOS TV that is **already rooted** with the [Homebrew Channel](https://webosbrew.org)
-  (see [rootmy.tv](https://rootmy.tv)), and SSH access as `root` (`ssh root@<tv-ip>`).
-- The TV needs internet access (the installer downloads this repo) and the tools webOS already ships:
-  `curl`, `tar`, `python3` and `node`.
+- An LG webOS TV that is already rooted with the [Homebrew Channel](https://webosbrew.org) ([rootmy.tv](https://rootmy.tv)).
+- SSH access as `root` (`ssh root@<tv-ip>`).
+- Internet access on the TV (the installer downloads this repository) and the tools webOS ships: `curl`, `tar`,
+  `python3`, `node`.
 
 ## Install
 
-Run this on your computer. It logs in to the TV and runs the installer there (replace `192.168.1.50`
-with your TV's IP):
+Run from your computer, with your TV's IP address. The installer asks what to install:
+
+```sh
+ssh -t root@192.168.1.50 'sh -c "$(curl -fsSL https://raw.githubusercontent.com/lasharor/cleanyourtv-WebOS/main/install.sh)"'
+```
+
+| Question | Default |
+|---|---|
+| Debloat LG's ads and telemetry | yes |
+| Install the picture-notification overlay | yes |
+| Start now (the screen blinks once) or at the next reboot | now |
+
+The launcher with Live TV is always installed. Without a terminal (no `-t`) the installer asks nothing and uses
+the defaults:
 
 ```sh
 ssh root@192.168.1.50 'curl -fsSL https://raw.githubusercontent.com/lasharor/cleanyourtv-WebOS/main/install.sh | sh'
 ```
 
-Already in an SSH session on the TV? Run just the `curl ... | sh` part.
+Options (each also skips its question; pass them after `sh -s --` when piping):
 
-Options go after `sh -s --`:
-
-| Option | What it does |
+| Option | Effect |
 |---|---|
-| `--no-debloat` | Install the launcher only; leave LG's services and the hosts file alone. |
+| `-y`, `--yes` | Ask nothing, use the defaults. |
+| `--no-debloat` | Do not install the debloat. |
+| `--no-notify` | Do not install the picture-notification overlay. |
 | `--no-start` | Install, but only take effect at the next reboot. |
-| `--no-verify` | Skip the post-install check (see below) and the automatic rollback. |
+| `--no-verify` | Skip the post-install check and the automatic rollback. |
 | `--force` | Continue even if LG's Home app looks different from what the installer expects. |
 
-```sh
-ssh root@192.168.1.50 'curl -fsSL https://raw.githubusercontent.com/lasharor/cleanyourtv-WebOS/main/install.sh | sh -s -- --no-debloat'
-```
+**What the installer does**
 
-The screen blinks once while the system app manager (`sam`) restarts, then the new Home appears.
-
-**It checks its own work.** After starting, the installer waits for the new Home to be registered with the
-system and for the helper to answer with the matching version. If that does not happen within two minutes
-it restores LG's Home and removes the boot scripts, so a failed install leaves the TV as it was. It also
-prints your TV model and firmware, and warns if it is not a webOS 25 TV (the only one tried so far).
-
-**Updating:** run the same one-liner again, or `sh /media/developer/cleanyourtv/update.sh` on the TV. Your
-settings and usage history are kept. If the launcher and helper versions ever differ, the launcher says so.
-
-### What the installer does
-
-1. Checks it is running as root on a rooted webOS TV, and saves the original state (stock Home
+1. Checks for root and a rooted webOS TV, prints the model and firmware, and saves the original state (stock Home
    `appinfo.json`, `/etc/hosts`, process and service lists) in `/media/developer/cleanyourtv/backup`.
-2. Copies the launcher, a small root helper and the scripts to `/media/developer/cleanyourtv`.
-3. Adds two boot scripts to the Homebrew Channel's `/var/lib/webosbrew/init.d/`:
-   - `10-cleanyourtv-home` starts the helper and bind-mounts the launcher over
-     `/usr/palm/applications/com.webos.app.home`, then restarts `sam` so it picks it up.
-   - `15-cleanyourtv-debloat` (skipped with `--no-debloat`) runs the debloat a minute after boot.
-4. Applies both immediately.
+2. Copies the launcher, a root helper and the scripts to `/media/developer/cleanyourtv`.
+3. Adds boot scripts to `/var/lib/webosbrew/init.d/`: `10-cleanyourtv-home` starts the helper and mounts the
+   launcher over LG's Home; `15-cleanyourtv-debloat` runs the debloat a minute after boot.
+4. Applies everything, then checks that the new Home is registered and the helper answers with the matching
+   version. If that fails within two minutes, it restores LG's Home and removes the boot scripts.
 
-## Customise
+**Update:** run the install command again, or `sh /media/developer/cleanyourtv/update.sh` on the TV. Settings and
+usage history are kept.
 
-Everything is changed in the launcher itself; there is nothing to edit by hand.
+**Uninstall:** `sh /media/developer/cleanyourtv/uninstall.sh` (`--keep-config` keeps settings and usage history).
 
-- **Hold OK on an app** (or press and hold with the pointer) for its menu: add it to the dock or replace a
-  dock app, move it left or right within the dock, remove it from the dock, or hide it.
-- **Hold OK on a top button** to remove it.
-- **The Customise button** (top right) has: top buttons (remove, or add Inputs, Settings or any app),
-  hidden apps (show them again), the app order, the clock format and a reset to the defaults.
+## Using the launcher
 
-**Language and clock.** Menus, buttons and the date follow the TV's language (English, Dutch, German, French
-and Spanish are translated; anything else shows English, with the date in the TV's own language). The clock
-uses the 24- or 12-hour format of that language, or whatever you pick under Customise → Clock.
+| Action | How |
+|---|---|
+| Open an app | OK |
+| App options (dock, hide) | Hold OK on an app |
+| Remove a top button | Hold OK on it |
+| Customise | The Customise button, top right |
+| Open Live TV | The Live TV button or tile |
+| Switch input | The Inputs button |
 
-**Inputs.** The Inputs picker lists every HDMI port with the name of the device on it (for example your
-soundbar or console) and whether it is connected or the active source.
+**Customise** holds the top buttons (remove, or add Inputs, Live TV, Settings or any app), hidden apps, the app
+order, the clock format and a reset.
 
-**App order.** The grid sorts itself by how often you use each app, most used first, so the apps you open
-all the time float to the front. Usage is counted by the helper whenever an app stays in the foreground for a
-few seconds (however it was started, including the Netflix button on the remote), and older use counts for
-less (half-life 30 days). Switch to A to Z in Customise. The dock is always yours: it never reorders itself.
+- **Dock:** up to four apps; add, replace, move or remove them from an app's options menu.
+- **App order:** the grid sorts by how often you use each app, most used first (or A to Z). Usage is counted when an
+  app stays in the foreground for a few seconds, however it was started; older use counts for less (half-life 30
+  days).
+- **Inputs:** lists each HDMI port with the name of the connected device and whether it is connected or the active
+  source.
+- **Language and clock:** menus follow the TV's language (English, Dutch, German, French and Spanish are
+  translated). The clock uses the 24- or 12-hour format of that language unless you choose one in Customise.
 
-Choices are saved on the TV in `/media/developer/cleanyourtv/config.json` and survive reboots and
-reinstalls. You can still edit that file (or copy `config.example.json` there) if you prefer; it holds
-`dock` (up to four app ids), `topbar` (buttons with `label`, `icon` and either `app` or `action`), `hidden`
-and `sort` (`usage` or `alpha`).
+Settings are stored in `/media/developer/cleanyourtv/config.json` and survive reboots and reinstalls. The file
+holds `dock` (up to four app ids), `topbar` (buttons with `label`, `icon` and `app` or `action`), `hidden` and
+`sort` (`usage` or `alpha`). `config.example.json` shows the format.
 
 ## Live TV
 
-The launcher can play an IPTV playlist (M3U) of your own, like the one many IPTV providers or media servers
-give you. It is built into the launcher: use the **Live TV** button in the top bar or the **Live TV** tile (hold
-OK on it to put it in the dock). It does not touch LG's own tuner or its channel list.
+Plays an IPTV playlist (M3U) from your own provider or media server. It does not use LG's tuner or channel list.
 
-- **First time:** the screen shows an address and a 4-digit code. Open the address on your phone or computer
-  (same network), enter the code and paste your playlist address (and the XMLTV guide address if the playlist
-  does not point to one). Nothing is stored anywhere but on the TV. The page closes itself after saving, or after
-  ten minutes. You can also set it from a shell on the TV:
-  `curl -X POST localhost:8765/api/live/settings -d '{"playlistUrl":"http://..."}'`.
-- **Remote:** Up/Down or CH+/CH- switch channel, digits jump to a channel number (numbers follow the playlist
-  order, 1 to N), **OK** opens the channel list (groups on the left, what is on now on the right), Info or
-  Left/Right shows the banner with now and next, **Back** (or the Home button) returns to the launcher and stops
-  the picture.
-- **Guide:** the playlist's XMLTV guide is downloaded in the background (compressed, a few seconds of work on the
-  TV) and refreshed twice a day. Only the next 36 hours of your channels are kept.
-- **Streams:** the TV's own video player plays HLS (`.m3u8`). For the common `…/live/<user>/<pass>/<id>.ts` links
-  the launcher asks for the `.m3u8` version first. Plain MPEG-TS streams that are not HLS may not play.
-- **Limits for now:** no recording, pause or favourites. To start over: `curl -X POST localhost:8765/api/live/reset`.
-
-The README, the repository and the installer never contain a playlist address: it lives only in
-`/media/developer/cleanyourtv/live/` on your TV and is removed by the uninstaller.
-
-## Notifications with a picture
-
-LG's own toasts are text only on this TV: I tried `iconUrl` and `remoteIconUrl` with web addresses, local files
-and LG's own icon, and none showed a picture. So the installer adds a tiny transparent window (the
-`com.cleanyourtv.notify` app) that shows a card with a picture on top of whatever is on screen. In testing it
-appeared over Plex and over Prime Video (DRM video) without interrupting playback, and the remote keeps
-controlling the app underneath (the window type `topui` is what makes that work: `overlay` and `popup` windows
-steal the remote).
-
-Send one from any computer, script, Home Assistant or camera automation on your network:
+**Setup (first use):** the screen shows an address and a 4-digit code. Open the address on a phone or computer on
+the same network, enter the code and paste the playlist address (and the XMLTV guide address if the playlist does
+not name one). The page closes after saving or after ten minutes. From a shell on the TV:
 
 ```sh
-curl -X POST http://<tv-ip>:8765/api/notify -d '{"title":"Front door","text":"Someone is at the door","image":"http://192.168.1.20/snapshot.jpg","seconds":15,"position":"top-right"}'
+curl -X POST localhost:8765/api/live/settings -d '{"playlistUrl":"http://...","epgUrl":"http://..."}'
 ```
 
-The helper only listens on the TV itself, so from another machine go through SSH:
-`ssh root@<tv-ip> "curl -s -X POST localhost:8765/api/notify -d '{...}'"`.
+**Remote**
+
+| Key | Action |
+|---|---|
+| Up / Down, CH+ / CH- | Next / previous channel |
+| Digits | Jump to a channel number (numbers follow the playlist order, 1 to N) |
+| OK | Open the guide |
+| Info, Left / Right | Show the channel banner (now and next) |
+| Back, Home | Return to the launcher and stop the picture |
+
+**Guide screen (OK):** group tabs across the top (Left / Right), the channels as rows with logo, what is on now and a
+progress bar, and a panel for the selected channel with the current programme (time, title, description) and what
+follows.
+
+**Notes**
+
+- The TV's own player plays HLS (`.m3u8`). For `…/live/<user>/<pass>/<id>.ts` links the launcher requests the
+  `.m3u8` version first. Plain MPEG-TS streams that are not HLS may not play.
+- The XMLTV guide is downloaded in the background (compressed) and refreshed twice a day. The next 36 hours are kept.
+  Programmes titled "No Data" are ignored.
+- No recording, pause or favourites.
+- The playlist address is stored only on the TV, in `/media/developer/cleanyourtv/live/`. `curl -X POST
+  localhost:8765/api/live/reset` clears it; the uninstaller removes it.
+
+## Picture notifications
+
+LG's toast notifications cannot show pictures on this TV. The optional `com.cleanyourtv.notify` app shows a card
+(picture, title, text) in a transparent window above whatever is on screen. It does not take the remote: the app
+underneath keeps working. Checked over Plex, Prime Video (DRM video) and an HDMI input.
+
+```sh
+ssh root@192.168.1.50 "curl -s -X POST localhost:8765/api/notify -d '{\"title\":\"Front door\",\"text\":\"Someone is at the door\",\"image\":\"http://192.168.1.20/snapshot.jpg\",\"seconds\":15,\"position\":\"top-right\"}'"
+```
 
 | Field | Meaning |
 |---|---|
-| `title`, `text` | Up to 120 and 400 characters. Either can be empty. |
-| `image` | `http(s)` address of a picture (up to 6 MB; self-signed certificates are accepted). The helper downloads it first, so the card appears complete. |
-| `seconds` | How long it stays, 2 to 120 (default 8). |
-| `position` | `top|middle|bottom` and `left|center|right`, for example `bottom-center` (default `top-right`). |
+| `title`, `text` | Up to 120 and 400 characters; either may be empty. |
+| `image` | `http(s)` address of a picture, up to 6 MB (self-signed certificates are accepted). The helper downloads it first, so the card appears complete. |
+| `seconds` | Display time, 2 to 120 (default 8). |
+| `position` | `top`, `middle` or `bottom` plus `left`, `center` or `right`, for example `bottom-center` (default `top-right`). |
 
-Home Assistant example (`configuration.yaml`, with an SSH-capable `shell_command`):
+The helper listens on the TV only, so other machines send the request over SSH as above. Home Assistant example:
 
 ```yaml
 shell_command:
@@ -164,58 +170,70 @@ shell_command:
     "curl -s -X POST localhost:8765/api/notify -d '{\"title\":\"{{ title }}\",\"text\":\"{{ text }}\",\"image\":\"{{ image }}\"}'"
 ```
 
-Skip the overlay with `--no-notify` when installing. The uninstaller removes it.
+## Debloat
 
-## The debloat
-
-Unless you pass `--no-debloat`, about a minute after every boot the script:
+About a minute after every boot, the debloat:
 
 - stops `remotelogger`, `service-logger`, `contentminer` and `nudge`;
-- stops `acr2`, `admanager`, `sportsalarm` and `adoverlay-service` from starting, by mounting a
-  do-nothing stub over their binaries (they are started on demand, so stopping them is not enough);
-- adds three LG ad servers (`eic.ads.lgtvcommon.com`, `nl.ad.lgsmartad.com`,
-  `nl.info.lgsmartad.com`) to `/etc/hosts`, marked `# cleanyourtv-debloat`. Existing entries, such as
-  update blocking from the Homebrew Channel, are untouched.
+- keeps `acr2`, `admanager`, `sportsalarm` and `adoverlay-service` from starting by mounting an empty stub over
+  their binaries (they start on demand);
+- adds `eic.ads.lgtvcommon.com`, `nl.ad.lgsmartad.com` and `nl.info.lgsmartad.com` to `/etc/hosts`, marked
+  `# cleanyourtv-debloat`. Existing entries, such as update blocking, are untouched.
 
-Nothing is uninstalled, and everything is undone by `debloat-undo.sh` or a reboot without the script.
+Nothing is uninstalled. `debloat-undo.sh` or a reboot without the boot script reverts it. It runs only while the
+launcher replaces Home, because LG's own Home does not start with those services blocked; *Restore LG Home* lifts it
+first. To turn it off: `touch /media/developer/cleanyourtv/DISABLE-DEBLOAT` and reboot.
 
-**The debloat only runs while this launcher replaces Home.** LG's own Home fails to start when those services
-are blocked, so *Restore LG Home* (and `undo-home.sh`) lifts the debloat first, and the boot script skips the
-debloat whenever the launcher is disabled.
-If an app misbehaves, `touch /media/developer/cleanyourtv/DISABLE-DEBLOAT` and reboot.
+## Back to LG's Home
 
-## Getting back to LG's Home
-
-| Situation | What to do |
+| Situation | Action |
 |---|---|
-| From the launcher | Select **Restore LG Home**, the last tile in the grid. Stock Home returns in about 15 s, until the next reboot. |
-| Over SSH, until next reboot | `sh /media/developer/cleanyourtv/undo-home.sh temp` |
-| Over SSH, permanently (boot scripts stay installed but do nothing) | `sh /media/developer/cleanyourtv/undo-home.sh`; remove the `DISABLE` file to switch back on. |
-| Remove everything | `sh /media/developer/cleanyourtv/uninstall.sh` (add `--keep-config` to keep your settings and usage history). |
-| TV shows a black screen and SSH still works | Run the second command above. |
+| From the launcher | Select **Restore LG Home**, the last tile in the grid (about 15 s, until the next reboot). |
+| Over SSH, until the next reboot | `sh /media/developer/cleanyourtv/undo-home.sh temp` |
+| Over SSH, permanently | `sh /media/developer/cleanyourtv/undo-home.sh`; delete the `DISABLE` file to switch back on. |
+| Remove everything | `sh /media/developer/cleanyourtv/uninstall.sh` |
 | Boot crashed | The Homebrew Channel's failsafe mode skips all boot scripts; reboot again. |
 
-If the helper stops responding for about a minute, a watchdog restores LG's Home on its own until the
-next reboot.
+If the helper stops responding for about a minute, a watchdog restores LG's Home until the next reboot.
+
+## Helper API
+
+The helper runs as root on `127.0.0.1:8765` (JSON). The launcher uses it; scripts can too.
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /api/apps` | Installed apps, config, usage scores, version |
+| `POST /api/launch` `{id, params}` | Launch an app |
+| `GET /api/inputs` | HDMI inputs and their state |
+| `POST /api/config` | Save dock, top buttons, hidden apps, sort, clock |
+| `POST /api/undo` | Restore LG's Home until the next reboot |
+| `GET /api/live/status`, `/api/live/channels`, `/api/live/epg` | Live TV data |
+| `POST /api/live/settings`, `/api/live/pair`, `/api/live/refresh`, `/api/live/reset` | Live TV setup |
+| `POST /api/notify` | Picture notification |
 
 ## How it works
 
-- LG's Home (`com.webos.app.home`) is a read-only system app, so the launcher is bind-mounted over its
-  folder at boot. `stage-home.sh` builds the mounted folder from the launcher page plus an
-  `appinfo.json` derived from **your TV's own** stock one (nothing of LG's is stored in this repo).
-- `sam` reads app definitions only at startup, which is why it is restarted after the mount.
-- The launcher is a plain web page. It talks to a small Node helper on `127.0.0.1:8765` that runs as
-  root and wraps `luna-send` to list apps, serve their icons, launch them and read input status.
-- Layout: `app/` (launcher page and icons), `helper/helper.js`, `scripts/` (boot, debloat and restore
-  scripts), `install.sh`, `uninstall.sh`.
+- LG's Home (`com.webos.app.home`) is a read-only system app. At boot the launcher is bind-mounted over its folder;
+  `stage-home.sh` builds the mounted folder from the launcher page and an `appinfo.json` derived from the TV's own
+  stock one (nothing of LG's is stored in this repository). The system app manager (`sam`) reads app definitions
+  only at startup, so it is restarted after the mount.
+- The launcher is a plain web page. The helper (Node) wraps `luna-send` to list apps, serve icons, launch apps and
+  read input status.
+- Picture notifications use a hidden web app with window type `topui`; `overlay` and `popup` windows take the
+  remote's focus, `topui` and `floating` do not.
+- Layout: `app/` launcher page and icons, `helper/` helper modules, `notify/` notification app, `scripts/` boot,
+  debloat and restore scripts, `install.sh`, `uninstall.sh`.
 
 ## Troubleshooting
 
-- **Black screen after the installer or a reboot:** wait about a minute, then press Home. If it stays
-  black, SSH in and run `sh /media/developer/cleanyourtv/undo-home.sh temp`.
-- **An app is missing from the grid:** check it is not listed under `hidden`. Apps without a visible
-  launch icon are not shown.
-- **After a firmware update that removes root:** re-root the TV first, then run the installer again.
+- **Black screen after installing or rebooting:** wait a minute and press Home. If it stays black, run
+  `sh /media/developer/cleanyourtv/undo-home.sh temp` over SSH.
+- **An app is missing from the grid:** check it is not under `hidden` in Customise. Apps without a launch icon are not
+  listed.
+- **After a firmware update that removes root:** re-root the TV, then run the installer again.
 
-Use at your own risk. This modifies a running TV with root access; read `install.sh` and the scripts
-in `scripts/` before running them.
+## Credits and licence
+
+The home-screen design follows [CleanYourTV](https://github.com/Gathin23/cleanyourtv) (Android TV, MIT).
+MIT licence, see `LICENSE`. This modifies a running TV with root access; read `install.sh` and `scripts/` before
+running them, and use it at your own risk.
