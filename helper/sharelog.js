@@ -40,6 +40,10 @@ function report() {
   let opts = '(no config)';
   try { opts = JSON.stringify(JSON.parse(read(D + '/config.json')).options || {}); } catch (_) {}
   sec('Options', opts + '\nDISABLE file: ' + (fs.existsSync(D + '/DISABLE') ? 'yes (LG Home selected)' : 'no'));
+  let keys = '{}'; try { keys = JSON.stringify(JSON.parse(read(D + '/config.json')).keys || {}); } catch (_) {}
+  const hl = read('/tmp/lginput-hook-lginput2.log');
+  const codes = {}; (hl.match(/uinput_code=\d+/g) || []).forEach(c => { codes[c] = (codes[c] || 0) + 1; });
+  sec('Remote keys', 'learned: ' + keys + '\nhook attached: ' + (/InputHook initialized/.test(hl) && /lib_main returned: 0/.test(hl)) + '\nkey codes seen in the hook log: ' + JSON.stringify(codes) + '\n' + hl.split('\n').filter(l => /\[(ERRO|FAIL|WARN)|Resolving|Applying|initialized/.test(l)).slice(0, 8).join('\n'));
   sec('Service status', sh('curl -s -m 3 http://127.0.0.1:8765/api/manager/status 2>&1').slice(0, 2500) || '(service not answering)');
   sec('Setup log (/tmp/cytv-bootstrap.log)', read('/tmp/cytv-bootstrap.log', 150));
   sec('Last update error', read(D + '/last-error.txt'));

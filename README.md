@@ -84,7 +84,9 @@ LG's system app manager restarts. It does the following:
 Over SSH the same setup is `sh /media/developer/apps/usr/palm/services/com.cleanyourtv.manager.service/bootstrap.sh install`
 (options `--no-debloat`, `--no-input-key`, `--no-start`, `--no-verify`, `--force`).
 
-**Update:** open the **CleanYourTV** app. It checks the latest GitHub release; the launcher and the service update
+**Update:** open the **CleanYourTV** app. Before the setup (or when the setup failed) the service is not running; the app
+then checks for a newer package by itself and shows **Update to x.y.z**, which downloads, checks and installs it through
+the root service without the service. After the setup: It checks the latest GitHub release; the launcher and the service update
 separately. A launcher update is downloaded, checked against the release's `.sha256` file, installed and started;
 if the new launcher does not report in within 40 seconds, the previous one is put back. A service update installs the
 new package and restarts the service; if the new service does not come up, the previous files are restored. The
@@ -192,6 +194,11 @@ The remote's Input button opens an Inputs list over whatever is playing, instead
   closes it. The magic remote's pointer works too.
 - **Instant open:** the page is built while hidden and keeps its icons and colours, so an open only turns it on.
 - **After a reboot** LG's picker shows until the service is up, a few seconds after the boot scripts run.
+- **Learning the key:** the Input and Home buttons can have different codes on other remotes and firmware. After the
+  setup, the manager app asks you to press the Input button (**Learn the Input key**, also in the main list): it reads the
+  code from the hook's log, binds it to the picker, then asks you to press Input again to test that our Inputs list
+  opens. **Learn the Home key** is a separate, optional row that records the Home button's code. Each key's screen has its own **Clear**: the Input key goes back to the default code (241), the Home key to none. If the hook does not attach on a firmware, it says so and leaves the Input key to LG. The learned
+  codes are in `config.json` (`keys`) and in **Share log**.
 - **Off:** the *Input key* switch in the manager app removes our bind; LG's picker is back at once. The hook only
   reacts to bound buttons. Other binds in `/home/root/.config/lginputhook/keybinds.json` are left alone.
 

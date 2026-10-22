@@ -4,7 +4,7 @@
 const fs = require('fs'), cp = require('child_process');
 const D = '/media/developer/cleanyourtv', HOOK = D + '/inputhook', CFGDIR = '/home/root/.config/lginputhook', BINDS = CFGDIR + '/keybinds.json';
 const TARGETS = ['RELEASE', 'lginput2', 'micomservice', 'tvservice', 'testapp'];
-const KEY = '241', COMMAND = 'sh ' + D + '/inputkey.sh';
+const DEFAULT_KEY = '241', COMMAND = 'sh ' + D + '/inputkey.sh';   // 241: the Input button on the remote this was written with; learned in the setup
 const ENV = Object.assign({}, process.env, { PATH: '/usr/bin:/usr/sbin:/bin:/sbin:' + (process.env.PATH || '') });
 
 function procs() {
@@ -17,12 +17,12 @@ function procs() {
 }
 const hooked = pid => { try { return fs.readFileSync('/proc/' + pid + '/maps', 'utf8').includes('libinputhookpp'); } catch (_) { return false; } };
 
-function writeBinds(on) {
+function writeBinds(on, key) {
   let b = {};
   try { b = JSON.parse(fs.readFileSync(BINDS, 'utf8')); } catch (_) {}
   const before = JSON.stringify(b);
-  if (on) b[KEY] = { action: 'exec', command: COMMAND };
-  else if (b[KEY] && b[KEY].command === COMMAND) delete b[KEY];
+  for (const k of Object.keys(b)) if (b[k] && b[k].command === COMMAND && (!on || k !== key)) delete b[k];   // our bind only, wherever it was
+  if (on) b[key] = { action: 'exec', command: COMMAND };
   if (JSON.stringify(b) === before) return;
   fs.mkdirSync(CFGDIR, { recursive: true });
   fs.writeFileSync(BINDS + '.tmp', JSON.stringify(b)); fs.renameSync(BINDS + '.tmp', BINDS);
@@ -30,8 +30,8 @@ function writeBinds(on) {
 
 let busy = false;
 // Idempotent: call at start and every so often (LG's input service restarts now and then and loses the hook).
-function ensure(enabled) {
-  try { writeBinds(enabled); } catch (e) { console.error('inputhook: keybinds:', e.message); }
+function ensure(enabled, key) {
+  try { writeBinds(enabled, String(key || DEFAULT_KEY)); } catch (e) { console.error('inputhook: keybinds:', e.message); }
   if (!enabled || busy || !fs.existsSync(HOOK + '/ezinject')) return;
   const todo = procs().filter(p => !hooked(p.pid));
   if (!todo.length) return;
@@ -47,6 +47,32 @@ function ensure(enabled) {
     });
   }
 }
-const status = () => ({ hooked: procs().filter(p => ['lginput2', 'micomservice'].includes(p.name)).every(p => hooked(p.pid)) && procs().length > 0,
-  bound: (() => { try { const b = JSON.parse(fs.readFileSync(BINDS, 'utf8')); return !!(b[KEY] && b[KEY].command === COMMAND); } catch (_) { return false; } })() });
-module.exports = { ensure, status };
+const HOOKLOG = '/tmp/lginput-hook-lginput2.log';
+// What the hook reports about itself: did it find LG's input function and install?
+function hookInfo() {
+  let t = ''; try { t = fs.readFileSync(HOOKLOG, 'utf8'); } catch (_) {}
+  return { attached: /InputHook initialized/.test(t) && /lib_main returned: 0/.test(t), sawKeys: /lginput_uinput_send_button called/.test(t), errors: t.split('\n').filter(l => /\[(ERRO|FAIL|WARN)/.test(l)).slice(0, 5) };
+}
+const status = (key) => ({ hooked: procs().filter(p => ['lginput2', 'micomservice'].includes(p.name)).every(p => hooked(p.pid)) && procs().length > 0,
+  bound: (() => { try { const b = JSON.parse(fs.readFileSync(BINDS, 'utf8')); const k = String(key || DEFAULT_KEY); return !!(b[k] && b[k].command === COMMAND); } catch (_) { return false; } })(), hook: hookInfo() });
+
+// ---- learning a key: the code of the next button press, read from the hook's log ----
+const IGNORE = { input: [28, 103, 105, 106, 108, 272, 273, 274, 352, 412], home: [28, 103, 105, 106, 108, 272, 273, 274, 352] };   // arrows, OK, pointer, Back
+let learn = null;
+const markSaved = () => { if (learn && learn.result) learn.result.saved = true; };
+function startLearn(name) {
+  let size = 0; try { size = fs.statSync(HOOKLOG).size; } catch (_) {}
+  learn = { name, size, at: Date.now(), result: null };
+}
+function learnState() {
+  if (!learn) return { state: 'idle' };
+  if (learn.result) return Object.assign({ state: 'got', name: learn.name }, learn.result);
+  if (!hookInfo().attached) return { state: 'unsupported', name: learn.name };
+  let t = ''; try { const fd = fs.openSync(HOOKLOG, 'r'), st = fs.fstatSync(fd), n = Math.max(0, st.size - learn.size); const b = Buffer.alloc(Math.min(n, 65536)); fs.readSync(fd, b, 0, b.length, learn.size); fs.closeSync(fd); t = b.toString('utf8'); } catch (_) {}
+  const re = /keyid=(\d+), state=1 uinput_code=(\d+)/g; let m;
+  if (Date.now() - learn.at > 1200) {   // ignore the OK press that started the step
+    while ((m = re.exec(t))) { if ((IGNORE[learn.name] || []).indexOf(+m[2]) < 0) { learn.result = { code: m[2], keyid: m[1] }; return Object.assign({ state: 'got', name: learn.name }, learn.result); } }
+  }
+  return { state: Date.now() - learn.at > 45000 ? 'timeout' : 'waiting', name: learn.name, seconds: Math.round((Date.now() - learn.at) / 1000) };
+}
+module.exports = { ensure, status, markSaved, startLearn, learnState, hookInfo, DEFAULT_KEY };
