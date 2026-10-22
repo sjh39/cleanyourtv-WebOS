@@ -12,9 +12,11 @@ const readJson = (f, d) => { try { return JSON.parse(fs.readFileSync(f, 'utf8'))
 const sh = (cmd, ms) => new Promise(res => cp.execFile('/bin/sh', ['-c', cmd], { env: ENV, timeout: ms || 60000, maxBuffer: 8 << 20 }, (e, out, err) => res({ ok: !e, out: String(out || ''), err: String(err || '') })));
 
 // GET a URL (follows redirects). Returns a Buffer, or with `file` streams to disk and resolves {sha256}.
+const allowHttp = () => { try { return !!JSON.parse(fs.readFileSync(D + '/config.json', 'utf8')).releasesUrl; } catch (_) { return false; } };   // a custom release source, for testing
 function fetch(url, file, hops) {
   return new Promise((resolve, reject) => {
     if ((hops || 0) > 6) return reject(new Error('too many redirects'));
+    if (!url.startsWith('https:') && !allowHttp()) return reject(new Error('refusing a download over plain http'));
     const mod = url.startsWith('https:') ? https : http;
     const req = mod.get(url, { headers: { 'User-Agent': 'cleanyourtv-manager', Accept: file ? 'application/octet-stream, */*' : 'application/vnd.github+json, application/json, */*' }, timeout: 20000 }, res => {
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) { res.resume(); return resolve(fetch(new URL(res.headers.location, url).toString(), file, (hops || 0) + 1)); }

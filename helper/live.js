@@ -7,7 +7,7 @@ const PAIR_PORT = 8766, PAIR_MS = 10 * 60 * 1000, REFRESH_MS = 12 * 3600 * 1000;
 try { fs.mkdirSync(DIR, { recursive: true }); } catch (_) {}
 
 const readJson = (f, d) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch (_) { return d; } };
-const writeJson = (f, o) => { fs.writeFileSync(f + '.tmp', JSON.stringify(o)); fs.renameSync(f + '.tmp', f); };
+const writeJson = (f, o) => { fs.writeFileSync(f + '.tmp', JSON.stringify(o), { mode: 0o600 }); fs.renameSync(f + '.tmp', f); };   // the playlist address holds an access key: owner only
 let settings = readJson(SETTINGS, {}), playlist = readJson(PLAYLIST, null), epg = readJson(EPG, null);
 let status = { state: 'idle', error: '' };
 
@@ -130,7 +130,7 @@ const page = (msg, ok) => `<!doctype html><meta name=viewport content="width=dev
 <button>Save</button></form>`}`;
 function startPairing() {
   stopPairing();
-  const code = String(crypto.randomInt(1000, 10000)); let bad = 0;
+  const code = String(crypto.randomInt(100000, 1000000)); let bad = 0;
   const srv = http.createServer((req, res) => {
     const send = (c, html) => { res.writeHead(c, { 'content-type': 'text/html; charset=utf-8' }); res.end(html); };
     if (req.method === 'GET') return send(200, page('', false));

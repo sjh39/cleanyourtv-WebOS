@@ -10,6 +10,7 @@ function fetchImage(url, depth = 0) {
     if (depth > 4) return reject(new Error('too many redirects'));
     let u; try { u = new URL(url); } catch (_) { return reject(new Error('bad image address')); }
     if (u.protocol !== 'http:' && u.protocol !== 'https:') return reject(new Error('image address must be http(s)'));
+    if (/^(localhost|127\.|0\.0\.0\.0|\[?::1\]?$)/i.test(u.hostname)) return reject(new Error('image address must not point at the TV itself'));   // not a way to read the service's own pages
     const lib = u.protocol === 'https:' ? https : http;
     const req = lib.get(u, { timeout: 8000, rejectUnauthorized: false }, res => {
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) { res.resume(); return resolve(fetchImage(new URL(res.headers.location, u).toString(), depth + 1)); }

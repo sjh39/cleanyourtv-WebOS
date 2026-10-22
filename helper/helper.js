@@ -1,7 +1,7 @@
 // Root service of CleanYourTV: bridges the launcher web app to luna, serves app icons, runs Live TV and picture
 // notifications, keeps the Input-key picker alive and hosts the manager API. Listens on 127.0.0.1 only.
 const http = require('http'), fs = require('fs'), path = require('path'), cp = require('child_process');
-const VERSION = '1.4.9';
+const VERSION = '1.4.10';
 const PORT = 8765, DIR = '/media/developer/cleanyourtv', CONF = DIR + '/config.json', USAGE = DIR + '/usage.json';
 const ENV = Object.assign({}, process.env, { PATH: '/usr/bin:/usr/sbin:/bin:/sbin:' + (process.env.PATH || '') });
 
@@ -15,7 +15,7 @@ function luna(uri, payload) {
   });
 }
 const readConf = () => { try { return JSON.parse(fs.readFileSync(CONF, 'utf8')); } catch (_) { return {}; } };
-const writeConf = c => { fs.writeFileSync(CONF + '.tmp', JSON.stringify(c, null, 2)); fs.renameSync(CONF + '.tmp', CONF); };
+const writeConf = c => { fs.writeFileSync(CONF + '.tmp', JSON.stringify(c, null, 2), { mode: 0o600 }); fs.renameSync(CONF + '.tmp', CONF); };
 let appCache = null, appCacheAt = 0;
 async function apps() {
   if (appCache && Date.now() - appCacheAt < 5000) return appCache;
@@ -79,7 +79,11 @@ try { manager = require('./manager').create({ luna, readConf, writeConf, inputho
 const body = req => new Promise(r => { let b = ''; req.on('data', c => b += c); req.on('end', () => { try { r(JSON.parse(b || '{}')); } catch (_) { r({}); } }); });
 
 http.createServer(async (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // Our apps are local files (their requests carry Origin "null"); curl and scripts send no Origin. A web page opened in the
+  // TV's browser has an http(s) origin and is refused, so it cannot drive this root service.
+  const origin = req.headers.origin;
+  if (origin !== undefined && origin !== 'null') { console.log('refused origin ' + origin + ' ' + req.method + ' ' + req.url.slice(0, 60)); res.writeHead(403, { 'content-type': 'application/json' }); return res.end('{"error":"origin not allowed"}'); }
+  if (origin === 'null') { res.setHeader('Access-Control-Allow-Origin', 'null'); res.setHeader('Vary', 'Origin'); }
   res.setHeader('Access-Control-Allow-Headers', 'content-type');
   if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
   const json = (o, c) => { res.writeHead(c || 200, { 'content-type': 'application/json' }); res.end(JSON.stringify(o)); };
@@ -129,6 +133,7 @@ http.createServer(async (req, res) => {
     res.writeHead(404); res.end();
   } catch (e) { json({ error: String(e) }, 500); }
 }).listen(PORT, '127.0.0.1', () => {
+  try { fs.chmodSync(DIR + '/live', 0o700); } catch (_) {} try { fs.chmodSync(CONF, 0o600); } catch (_) {} try { fs.chmodSync(USAGE, 0o600); } catch (_) {}
   setInterval(pollForeground, 4000);
   // Input key: bind it and keep the hook in LG's input processes (they restart now and then)
   setTimeout(() => inputhook.ensure(options().inputKey, keyCode()), 500);

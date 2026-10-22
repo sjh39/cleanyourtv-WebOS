@@ -127,7 +127,7 @@ Settings are in `/media/developer/cleanyourtv/config.json`: `dock`, `topbar`, `h
 ## Live TV
 
 Plays an IPTV playlist (M3U) from your own provider or server; it does not use LG's tuner. On first use the screen
-shows an address and a 4-digit code: open the address on a phone on the same network, enter the code and paste the
+shows an address and a 6-digit code: open the address on a phone on the same network, enter the code and paste the
 playlist address (and the XMLTV guide address if the playlist has none). From a shell on the TV:
 
 ```sh
