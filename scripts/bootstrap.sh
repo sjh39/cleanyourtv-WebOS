@@ -53,6 +53,9 @@ command -v luna-send >/dev/null || die "this does not look like webOS (no luna-s
 [ -d "$INITD" ] || die "$INITD not found: root with the Homebrew Channel is required (https://rootmy.tv)"
 [ -w /media/developer ] || die "/media/developer is not writable"
 for t in tar node; do command -v $t >/dev/null || die "missing tool: $t"; done
+# hard requirements: --force does not skip these (older webOS has no systemd and an old Node that cannot run the service)
+command -v systemctl >/dev/null || die "this TV has no systemd (webOS older than 5): CleanYourTV needs a newer webOS and cannot be set up here. Nothing was changed."
+node -e '(()=>1)()' >/dev/null 2>&1 || die "this TV's Node.js ($(node -v 2>&1 | head -1)) is too old for the service: CleanYourTV needs a newer webOS and cannot be set up here. Nothing was changed."
 [ -f $S/helper/helper.js ] && [ -f $S/scripts/10-cleanyourtv-home ] || die "the service files are incomplete in $S"
 [ -f $HOME_DIR/appinfo.json ] || die "stock Home app not found at $HOME_DIR"
 if grep -q " $HOME_DIR " /proc/mounts && [ ! -f $D/backup/home-appinfo.orig.json ]; then

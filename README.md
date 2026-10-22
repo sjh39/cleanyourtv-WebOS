@@ -38,6 +38,7 @@ the boot scripts brings LG's Home back.
 - An LG webOS TV rooted with the [Homebrew Channel](https://webosbrew.org) ([rootmy.tv](https://rootmy.tv)).
 - Internet access on the TV, and SSH access as `root` for the install command.
 - Firmware from the [compatibility list](#compatibility). Other firmware may work; see there.
+- webOS 5 or newer (2020 models and later). webOS 4 and older (2018 models and before) are not supported: they have no systemd and an old Node.js, and the setup stops before changing anything.
 
 ## Install
 

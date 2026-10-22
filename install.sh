@@ -20,6 +20,7 @@ main() {
   [ -d /var/lib/webosbrew/init.d ] || die "/var/lib/webosbrew/init.d not found: root with the Homebrew Channel is required (https://rootmy.tv)"
   for t in curl node; do command -v $t >/dev/null || die "missing tool: $t"; done
 
+  command -v systemctl >/dev/null && node -e '(()=>1)()' >/dev/null 2>&1 || die "this TV is too old (webOS 4 or earlier: no systemd, old Node.js). CleanYourTV needs webOS 5 or newer."
   T=$(mktemp -d /tmp/cytv.XXXXXX) || die "mktemp failed"
   trap 'rm -rf "$T"' EXIT
   if [ -n "$CYTV_IPK" ]; then
