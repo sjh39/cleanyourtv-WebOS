@@ -176,10 +176,11 @@ if [ $VERIFY = 1 ]; then
   if [ $ok = 0 ]; then
     warn "the new Home did not come up (app type: ${type:-none}, service: ${hv:-not answering}); rolling back"
     # restoring LG's Home live does not always work; without the boot scripts a restart brings it back
+    cp /tmp/cleanyourtv-helper.log /media/developer/cytv-setup.log.service 2>/dev/null
     rm -f $INITD/10-cleanyourtv-home $INITD/15-cleanyourtv-debloat
     echo '{"lastAppId":"com.webos.app.home"}' > /var/luna/preferences/bootd_last_foreground_app_id.json 2>/dev/null
     (sleep 4; reboot) </dev/null >/dev/null 2>&1 &
-    die "rolled back: the boot scripts are removed and the TV restarts with LG's Home. Details: /tmp/cleanyourtv-helper.log"
+    die "rolled back: the boot scripts are removed and the TV restarts with LG's Home. Details: /media/developer/cytv-setup.log and cytv-setup.log.service"
   fi
 fi
 ensure_apps

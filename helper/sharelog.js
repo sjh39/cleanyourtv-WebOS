@@ -5,6 +5,7 @@
 // Writes /tmp/cytv-sharelog.json {url, until}. Usage: node sharelog.js
 const http = require('http'), fs = require('fs'), os = require('os'), cp = require('child_process'), crypto = require('crypto');
 const D = '/media/developer/cleanyourtv', SVC = '/media/developer/apps/usr/palm/services/com.cleanyourtv.manager.service';
+const SETUPLOG = '/media/developer/cytv-setup.log';
 const STATE = '/tmp/cytv-sharelog.json', PIDF = '/tmp/cytv-sharelog.pid', LIFE = 10 * 60 * 1000;
 const ENV = Object.assign({}, process.env, { PATH: '/usr/bin:/usr/sbin:/bin:/sbin:' + (process.env.PATH || '') });
 
@@ -45,7 +46,8 @@ function report() {
   const codes = {}; (hl.match(/uinput_code=\d+/g) || []).forEach(c => { codes[c] = (codes[c] || 0) + 1; });
   sec('Remote keys', 'learned: ' + keys + '\nhook attached: ' + (/InputHook initialized/.test(hl) && /lib_main returned: 0/.test(hl)) + '\nkey codes seen in the hook log: ' + JSON.stringify(codes) + '\n' + hl.split('\n').filter(l => /\[(ERRO|FAIL|WARN)|Resolving|Applying|initialized/.test(l)).slice(0, 8).join('\n'));
   sec('Service status', sh('curl -s -m 3 http://127.0.0.1:8765/api/manager/status 2>&1').slice(0, 2500) || '(service not answering)');
-  sec('Setup log (/tmp/cytv-bootstrap.log)', read('/tmp/cytv-bootstrap.log', 150));
+  sec('Setup log (' + SETUPLOG + ')', read(SETUPLOG, 150));
+  sec('Service log saved at the last rollback', read(SETUPLOG + '.service', 80));
   sec('Last update error', read(D + '/last-error.txt'));
   sec('Service log (last 80 lines)', read('/tmp/cleanyourtv-helper.log', 80));
   sec('Input hook (last 10 lines)', read('/tmp/lginput-hook-lginput2.log', 10));
@@ -70,7 +72,8 @@ const page = (text) => '<!doctype html><html><head><meta charset="utf-8"><meta n
 
 function main() {
   try { const old = parseInt(fs.readFileSync(PIDF, 'utf8'), 10); if (old) process.kill(old, 'SIGTERM'); } catch (_) {}
-  const token = crypto.randomBytes(9).toString('hex'), text = report();
+  const token = crypto.randomBytes(9).toString('hex');
+  let text = 'The report is still being prepared; reload in a few seconds.';
   const srv = http.createServer((req, res) => {
     const u = req.url.split('?')[0];
     if (u === '/' + token) { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' }); return res.end(page(text)); }
@@ -84,6 +87,8 @@ function main() {
     fs.writeFileSync(STATE, JSON.stringify({ url: 'http://' + lanIp() + ':' + port + '/' + token, until }));
     fs.writeFileSync(PIDF, String(process.pid));
     setTimeout(() => { try { fs.unlinkSync(STATE); } catch (_) {} process.exit(0); }, LIFE);
+    // collected after the address is published: right after a boot the luna calls can take a long time
+    setTimeout(() => { text = report(); }, 50);
   });
   srv.listen(port, '0.0.0.0');
 }

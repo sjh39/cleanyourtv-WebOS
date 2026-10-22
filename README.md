@@ -61,7 +61,7 @@ screen blinks once.
 
 The setup saves the original state in `/media/developer/cleanyourtv/backup`, installs the launcher, adds boot scripts
 to `/var/lib/webosbrew/init.d/`, replaces LG's Home at boot and starts the service. If the new Home does not come up,
-it removes the boot scripts and restarts the TV with LG's Home. Its log is `/tmp/cytv-bootstrap.log`.
+it removes the boot scripts and restarts the TV with LG's Home. Its log is `/media/developer/cytv-setup.log` (kept across the restart), with the service log in `cytv-setup.log.service`.
 
 The same setup over SSH: `sh /media/developer/apps/usr/palm/services/com.cleanyourtv.manager.service/bootstrap.sh install`
 (options `--no-debloat`, `--no-input-key`, `--no-start`, `--no-verify`, `--force`).
