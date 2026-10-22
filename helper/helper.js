@@ -1,7 +1,7 @@
 // Root service of CleanYourTV: bridges the launcher web app to luna, serves app icons, runs Live TV and picture
 // notifications, keeps the Input-key picker alive and hosts the manager API. Listens on 127.0.0.1 only.
 const http = require('http'), fs = require('fs'), path = require('path'), cp = require('child_process');
-const VERSION = '1.4.10';
+const VERSION = '1.4.11';
 const PORT = 8765, DIR = '/media/developer/cleanyourtv', CONF = DIR + '/config.json', USAGE = DIR + '/usage.json';
 const ENV = Object.assign({}, process.env, { PATH: '/usr/bin:/usr/sbin:/bin:/sbin:' + (process.env.PATH || '') });
 
@@ -74,8 +74,10 @@ try { inputhook = require('./inputhook'); } catch (e) { console.error('inputhook
 const options = () => Object.assign({ debloat: true, inputKey: true }, readConf().options || {});
 const keyCode = () => String(((readConf().keys || {}).input) || '241');
 let pickerShownAt = 0;
+let notifyApi = null;
+try { if (notify) notifyApi = require('./notifyapi').create({ notify, readConf, writeConf }); } catch (e) { console.error('notification api module failed:', e.message); }
 let manager = null;
-try { manager = require('./manager').create({ luna, readConf, writeConf, inputhook, VERSION, pickerShown: () => pickerShownAt }); } catch (e) { console.error('manager module failed:', e.message); }
+try { manager = require('./manager').create({ luna, readConf, writeConf, inputhook, VERSION, notifyApi, pickerShown: () => pickerShownAt }); } catch (e) { console.error('manager module failed:', e.message); }
 const body = req => new Promise(r => { let b = ''; req.on('data', c => b += c); req.on('end', () => { try { r(JSON.parse(b || '{}')); } catch (_) { r({}); } }); });
 
 http.createServer(async (req, res) => {
@@ -134,6 +136,7 @@ http.createServer(async (req, res) => {
   } catch (e) { json({ error: String(e) }, 500); }
 }).listen(PORT, '127.0.0.1', () => {
   try { fs.chmodSync(DIR + '/live', 0o700); } catch (_) {} try { fs.chmodSync(CONF, 0o600); } catch (_) {} try { fs.chmodSync(USAGE, 0o600); } catch (_) {}
+  if (notifyApi) notifyApi.sync();
   setInterval(pollForeground, 4000);
   // Input key: bind it and keep the hook in LG's input processes (they restart now and then)
   setTimeout(() => inputhook.ensure(options().inputKey, keyCode()), 500);

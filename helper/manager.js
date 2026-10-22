@@ -43,7 +43,7 @@ function setHome(enabled) {
 }
 
 function create(ctx) {
-  const { luna, readConf, writeConf, inputhook, VERSION, pickerShown } = ctx;
+  const { luna, readConf, writeConf, inputhook, VERSION, pickerShown, notifyApi } = ctx;
   const keys = () => { const k = Object.assign({ input: '', home: '', learned: false }, readConf().keys || {}); return Object.assign(k, { inputIsDefault: !k.input, input: k.input || '241' }); };
   let job = { state: 'idle', message: '', at: 0 }, release = null, releaseAt = 0, releaseErr = '', frontendOk = null, checking = false;
   const setJob = (state, message) => { job = { state, message, at: Date.now() }; };
@@ -84,7 +84,7 @@ function create(ctx) {
       frontend: { version: fe.version || '?', previous: prevInfo() && prevInfo().version || null,
         updateTo: lat && lat.frontend && cmp(lat.frontend, fe.version) > 0 ? lat.frontend : null },
       release: lat ? { version: lat.version, frontend: lat.frontend, service: lat.service, notes: lat.notes } : null, checkedAt: releaseAt, checking, checkError: releaseErr,
-      options: options(), home: { enabled: !fs.existsSync(D + '/DISABLE'), ours: (() => { try { return fs.readFileSync('/proc/mounts', 'utf8').includes(' /usr/palm/applications/com.webos.app.home '); } catch (_) { return false; } })() },
+      options: options(), notifyApi: notifyApi ? { enabled: notifyApi.info().enabled, port: notifyApi.info().port } : { enabled: false }, home: { enabled: !fs.existsSync(D + '/DISABLE'), ours: (() => { try { return fs.readFileSync('/proc/mounts', 'utf8').includes(' /usr/palm/applications/com.webos.app.home '); } catch (_) { return false; } })() },
       inputhook: inputhook.status(keys().input), keys: keys(), job, repo: repoUrl().replace(/^https:\/\/api\.github\.com\/repos\//, '').replace(/\/releases.*$/, ''),
     };
   }
@@ -203,10 +203,12 @@ function create(ctx) {
       }
       return json(l);
     }
+    if (act === 'notify-api' && req.method === 'GET') return json(notifyApi ? notifyApi.info() : { enabled: false });
     if (act === 'test-key') return json({ pickerShownAt: pickerShown ? pickerShown() : 0, now: Date.now() });
     if (req.method !== 'POST') return json({ error: 'POST expected' }, 405);
     const b = await body(req);
     if (act === 'check') { await check(); return json(status()); }
+    if (act === 'notify-api') return json(notifyApi ? notifyApi.set(b) : { enabled: false });
     if (act === 'learn-key') { inputhook.startLearn(b.name === 'home' ? 'home' : 'input'); return json({ returnValue: true }); }
     if (act === 'clear-key') {   // forget a learned code: Input goes back to the default, Home to none
       const name = b.name === 'home' ? 'home' : 'input', c = readConf(), k = Object.assign({ input: '', home: '' }, c.keys || {});

@@ -37,7 +37,7 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:var(--night);col
   <div id="qrbox"><canvas id="qr"></canvas></div></div>
 <script>
 var kFlow='input', kText='', kRows=[], kTimer=0, upd=null, checkedOffline=false, forceOffer=false, API='http://127.0.0.1:8765', SVC='/media/developer/apps/usr/palm/services/com.cleanyourtv.manager.service';
-var idxStack=[], setupIdx=0, updIdx=0, st=null, rows=[], idx=0, view='main', pending=null, pollT=0, setup={debloat:true,inputKey:true}, offline=false, busyMsg='';
+var napi=null, idxStack=[], setupIdx=0, updIdx=0, st=null, rows=[], idx=0, view='main', pending=null, pollT=0, setup={debloat:true,inputKey:true}, offline=false, busyMsg='';
 function $(i){return document.getElementById(i)}
 function api(p,body){return new Promise(function(res,rej){var x=new XMLHttpRequest();x.open(body?'POST':'GET',API+p);x.timeout=30000;
   x.onload=function(){try{res(JSON.parse(x.responseText))}catch(e){rej(e)}};x.onerror=x.ontimeout=function(){rej(new Error('no answer'))};x.send(body?JSON.stringify(body):null)})}
@@ -53,6 +53,15 @@ function build(){
   rows=[];
   if(view==='share'){rows.push({label:'Close',fn:closeShare});return}
   if(view==='keys'){rows=kRows;return}
+  if(view==='notifyhow'){rows.push({label:'Back',fn:pop});return}
+  if(view==='notifyapi'){
+    rows.push({label:'Accept notifications from the network',sub:onoff(napi&&napi.enabled),fn:function(){api('/api/manager/notify-api',{enabled:!(napi&&napi.enabled)}).then(function(n){napi=n;api('/api/manager/status').then(function(s2){st=s2;build();draw()})},function(){banner('The service did not answer','err')})}});
+    if(napi&&napi.enabled){
+      rows.push({label:'How to send',sub:'address, token, example',fn:function(){
+        kText='Send a POST request:\nhttp://'+napi.ip+':'+napi.port+'/notify\n\nHeader:\nAuthorization: Bearer '+napi.token+'\n\nBody (JSON):\n{"title":"Front door","text":"Someone is at the door","image":"http://…/snapshot.jpg","seconds":15}';push('notifyhow')}});
+      rows.push({label:'New token',sub:'the old one stops working',fn:function(){api('/api/manager/notify-api',{regenerate:true}).then(function(n){napi=n;banner('New token created. Open \u201CHow to send\u201D to see it.','ok');build();draw()})}});
+    }
+    rows.push({sep:true});rows.push({label:'Back',fn:pop});return}
   if(offline){   // before the setup: a newer package first, then choose, set up, then the extras
     updIdx=0;
     if(upd){rows.push({label:'Update to '+upd.updateTo,sub:'recommended first · installed '+upd.installed,fn:offlineUpdate});rows.push({sep:true})}
@@ -91,6 +100,7 @@ function build(){
   rows.push({sep:true});
   rows.push({label:'CleanYourTV as Home',sub:onoff(st.home&&st.home.enabled),fn:function(){push('confirm-home')}});
   rows.push({label:'Debloat LG’s ads and telemetry',sub:onoff(st.options.debloat),fn:function(){opt({debloat:!st.options.debloat})}});
+  rows.push({label:'Network notifications',sub:onoff(st.notifyApi&&st.notifyApi.enabled),fn:function(){api('/api/manager/notify-api').then(function(n){napi=n;push('notifyapi')},function(){banner('The service did not answer','err')})}});
   rows.push({label:'Input key',sub:(st.inputhook&&st.inputhook.hook&&!st.inputhook.hook.attached)?'not available':onoff(st.options.inputKey),fn:function(){push('inputkey')}});
   rows.push({sep:true});
   rows.push({label:'Share log',sub:'QR code for your phone',fn:openShare});
@@ -104,6 +114,11 @@ var INFO={
  'Go back to launcher':'Swaps the previous launcher version back in. The newer one stays available as an update.',
  'CleanYourTV as Home':'On: the Home button opens this launcher. Off: LG\u2019s own Home. Switching restarts the TV (about a minute); the service keeps running either way.',
  'Debloat LG\u2019s ads and telemetry':'Stops LG\u2019s ad, recommendation and telemetry services and blocks a few ad servers. Nothing is uninstalled, and it only applies while this launcher is Home.',
+
+ 'Network notifications':'Lets other devices on your network send picture notifications to this TV with a POST request and a secret token. Off by default.',
+ 'Accept notifications from the network':'On: the TV listens on port 8767 for POST /notify with the token. Anyone who has the token and network access can show cards on this screen.',
+ 'How to send':'Shows the address, the token and an example request.',
+ 'New token':'Creates a new secret token. Devices using the old one stop working.',
  'Input key':'The remote\u2019s Input button opens our Inputs list over the running app instead of LG\u2019s picker. Open this screen to switch it off or to learn the button.',
  'Share log':'Shows a QR code. Scan it with a phone on the same Wi-Fi to copy a report for a bug report. Addresses and URL paths are masked; the page closes after ten minutes.',
  'Uninstall':'Removes the apps, the boot scripts and your settings, then restarts the TV so LG\u2019s Home comes back.',
@@ -125,6 +140,9 @@ function draw(){
   var h='';rows.forEach(function(r,i){h+=r.sep?'<div class="sep"></div>':'<div class="row'+(i===idx?' f':'')+(r.dim?' dim':'')+'" data-i="'+i+'"><span class="lb"></span>'+(r.sub?'<span class="st"></span>':'')+'</div>'});
   $('list').innerHTML=h;var el=$('list').children;rows.forEach(function(r,i){if(r.sep)return;el[i].querySelector('.lb').textContent=r.label;if(r.sub)el[i].querySelector('.st').textContent=r.sub});
   var inf=infoFor(rows[idx]),ie=$('info');ie.textContent='';
+  $('sub').style.wordBreak='';
+  if(view==='notifyhow'){$('sub').textContent=kText;$('sub').style.whiteSpace='pre-line';$('sub').style.wordBreak='break-all';return}
+  if(view==='notifyapi'){$('sub').textContent='Network notifications';return}
   if(view==='keys'){$('sub').textContent=kText;$('sub').style.whiteSpace='pre-line';return}
   if(inf){var b=document.createElement('b');b.textContent=inf.t;ie.appendChild(b);ie.appendChild(document.createTextNode(inf.d))}
   if(view==='inputkey'){$('sub').textContent='Input key';return}
