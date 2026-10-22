@@ -8,7 +8,7 @@ A clean home screen for rooted LG webOS TVs, with an optional debloat of LG's ad
 - **Picture notifications:** shows a card with a photo on top of any app, triggered from your network.
 - **Input key:** the remote's Input button opens a fast Inputs list over the running app instead of LG's picker.
 - **Manager app:** installs and updates the launcher and the service from GitHub releases (checked by SHA-256, with
-  rollback), switches the options and restores LG's Home.
+  rollback), switches the options and switches between LG's Home and ours.
 - **Debloat:** stops LG's ad and telemetry services and blocks a few ad servers.
 
 Everything runs from RAM at boot. Nothing under `/usr`, `/etc` or the firmware is modified, and a reboot without
@@ -86,8 +86,8 @@ new package and restarts the service; if the new service does not come up, the p
 manager can also go back to the previous launcher version. Settings and usage history are kept. Running the install script again on a set-up TV also updates the service.
 
 **Uninstall:** **Uninstall** in the manager app, or `sh /media/developer/cleanyourtv/uninstall.sh` (`--keep-config`
-keeps settings and usage history). It restores LG's Home, removes the apps and the boot scripts, and removes our
-Input-key bind. The hook stays loaded in LG's input process until the next reboot and does nothing without a bind.
+keeps settings and usage history). It removes the apps, the boot scripts and our Input-key bind, then **restarts the
+TV**, which brings LG's Home back. (The hook disappears with the restart.)
 
 ## The manager app
 
@@ -101,7 +101,7 @@ Input-key bind. The hook stays loaded in LG's input process until the next reboo
 | Debloat | Turns the debloat on or off (boot script and running state). |
 | Input key | Turns the Input-key takeover on or off. |
 | Open the launcher | Opens Home. |
-| Restore LG's Home | LG's Home until the next reboot. |
+| CleanYourTV as Home | Switch: choose LG's Home or ours. Either way the TV restarts (asks first). |
 | Uninstall | Removes everything (asks first). |
 
 ## Using the launcher
@@ -179,7 +179,12 @@ The remote's Input button opens an Inputs list over whatever is playing, instead
   once, hidden, and every press only wakes it (about 0.1 s). The picker redraws from the last known inputs and then
   refreshes them. The service restarts the picker if the system closes it, and re-injects the hook if LG's input
   process restarts.
-- **Use:** Up/Down, OK to switch, Back or Input again to close. The last row opens the launcher.
+- **Layout:** the dock apps in a row on top, the inputs in a row below (equal weight). Each input shows the port
+  ("HDMI 2") and what is connected to it (the device's own name, "Connected" or "Nothing connected"); the active input
+  has a green dot. The last chip is **Live TV**, which opens the launcher's Live TV player directly.
+- **Use:** it opens on the active input. Left/Right move in a row, Up/Down switch rows, OK opens, Back or Input again
+  closes it. The magic remote's pointer works too.
+- **Instant open:** the page is built while hidden and keeps its icons and colours, so an open only turns it on.
 - **After a reboot** LG's picker shows until the service is up, a few seconds after the boot scripts run.
 - **Off:** the *Input key* switch in the manager app removes our bind; LG's picker is back at once. The hook only
   reacts to bound buttons. Other binds in `/home/root/.config/lginputhook/keybinds.json` are left alone.
@@ -221,21 +226,27 @@ About a minute after every boot, the debloat:
   `# cleanyourtv-debloat`. Existing entries, such as update blocking, are untouched.
 
 Nothing is uninstalled. `debloat-undo.sh` or a reboot without the boot script reverts it. It runs only while the
-launcher replaces Home, because LG's own Home does not start with those services blocked; *Restore LG Home* lifts it
+launcher replaces Home, because LG's own Home does not start with those services blocked; switching to LG's Home lifts it
 first. Turn it off with the *Debloat* switch in the manager app (it stops being applied at once and at every boot), or with
 `touch /media/developer/cleanyourtv/DISABLE-DEBLOAT` and a reboot.
 
 ## Back to LG's Home
 
+LG's Home does not come back reliably while the system is running, so every switch restarts the TV (about a minute).
+
 | Situation | Action |
 |---|---|
-| From the launcher | Select **Restore LG Home**, the last tile in the grid (about 15 s, until the next reboot). |
-| Over SSH, until the next reboot | `sh /media/developer/cleanyourtv/undo-home.sh temp` |
-| Over SSH, permanently | `sh /media/developer/cleanyourtv/undo-home.sh`; delete the `DISABLE` file to switch back on. |
-| Remove everything | `sh /media/developer/cleanyourtv/uninstall.sh` |
+| From the launcher | Select **LG Home**, the last tile in the grid. The TV restarts with LG's Home. |
+| From the manager app | Open **CleanYourTV**, set **CleanYourTV as Home** to off. |
+| Switch back to the launcher | Open **CleanYourTV** (from LG's app list), set **CleanYourTV as Home** to on. |
+| Over SSH | `touch /media/developer/cleanyourtv/DISABLE; reboot` for LG's Home; `rm /media/developer/cleanyourtv/DISABLE; reboot` for ours. |
+| Remove everything | **Uninstall** in the manager app, or `sh /media/developer/cleanyourtv/uninstall.sh` (restarts the TV). |
 | Boot crashed | The Homebrew Channel's failsafe mode skips all boot scripts; reboot again. |
 
-If the service stops responding for about a minute, a watchdog restores LG's Home until the next reboot.
+While LG's Home is selected, the service keeps running: the manager app and the Input-key picker still work, and
+the debloat is not applied (LG's Home needs the services it stops). If the service stops responding for about a
+minute while the launcher is Home, a watchdog restores LG's Home live (`undo-home.sh temp`, until the next reboot);
+if the screen stays black after that, restart the TV.
 
 ## Service API
 
@@ -247,7 +258,7 @@ The service runs as root on `127.0.0.1:8765` (JSON). The launcher and the manage
 | `POST /api/launch` `{id, params}` | Launch an app |
 | `GET /api/inputs` | HDMI inputs and their state |
 | `POST /api/config` | Save dock, top buttons, hidden apps, sort, clock (other settings are kept) |
-| `POST /api/undo` | Restore LG's Home until the next reboot |
+| `POST /api/undo` | Select LG's Home and restart the TV |
 | `GET /api/live/status`, `/api/live/channels`, `/api/live/epg` | Live TV data |
 | `POST /api/live/settings`, `/api/live/pair`, `/api/live/refresh`, `/api/live/reset` | Live TV setup |
 | `POST /api/notify` | Picture notification |
@@ -256,7 +267,8 @@ The service runs as root on `127.0.0.1:8765` (JSON). The launcher and the manage
 | `POST /api/manager/update-frontend`, `update-service` `{version}` | Install the latest release's launcher or package |
 | `POST /api/manager/rollback-frontend` | Back to the previous launcher |
 | `POST /api/manager/options` `{debloat, inputKey}` | Switch options |
-| `POST /api/manager/restore`, `uninstall` | Restore LG's Home until reboot; remove everything |
+| `POST /api/manager/home` `{enabled}` | Select the launcher (`true`) or LG's Home (`false`) as Home and restart the TV |
+| `POST /api/manager/uninstall` | Remove everything and restart the TV |
 
 `config.json` may hold `releasesUrl`, the address of a release description in GitHub's `releases/latest` format, to
 update from somewhere other than GitHub.
@@ -289,8 +301,8 @@ version is `VERSION` in `helper/helper.js`; the launcher version is `app/version
 
 ## Troubleshooting
 
-- **Black screen after installing or rebooting:** wait a minute and press Home. If it stays black, run
-  `sh /media/developer/cleanyourtv/undo-home.sh temp` over SSH.
+- **Black screen after installing, switching or rebooting:** wait a minute. If it stays black, restart the TV (power off
+  at the wall for ten seconds, or `reboot` over SSH). Live restores (`undo-home.sh temp`) can leave the screen black.
 - **An app is missing from the grid:** check it is not under `hidden` in Customise. Apps without a launch icon are not
   listed.
 - **After a firmware update that removes root:** re-root the TV, then run the install script again and the setup in the manager app.

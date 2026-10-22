@@ -107,6 +107,7 @@ if [ ! -f $D/app/index.html ] || newer $S/payload/app/version.json $D/app/versio
   rm -rf $D/app.prev; [ -d $D/app ] && mv $D/app $D/app.prev
   mkdir -p $D/app && cp $S/payload/app/* $D/app/
   say "launcher $(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' $D/app/version.json) in place"
+  FRONTEND_NEW=1
 fi
 
 # ---- options (stored in config.json, changed later in the manager) ----
@@ -123,7 +124,7 @@ json.dump(c, open(p, 'w'), indent=2)
 PY
 opt() { python3 -c "import json;print(1 if json.load(open('$D/config.json'))['options']['$1'] else 0)"; }
 [ -n "$CYTV_REPO" ] && echo "$CYTV_REPO ${CYTV_REF:-main}" > $D/source
-rm -f $D/DISABLE $D/DISABLE-DEBLOAT
+[ "$MODE" = install ] && rm -f $D/DISABLE $D/DISABLE-DEBLOAT   # setting up selects our Home; an update keeps the choice
 
 # ---- boot scripts ----
 ln -sf $D/10-cleanyourtv-home $INITD/10-cleanyourtv-home
@@ -153,6 +154,12 @@ if [ "$MODE" = update ]; then
   fi
   say "service $WANT is running"
   ensure_apps
+  # the overlay apps and the launcher may have new pages: restart the hidden picker (the service starts it again) and reload Home
+  luna-send -n 1 -w 3000 luna://com.webos.applicationManager/closeByAppId '{"id":"com.cleanyourtv.picker"}' </dev/null >/dev/null 2>&1
+  if [ "$FRONTEND_NEW" = 1 ] && grep -q " $HOME_DIR " /proc/mounts; then
+    pkill -f "[a]pp-id=com.webos.app.home"; sleep 2
+    luna-send -n 1 -w 10000 -f luna://com.webos.applicationManager/launch '{"id":"com.webos.app.home"}' </dev/null >/dev/null
+  fi
   exit 0
 fi
 say "starting (the screen blinks once while the system app manager restarts)"

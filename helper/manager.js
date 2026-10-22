@@ -28,6 +28,18 @@ function fetch(url, file, hops) {
   });
 }
 
+const LASTAPP = '/var/luna/preferences/bootd_last_foreground_app_id.json';
+const restartTv = () => cp.spawn('/bin/sh', ['-c', 'sleep 3; reboot'], { env: ENV, detached: true, stdio: 'ignore' }).unref();
+function fixLastApp() {   // the TV comes back to its last app; that must not be one of ours
+  try { if (fs.readFileSync(LASTAPP, 'utf8').includes('cleanyourtv')) fs.writeFileSync(LASTAPP, '{"lastAppId":"com.webos.app.home"}'); } catch (_) {}
+}
+// Switching between LG's Home and ours needs a restart: LG's Home does not come back reliably while the system is running.
+function setHome(enabled) {
+  if (enabled) { try { fs.unlinkSync(D + '/DISABLE'); } catch (_) {} }
+  else { fs.writeFileSync(D + '/DISABLE', ''); fixLastApp(); }
+  restartTv();
+}
+
 function create(ctx) {
   const { luna, readConf, writeConf, inputhook, VERSION } = ctx;
   let job = { state: 'idle', message: '', at: 0 }, release = null, releaseAt = 0, releaseErr = '', frontendOk = null, checking = false;
@@ -69,7 +81,7 @@ function create(ctx) {
       frontend: { version: fe.version || '?', previous: prevInfo() && prevInfo().version || null,
         updateTo: lat && lat.frontend && cmp(lat.frontend, fe.version) > 0 ? lat.frontend : null },
       release: lat ? { version: lat.version, frontend: lat.frontend, service: lat.service, notes: lat.notes } : null, checkedAt: releaseAt, checking, checkError: releaseErr,
-      options: options(), home: { ours: (() => { try { return fs.readFileSync('/proc/mounts', 'utf8').includes(' /usr/palm/applications/com.webos.app.home '); } catch (_) { return false; } })() },
+      options: options(), home: { enabled: !fs.existsSync(D + '/DISABLE'), ours: (() => { try { return fs.readFileSync('/proc/mounts', 'utf8').includes(' /usr/palm/applications/com.webos.app.home '); } catch (_) { return false; } })() },
       inputhook: inputhook.status(), job, repo: repoUrl().replace(/^https:\/\/api\.github\.com\/repos\//, '').replace(/\/releases.*$/, ''),
     };
   }
@@ -182,10 +194,8 @@ function create(ctx) {
     const b = await body(req);
     if (act === 'check') { await check(); return json(status()); }
     if (act === 'options') { await setOptions(b); return json(status()); }
-    if (act === 'restore') {   // back to LG's Home until the next reboot (undo-home.sh temp)
-      cp.spawn('/bin/sh', ['-c', 'sleep 1; sh ' + D + '/undo-home.sh temp'], { env: ENV, detached: true, stdio: 'ignore' }).unref();
-      return json({ returnValue: true });
-    }
+    if (act === 'home') { setHome(b.enabled !== false); return json({ returnValue: true }); }
+    if (act === 'restore') { setHome(false); return json({ returnValue: true }); }
     if (act === 'uninstall') {
       cp.spawn('/bin/sh', ['-c', 'sleep 1; sh ' + D + '/uninstall.sh'], { env: ENV, detached: true, stdio: 'ignore' }).unref();
       return json({ returnValue: true });
@@ -201,6 +211,6 @@ function create(ctx) {
     return json({ error: 'unknown action' }, 404);
   }
   const frontendLoaded = v => { frontendOk = v; };
-  return { handle, check, frontendLoaded, status };
+  return { handle, check, frontendLoaded, status, useLgHome: () => setHome(false) };
 }
 module.exports = { create, cmp };

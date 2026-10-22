@@ -2,87 +2,156 @@
 <html><head><meta charset="utf-8"><title>Inputs</title>
 <style>
 *{box-sizing:border-box;margin:0}
-:root{--ink:#f5f6f8;--font:"LG Smart UI","Helvetica Neue",Helvetica,Arial,sans-serif}
+:root{--ink:#f5f6f8;--ink2:rgba(245,246,248,.62);--font:"LG Smart UI","Helvetica Neue",Helvetica,Arial,sans-serif}
 html,body{width:1920px;height:1080px;overflow:hidden;background:transparent;color:var(--ink);font-family:var(--font)}
-#dim{position:absolute;left:0;top:0;width:1920px;height:1080px;background:rgba(5,6,9,.72);opacity:0;transition:opacity .2s linear}
-#panel{position:absolute;left:580px;top:50%;width:760px;display:flex;flex-direction:column;gap:12px;transform:translateY(-50%);opacity:0;transition:opacity .2s linear}
-.on #dim,.on #panel{opacity:1}
-h2{font-size:46px;font-weight:700;letter-spacing:-.02em;margin-bottom:14px}
-.row{display:flex;align-items:center;gap:22px;height:84px;padding:0 34px;border-radius:30px;font-size:30px;font-weight:500;background:rgba(28,30,36,.96);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
-.row svg{width:34px;height:34px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-.row .lb{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.row .st{font-size:22px;opacity:.65}
-.row.dim{opacity:.6}
-.row.f{background:var(--ink);color:#0b0c10;opacity:1}
-#msg{font-size:28px;opacity:.7}
+#dim{position:absolute;left:0;top:0;width:1920px;height:1080px;background:rgba(5,6,9,.78);opacity:0;transition:opacity .12s linear}
+#wrap{position:absolute;left:96px;right:96px;top:0;bottom:0;display:flex;flex-direction:column;justify-content:center;gap:72px;opacity:0;transition:opacity .12s linear}
+.on #dim,.on #wrap{opacity:1}
+.cap{font-size:30px;font-weight:600;color:var(--ink2);margin-bottom:20px;letter-spacing:.01em}
+.row{display:flex;gap:32px}
+#inputs{gap:24px}
+.tile{position:relative;flex:1 1 0;min-width:0;height:180px;border-radius:50px;overflow:hidden;background:#1a1c22;display:flex;align-items:center;justify-content:center;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);transform:scale(.96);transition:transform .15s ease-out}
+.tile img{max-width:58%;max-height:58%;object-fit:contain}
+.tile.f{transform:translateY(-10px) scale(1.06);box-shadow:0 0 0 5px var(--ink),0 26px 44px rgba(0,0,0,.5)}
+.chip{position:relative;flex:1 1 auto;min-width:max(200px,fit-content);max-width:340px;height:180px;padding:0 32px;border-radius:50px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:rgba(245,246,248,.92);color:#0b0c10;
+  transform:scale(.96);transition:transform .15s ease-out}
+.chip svg{width:48px;height:48px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.chip .tx{display:flex;flex-direction:column;align-items:center;gap:2px;max-width:100%}
+.chip .lb{font-size:36px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.chip .st{font-size:25px;font-weight:500;opacity:.7;white-space:nowrap}
+.chip.dim{opacity:.7}
+.chip.act::after{content:"";position:absolute;right:26px;top:24px;width:16px;height:16px;border-radius:8px;background:#1fbf5a;box-shadow:0 0 0 3px rgba(11,12,16,.9)}
+.chip.f{opacity:1;background:#fff;transform:translateY(-10px) scale(1.08);box-shadow:inset 0 0 0 5px #0b0c10,0 0 0 6px #fff,0 26px 44px rgba(0,0,0,.5)}
+#inputs{justify-content:center}
+#msg{margin-top:28px;text-align:center;font-size:28px;font-weight:500;color:var(--ink);opacity:.85}
+#msg:empty{display:none}
 </style></head><body>
-<div id="dim"></div><div id="panel"><h2 id="h"></h2><div id="list"></div><div id="msg"></div></div>
+<div id="dim"></div>
+<div id="wrap">
+  <div id="appsBox"><div class="cap" id="capA"></div><div class="row" id="apps"></div></div>
+  <div><div class="cap" id="capI"></div><div class="row" id="inputs"></div><div id="msg"></div></div>
+</div>
 <script>
-/* Inputs picker shown over whatever is playing, opened by the Input key (see the inputhook bind).
-   The app stays running: starting a web app takes ~8 s before it gets the remote, so the manager starts it once
-   ({"prewarm":true}) and it hides itself. Every later launch only fires webOSRelaunch and takes ~0.1 s. */
-var API='http://127.0.0.1:8765', rows=[], idx=0, moved=false, shown=false, shownAt=0, KEY='cytv.picker.rows';
-var HDMI='<svg viewBox="0 0 24 24"><path d="M4 8h16v7l-3 3H7l-3-3z"/><path d="M9 11v3M12 11v3M15 11v3"/></svg>';
-var HOME='<svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7"/><path d="M6 10v9h12v-9"/></svg>';
-var TX={nl:{Inputs:'Ingangen',Connected:'Verbonden',Active:'Actief',Home:'Home',nohelper:'De launcher-service draait niet'},
-  de:{Inputs:'Eing\u00E4nge',Connected:'Verbunden',Active:'Aktiv',Home:'Startseite',nohelper:'Der Launcher-Dienst l\u00E4uft nicht'},
-  fr:{Inputs:'Entr\u00E9es',Connected:'Connect\u00E9',Active:'Actif',Home:'Accueil',nohelper:'Le service du lanceur ne tourne pas'},
-  es:{Inputs:'Entradas',Connected:'Conectado',Active:'Activo',Home:'Inicio',nohelper:'El servicio del lanzador no est\u00E1 activo'}};
+/* Inputs picker shown over whatever is playing, opened by the Input key (see the inputhook bind): the dock apps above,
+   the inputs (HDMI ports, Live TV) below. The app stays running: starting a web app takes ~8 s before it gets the
+   remote, so the service starts it once ({"prewarm":true}) and it hides itself; every later launch only fires
+   webOSRelaunch. For an instant open the page is built while hidden, the icons are kept as data in localStorage and
+   opening only toggles a class and refreshes in the background. */
+var API='http://127.0.0.1:8765', KEY='cytv.picker.v3';
+var apps=[], inputs=[], row=1, col=[0,0], moved=false, shown=false, shownAt=0, built='';
+var cache={apps:[],inputs:[],icons:{},colors:{}};
+var ICON={
+  hdmi:'<svg viewBox="0 0 24 24"><path d="M4 8h16v7l-3 3H7l-3-3z"/><path d="M9 11v3M12 11v3M15 11v3"/></svg>',
+  tv:'<svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M8 21h8M12 18v3"/></svg>'};
+var TX={
+  nl:{Apps:'Apps',Inputs:'Ingangen',Connected:'Verbonden',Live:'Live TV',LiveSub:'Je afspeellijst',Nothing:'Niets aangesloten',nohelper:'Kan de ingangen niet lezen. Live TV werkt nog.'},
+  de:{Apps:'Apps',Inputs:'Eing\u00E4nge',Connected:'Verbunden',Live:'Live-TV',LiveSub:'Deine Playlist',Nothing:'Nichts angeschlossen',nohelper:'Eing\u00E4nge nicht lesbar. Live-TV funktioniert weiter.'},
+  fr:{Apps:'Apps',Inputs:'Entr\u00E9es',Connected:'Connect\u00E9',Live:'TV en direct',LiveSub:'Votre playlist',Nothing:'Rien de connect\u00E9',nohelper:'Impossible de lire les entr\u00E9es. La TV en direct fonctionne encore.'},
+  es:{Apps:'Apps',Inputs:'Entradas',Connected:'Conectado',Live:'TV en directo',LiveSub:'Tu lista',Nothing:'Nada conectado',nohelper:'No se pueden leer las entradas. La TV en directo sigue funcionando.'}};
+var EN={Apps:'Apps',Inputs:'Inputs',Connected:'Connected',Live:'Live TV',LiveSub:'Your playlist',Nothing:'Nothing connected',nohelper:'Can\u2019t read the inputs. Live TV still works.'};
 var LANG=((window.webOSSystem&&webOSSystem.locale)||navigator.language||'en').slice(0,2);
-function t(k){return (TX[LANG]&&TX[LANG][k])||({nohelper:'The launcher service is not running'}[k])||k}
+function t(k){return (TX[LANG]&&TX[LANG][k])||EN[k]||k}
 function $(i){return document.getElementById(i)}
 function call(uri,p){try{var b=new PalmServiceBridge();b.onservicecallback=function(){};b.call(uri,JSON.stringify(p));return true}catch(e){return false}}
-function launch(id){
-  if(!call('luna://com.webos.applicationManager/launch',{id:id,params:{}})){
-    try{var x=new XMLHttpRequest();x.open('POST',API+'/api/launch');x.send(JSON.stringify({id:id,params:{}}))}catch(e){}}}
-function hide(){shown=false;document.body.classList.remove('on');try{webOSSystem.hide()}catch(e){}}
-function draw(){
-  var h='';
-  rows.forEach(function(r,i){h+='<div class="row'+(i===idx?' f':'')+(r.dim?' dim':'')+'" data-i="'+i+'">'+(r.home?HOME:HDMI)+'<span class="lb"></span>'+(r.sub?'<span class="st"></span>':'')+'</div>'});
-  $('list').innerHTML=h;
-  var el=$('list').children;
-  rows.forEach(function(r,i){el[i].querySelector('.lb').textContent=r.label;if(r.sub)el[i].querySelector('.st').textContent=r.sub})}
-function choose(i){var r=rows[i];if(!r)return;launch(r.id);setTimeout(hide,200)}
-function build(devs){
+function log(m){try{var x=new XMLHttpRequest();x.open('GET',API+'/api/log?m='+encodeURIComponent('picker '+m));x.send()}catch(e){}}
+function launch(id,params){
+  log('launch '+id+' '+JSON.stringify(params||{}));
+  var x=new XMLHttpRequest();x.open('POST',API+'/api/launch');x.timeout=4000;
+  x.onload=function(){log('launch reply '+x.responseText.slice(0,120))};
+  x.onerror=x.ontimeout=function(){log('helper did not answer; trying the system');call('luna://com.webos.applicationManager/launch',{id:id,params:params||{}})};
+  x.send(JSON.stringify({id:id,params:params||{}}))}
+function hide(){log('hide');shown=false;document.body.classList.remove('on');try{webOSSystem.hide()}catch(e){}}
+function cur(){return row===0?apps:inputs}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(cache))}catch(e){}}
+
+/* a tile's background is the colour along its icon's edge, as in the launcher */
+function edge(img){try{var c=document.createElement('canvas');c.width=c.height=16;var g=c.getContext('2d');g.drawImage(img,0,0,16,16);
+  var d=g.getImageData(0,0,16,16).data,r=0,gg=0,b=0,n=0;
+  for(var i=0;i<16;i++)for(var j=0;j<16;j++){if(i&&j&&i<15&&j<15)continue;var k=(i*16+j)*4;if(d[k+3]<200)continue;r+=d[k];gg+=d[k+1];b+=d[k+2];n++}
+  return n>8?'rgb('+Math.round(r/n)+','+Math.round(gg/n)+','+Math.round(b/n)+')':null}catch(e){return null}}
+function keep(img,id){   // remember the icon and its colour so the next open needs no network
+  try{var c=document.createElement('canvas'),w=Math.min(256,img.naturalWidth||256),h=Math.min(256,img.naturalHeight||256);c.width=w;c.height=h;
+    c.getContext('2d').drawImage(img,0,0,w,h);cache.icons[id]=c.toDataURL('image/png')}catch(e){}
+  var col=edge(img);if(col){cache.colors[id]=col;img.parentNode.style.background=col}
+  persist()}
+
+/* build the rows once per change of data; moving the focus only changes classes */
+function render(){
+  $('capA').textContent=t('Apps');$('capI').textContent=t('Inputs');
+  var h='';apps.forEach(function(a,i){h+='<div class="tile" data-r="0" data-i="'+i+'"'+(cache.colors[a.id]?' style="background:'+cache.colors[a.id]+'"':'')+'><img alt=""></div>'});
+  $('apps').innerHTML=h;
+  var imgs=$('apps').querySelectorAll('img');
+  apps.forEach(function(a,i){var im=imgs[i],data=cache.icons[a.id];im.crossOrigin='anonymous';
+    if(data)im.src=data;
+    else{im.onload=function(){keep(im,a.id)};im.src=API+'/icon/'+encodeURIComponent(a.id)}});
+  h='';inputs.forEach(function(r,i){h+='<div class="chip'+(r.dim?' dim':'')+(r.active?' act':'')+'" data-r="1" data-i="'+i+'">'+ICON[r.icon]+'<div class="tx"><span class="lb"></span><span class="st"></span></div></div>'});
+  $('inputs').innerHTML=h;
+  var el=$('inputs').children;inputs.forEach(function(r,i){el[i].querySelector('.lb').textContent=r.label;el[i].querySelector('.st').textContent=r.sub||''});
+  $('appsBox').style.display=apps.length?'':'none'}
+function paint(){
+  var a=$('apps').children,c=$('inputs').children,i;
+  for(i=0;i<a.length;i++)a[i].className='tile'+(row===0&&col[0]===i?' f':'');
+  for(i=0;i<c.length;i++)c[i].className='chip'+(inputs[i].dim?' dim':'')+(inputs[i].active?' act':'')+(row===1&&col[1]===i?' f':'')}
+function choose(){log('choose row '+row+' col '+col[row]);var r=cur()[col[row]];if(!r)return;if(row===0)launch(r.id);else launch(r.id,r.params);setTimeout(hide,200)}
+
+function buildInputs(devs){
   var r=(devs||[]).filter(function(v){return v.appId}).map(function(v){
-    var port='HDMI '+v.port,named=v.label&&v.label!==port,parts=[];
-    if(named)parts.push(port);if(v.hdmiPlugIn)parts.push(t('Connected'));if(v.activate)parts.push(t('Active'));
-    return {id:v.appId,label:v.label||port,sub:parts.join(' \u00B7 '),dim:!v.hdmiPlugIn,active:!!v.activate}});
-  r.push({id:'com.webos.app.home',label:t('Home'),home:true});
+    var port='HDMI '+v.port,named=v.label&&v.label!==port;
+    // second line: what is connected (the device's own name), or that nothing is
+    var what=!v.hdmiPlugIn?t('Nothing'):(named?v.label:t('Connected'));
+    return {id:v.appId,icon:'hdmi',label:port,sub:what,dim:!v.hdmiPlugIn,active:!!v.activate}});
+  r.push({id:'com.webos.app.home',params:{live:true},icon:'tv',label:t('Live'),sub:t('LiveSub')});
   return r}
-function setRows(r,keepIdx){
-  rows=r;if(!keepIdx){idx=0;for(var i=0;i<rows.length;i++)if(rows[i].active){idx=i;break}}
-  if(idx>=rows.length)idx=0;draw()}
+function setData(d,fresh){
+  apps=d.apps;inputs=d.inputs;
+  var sig=JSON.stringify([apps,inputs]);
+  if(sig!==built){built=sig;render()}
+  if(fresh){row=1;col=[0,0];for(var i=0;i<inputs.length;i++)if(inputs[i].active){col[1]=i;break}}
+  col[0]=Math.min(col[0],Math.max(0,apps.length-1));col[1]=Math.min(col[1],inputs.length-1);
+  if(row===0&&!apps.length)row=1;
+  paint()}
+function get(path,cb,fail){var x=new XMLHttpRequest();x.open('GET',API+path);x.timeout=4000;
+  x.onload=function(){try{cb(JSON.parse(x.responseText))}catch(e){fail&&fail()}};x.onerror=x.ontimeout=function(){fail&&fail()};x.send()}
 function refresh(){
-  var x=new XMLHttpRequest();x.open('GET',API+'/api/inputs');x.timeout=4000;
-  x.onload=function(){var d=[];try{d=JSON.parse(x.responseText).devices||[]}catch(e){}
-    var r=build(d);try{localStorage.setItem(KEY,JSON.stringify(r))}catch(e){}
-    $('msg').textContent='';if(shown)setRows(r,moved)};
-  x.onerror=x.ontimeout=function(){if(shown&&rows.length<2)$('msg').textContent=t('nohelper')};
-  x.send()}
+  var got={apps:null,inputs:null};
+  function done(){if(!got.apps||!got.inputs)return;cache.apps=got.apps;cache.inputs=got.inputs;persist();$('msg').textContent='';setData(cache,false)}
+  get('/api/apps',function(x){var by={};(x.apps||[]).forEach(function(a){by[a.id]=a});
+    got.apps=((x.config&&x.config.dock)||[]).filter(function(id){return by[id]}).map(function(id){return {id:id,title:by[id].title}});done()},function(){});
+  get('/api/inputs',function(x){got.inputs=buildInputs(x.devices);done()},function(){if(shown&&inputs.length<=1)$('msg').textContent=t('nohelper')})}
+function load(){   // the last known layout, ready before the first open
+  try{var c=JSON.parse(localStorage.getItem(KEY)||'null');if(c&&c.inputs&&c.inputs.length){cache=c;cache.icons=cache.icons||{};cache.colors=cache.colors||{}}}catch(e){}
+  setData(cache.inputs.length?cache:{apps:[],inputs:buildInputs([])},true)}
 function show(){
-  $('h').textContent=t('Inputs');
-  var c=null;try{c=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){}
-  setRows(c&&c.length?c:[{id:'com.webos.app.home',label:t('Home'),home:true}]);
-  shown=true;moved=false;shownAt=Date.now();
-  requestAnimationFrame(function(){requestAnimationFrame(function(){if(shown)document.body.classList.add('on')})});
+  shown=true;moved=false;shownAt=Date.now();log('show');
+  setData({apps:apps,inputs:inputs},true);   // focus back on the active input
+  document.body.classList.add('on');
+  requestAnimationFrame(function(){log('painted')});
   refresh()}
 function params(){var p={};try{p=JSON.parse(webOSSystem.launchParams||'{}')}catch(e){}return p||{}}
+function move(dr,dc){
+  moved=true;
+  if(dr){var nr=row+dr;if(nr<0||nr>1||!(nr===0?apps:inputs).length)return;
+    var from=cur(),to=nr===0?apps:inputs;col[nr]=Math.min(to.length-1,Math.round(col[row]*(to.length-1)/Math.max(1,from.length-1)));row=nr}
+  if(dc){var n=cur().length;col[row]=(col[row]+dc+n)%n}
+  paint()}
 document.addEventListener('keydown',function(e){
   if(!shown)return;
   var k=e.keyCode;
-  if(k===38){moved=true;idx=(idx+rows.length-1)%rows.length;draw()}
-  else if(k===40){moved=true;idx=(idx+1)%rows.length;draw()}
-  else if(k===13){choose(idx)}
-  else if(k===461||k===27||k===8||k===10009){hide()}
+  if(k===37)move(0,-1);else if(k===39)move(0,1);else if(k===38)move(-1,0);else if(k===40)move(1,0);
+  else if(k===13)choose();
+  else if(k===461||k===27||k===8||k===10009)hide();
   e.preventDefault()});
-document.addEventListener('click',function(e){if(!shown)return;var r=e.target.closest&&e.target.closest('.row');if(r)choose(+r.getAttribute('data-i'));else hide()});
-document.addEventListener('mousemove',function(e){var r=e.target.closest&&e.target.closest('.row');if(r&&+r.getAttribute('data-i')!==idx){moved=true;idx=+r.getAttribute('data-i');draw()}});
+document.addEventListener('click',function(e){if(!shown)return;var r=e.target.closest&&e.target.closest('[data-r]');if(r){row=+r.getAttribute('data-r');col[row]=+r.getAttribute('data-i');paint();choose()}else hide()});
+document.addEventListener('mousemove',function(e){var r=e.target.closest&&e.target.closest('[data-r]');if(!r)return;var a=+r.getAttribute('data-r'),i=+r.getAttribute('data-i');if(a!==row||i!==col[row]){moved=true;row=a;col[row]=i;paint()}});
 document.addEventListener('webOSRelaunch',function(){
+  log('relaunch shown='+shown);
   if(params().prewarm)return;
   if(shown){if(Date.now()-shownAt>700)hide()}   // Input pressed again closes it
   else show()});
+load();
 if(params().prewarm){
+  refresh();   // built and filled while hidden
   var done=false,go=function(){if(done)return;done=true;setTimeout(hide,150)};
   window.addEventListener('focus',go);setTimeout(go,12000);
 }else show();

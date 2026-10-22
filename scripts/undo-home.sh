@@ -2,6 +2,12 @@
 # Restore LG's stock Home. "temp": until next reboot only; no arg: also create DISABLE so reboots keep stock Home.
 export PATH=/usr/bin:/usr/sbin:/bin:/sbin:$PATH
 [ "$1" = temp ] || touch /media/developer/cleanyourtv/DISABLE /media/developer/cleanyourtv/DISABLE-DEBLOAT
+# our apps must not be what the TV tries to come back to: close them and point the boot's "last app" at LG's Home
+for id in com.cleanyourtv.manager com.cleanyourtv.picker com.cleanyourtv.notify; do
+  luna-send -n 1 -w 3000 luna://com.webos.applicationManager/closeByAppId "{\"id\":\"$id\"}" </dev/null >/dev/null 2>&1
+done
+LASTAPP=/var/luna/preferences/bootd_last_foreground_app_id.json
+grep -q cleanyourtv $LASTAPP 2>/dev/null && echo '{"lastAppId":"com.webos.app.home"}' > $LASTAPP
 # LG's own Home needs the ad services the debloat blocks (it fails to start without them), so lift the debloat first
 [ -f /media/developer/cleanyourtv/debloat-undo.sh ] && sh /media/developer/cleanyourtv/debloat-undo.sh </dev/null >/dev/null 2>&1
 for m in $(awk '$2 ~ /applications\/com.webos.app.home$/ {print $2}' /proc/mounts | sort -r); do umount $m 2>/dev/null; done

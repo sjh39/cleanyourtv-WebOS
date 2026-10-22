@@ -1,7 +1,7 @@
 // Root service of CleanYourTV: bridges the launcher web app to luna, serves app icons, runs Live TV and picture
 // notifications, keeps the Input-key picker alive and hosts the manager API. Listens on 127.0.0.1 only.
 const http = require('http'), fs = require('fs'), path = require('path'), cp = require('child_process');
-const VERSION = '1.4.2';
+const VERSION = '1.4.4';
 const PORT = 8765, DIR = '/media/developer/cleanyourtv', CONF = DIR + '/config.json', USAGE = DIR + '/usage.json';
 const ENV = Object.assign({}, process.env, { PATH: '/usr/bin:/usr/sbin:/bin:/sbin:' + (process.env.PATH || '') });
 
@@ -85,6 +85,7 @@ http.createServer(async (req, res) => {
   try {
     if (notify && u.startsWith('/api/notify')) return notify.handle(req, res, u, body);
     if (live && u.startsWith('/api/live/')) return live.handle(req, res, u, body);
+    if (u === '/api/log') { console.log(fs.readFileSync('/proc/uptime', 'utf8').split(' ')[0] + ' ' + decodeURIComponent((req.url.split('m=')[1] || '')).slice(0, 300)); return json({}); }   // small diagnostics from the overlay apps
     if (manager && u.startsWith('/api/manager/')) return manager.handle(req, res, u, body);
     if (u === '/api/frontend-ok' && req.method === 'POST') { const b = await body(req); if (manager) manager.frontendLoaded(String(b.version || '')); return json({ returnValue: true }); }
     if (u === '/api/version') return json({ version: VERSION });
@@ -112,9 +113,8 @@ http.createServer(async (req, res) => {
       writeConf(out);
       return json({ returnValue: true });
     }
-    if (u === '/api/undo' && req.method === 'POST') {
-      cp.spawn('/bin/sh', ['-c', 'sleep 1; sh /media/developer/cleanyourtv/undo-home.sh temp'], { env: ENV, detached: true, stdio: 'ignore' }).unref();
-      return json({ returnValue: true });
+    if (u === '/api/undo' && req.method === 'POST') {   // LG's Home, kept until switched back on in the manager; restarts the TV
+      if (manager) manager.useLgHome(); return json({ returnValue: true });
     }
     const m = u.match(/^\/icon\/([\w.\-]+)$/);
     if (m) {
