@@ -1,7 +1,7 @@
-// Root helper for cleanyourtv launcher: bridges the launcher web app to luna and serves app icons.
-// Listens on 127.0.0.1 only.
+// Root service of CleanYourTV: bridges the launcher web app to luna, serves app icons, runs Live TV and picture
+// notifications, keeps the Input-key picker alive and hosts the manager API. Listens on 127.0.0.1 only.
 const http = require('http'), fs = require('fs'), path = require('path'), cp = require('child_process');
-const VERSION = '1.3.2';
+const VERSION = '1.4.0';
 const PORT = 8765, DIR = '/media/developer/cleanyourtv', CONF = DIR + '/config.json', USAGE = DIR + '/usage.json';
 const ENV = Object.assign({}, process.env, { PATH: '/usr/bin:/usr/sbin:/bin:/sbin:' + (process.env.PATH || '') });
 
@@ -15,6 +15,7 @@ function luna(uri, payload) {
   });
 }
 const readConf = () => { try { return JSON.parse(fs.readFileSync(CONF, 'utf8')); } catch (_) { return {}; } };
+const writeConf = c => { fs.writeFileSync(CONF + '.tmp', JSON.stringify(c, null, 2)); fs.renameSync(CONF + '.tmp', CONF); };
 let appCache = null, appCacheAt = 0;
 async function apps() {
   if (appCache && Date.now() - appCacheAt < 5000) return appCache;
@@ -68,6 +69,11 @@ let notify = null;
 try { notify = require('./notify'); } catch (e) { console.error('notify module failed:', e.message); }
 let live = null;
 try { live = require('./live'); } catch (e) { console.error('live module failed:', e.message); }
+let inputhook = { ensure() {}, status() { return {}; } };
+try { inputhook = require('./inputhook'); } catch (e) { console.error('inputhook module failed:', e.message); }
+const options = () => Object.assign({ debloat: true, inputKey: true }, readConf().options || {});
+let manager = null;
+try { manager = require('./manager').create({ luna, readConf, writeConf, inputhook, VERSION }); } catch (e) { console.error('manager module failed:', e.message); }
 const body = req => new Promise(r => { let b = ''; req.on('data', c => b += c); req.on('end', () => { try { r(JSON.parse(b || '{}')); } catch (_) { r({}); } }); });
 
 http.createServer(async (req, res) => {
@@ -79,6 +85,8 @@ http.createServer(async (req, res) => {
   try {
     if (notify && u.startsWith('/api/notify')) return notify.handle(req, res, u, body);
     if (live && u.startsWith('/api/live/')) return live.handle(req, res, u, body);
+    if (manager && u.startsWith('/api/manager/')) return manager.handle(req, res, u, body);
+    if (u === '/api/frontend-ok' && req.method === 'POST') { const b = await body(req); if (manager) manager.frontendLoaded(String(b.version || '')); return json({ returnValue: true }); }
     if (u === '/api/version') return json({ version: VERSION });
     if (u === '/api/apps') return json({ apps: await apps(), config: readConf(), usage: usageScores(), version: VERSION });
     if (u === '/api/inputs') return json(await luna('luna://com.webos.service.eim/getAllInputStatus', {}));
@@ -99,7 +107,9 @@ http.createServer(async (req, res) => {
         const t = { label: o.label.slice(0, 40), icon: String(o.icon || 'grid').slice(0, 20) };
         if (typeof o.action === 'string') t.action = o.action; if (typeof o.app === 'string') t.app = o.app;
         if (o.params && typeof o.params === 'object') t.params = o.params; return t; });
-      fs.writeFileSync(CONF + '.tmp', JSON.stringify(out, null, 2)); fs.renameSync(CONF + '.tmp', CONF);
+      const old = readConf();   // settings the launcher does not own (options, updates source) stay as they are
+      for (const k of Object.keys(old)) if (!(k in out) && !['dock', 'hidden', 'sort', 'clock', 'topbar'].includes(k)) out[k] = old[k];
+      writeConf(out);
       return json({ returnValue: true });
     }
     if (u === '/api/undo' && req.method === 'POST') {
@@ -116,4 +126,11 @@ http.createServer(async (req, res) => {
     }
     res.writeHead(404); res.end();
   } catch (e) { json({ error: String(e) }, 500); }
-}).listen(PORT, '127.0.0.1', () => setInterval(pollForeground, 4000));
+}).listen(PORT, '127.0.0.1', () => {
+  setInterval(pollForeground, 4000);
+  // Input key: bind it and keep the hook in LG's input processes (they restart now and then)
+  setTimeout(() => inputhook.ensure(options().inputKey), 500);
+  setInterval(() => inputhook.ensure(options().inputKey), 30000);
+  try { require('./picker').start(luna, () => options().inputKey); } catch (e) { console.error('picker module failed:', e.message); }
+  if (manager) setTimeout(() => manager.check(), 60000);
+});

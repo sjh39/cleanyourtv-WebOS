@@ -6,6 +6,9 @@ A clean home screen for rooted LG webOS TVs, with an optional debloat of LG's ad
   glow taken from its icon, an app grid, an Inputs picker, a Settings shortcut and a clock.
 - **Live TV:** plays your own M3U playlist, with channel list, programme guide and number entry.
 - **Picture notifications:** shows a card with a photo on top of any app, triggered from your network.
+- **Input key:** the remote's Input button opens a fast Inputs list over the running app instead of LG's picker.
+- **Manager app:** installs and updates the launcher and the service from GitHub releases (checked by SHA-256, with
+  rollback), switches the options and restores LG's Home.
 - **Debloat:** stops LG's ad and telemetry services and blocks a few ad servers.
 
 Everything runs from RAM at boot. Nothing under `/usr`, `/etc` or the firmware is modified, and a reboot without
@@ -25,18 +28,27 @@ untested.
 <td><img src="docs/screenshots/customise.jpg" alt="Customise menu" width="440"></td>
 <td><img src="docs/screenshots/inputs.jpg" alt="Inputs picker" width="440"></td>
 </tr>
+<tr>
+<td><img src="docs/screenshots/picker.jpg" alt="Inputs picker opened with the Input key, over the running app" width="440"></td>
+<td><img src="docs/screenshots/manager.jpg" alt="Manager app" width="440"></td>
+</tr>
 </table>
 
 ## Requirements
 
 - An LG webOS TV that is already rooted with the [Homebrew Channel](https://webosbrew.org) ([rootmy.tv](https://rootmy.tv)).
-- SSH access as `root` (`ssh root@<tv-ip>`).
-- Internet access on the TV (the installer downloads this repository) and the tools webOS ships: `curl`, `tar`,
-  `python3`, `node`.
+- SSH access as `root` (`ssh root@<tv-ip>`) for the installer. The manager app can also set itself up without SSH.
+- Internet access on the TV and the tools webOS ships: `curl`, `tar`, `python3`, `node`.
 
 ## Install
 
-Run from your computer, with your TV's IP address. The installer asks what to install:
+CleanYourTV is one package, `com.cleanyourtv.manager_<version>_all.ipk`, from the
+[Releases](https://github.com/lasharor/cleanyourtv-WebOS/releases) page. It contains the manager app, the Inputs
+picker and notification overlay apps, the service, the launcher and the bundled inputhook (see
+[`THIRD-PARTY.md`](THIRD-PARTY.md)).
+
+**With the installer** (downloads the latest package, checks its SHA-256, installs it and sets everything up). Run
+from your computer, with your TV's IP address; it asks what to set up:
 
 ```sh
 ssh -t root@192.168.1.50 'sh -c "$(curl -fsSL https://raw.githubusercontent.com/lasharor/cleanyourtv-WebOS/main/install.sh)"'
@@ -45,41 +57,64 @@ ssh -t root@192.168.1.50 'sh -c "$(curl -fsSL https://raw.githubusercontent.com/
 | Question | Default |
 |---|---|
 | Debloat LG's ads and telemetry | yes |
-| Install the picture-notification overlay | yes |
+| Take over the Input key | yes |
 | Start now (the screen blinks once) or at the next reboot | now |
 
-The launcher with Live TV is always installed. Without a terminal (no `-t`) the installer asks nothing and uses
-the defaults:
+Without a terminal (no `-t`) it asks nothing and uses the defaults:
 
 ```sh
 ssh root@192.168.1.50 'curl -fsSL https://raw.githubusercontent.com/lasharor/cleanyourtv-WebOS/main/install.sh | sh'
 ```
 
-Options (each also skips its question; pass them after `sh -s --` when piping):
-
 | Option | Effect |
 |---|---|
 | `-y`, `--yes` | Ask nothing, use the defaults. |
 | `--no-debloat` | Do not install the debloat. |
-| `--no-notify` | Do not install the picture-notification overlay. |
+| `--no-input-key` | Leave the Input key to LG's picker. |
 | `--no-start` | Install, but only take effect at the next reboot. |
 | `--no-verify` | Skip the post-install check and the automatic rollback. |
 | `--force` | Continue even if LG's Home app looks different from what the installer expects. |
 
-**What the installer does**
+**Without SSH:** install the `.ipk` with the Homebrew Channel's tools (or `ares-install`), open **CleanYourTV** in
+the app list and choose **Set up now**. It runs the same setup as the installer through the Homebrew Channel's root
+service.
+
+**What the setup does**
 
 1. Checks for root and a rooted webOS TV, prints the model and firmware, and saves the original state (stock Home
    `appinfo.json`, `/etc/hosts`, process and service lists) in `/media/developer/cleanyourtv/backup`.
-2. Copies the launcher, a root helper and the scripts to `/media/developer/cleanyourtv`.
-3. Adds boot scripts to `/var/lib/webosbrew/init.d/`: `10-cleanyourtv-home` starts the helper and mounts the
+2. Copies the service files, the launcher and the inputhook to `/media/developer/cleanyourtv`.
+3. Adds boot scripts to `/var/lib/webosbrew/init.d/`: `10-cleanyourtv-home` starts the service and mounts the
    launcher over LG's Home; `15-cleanyourtv-debloat` runs the debloat a minute after boot.
-4. Applies everything, then checks that the new Home is registered and the helper answers with the matching
-   version. If that fails within two minutes, it restores LG's Home and removes the boot scripts.
+4. Applies everything, registers the overlay apps (one restart of the system app manager) and checks that the new
+   Home is registered and the service answers with the matching version. If that fails within two minutes, it
+   restores LG's Home and removes the boot scripts.
 
-**Update:** run the install command again, or `sh /media/developer/cleanyourtv/update.sh` on the TV. Settings and
+**Update:** open the **CleanYourTV** app. It checks the latest GitHub release; the launcher and the service update
+separately. A launcher update is downloaded, checked against the release's `.sha256` file, installed and started;
+if the new launcher does not report in within 40 seconds, the previous one is put back. A service update installs the
+new package and restarts the service; if the new service does not come up, the previous files are restored. The
+manager can also go back to the previous launcher version. Running the installer again also updates. Settings and
 usage history are kept.
 
-**Uninstall:** `sh /media/developer/cleanyourtv/uninstall.sh` (`--keep-config` keeps settings and usage history).
+**Uninstall:** **Uninstall** in the manager app, or `sh /media/developer/cleanyourtv/uninstall.sh` (`--keep-config`
+keeps settings and usage history). It restores LG's Home, removes the apps and the boot scripts, and removes our
+Input-key bind. The hook stays loaded in LG's input process until the next reboot and does nothing without a bind.
+
+## The manager app
+
+**CleanYourTV** in the app list:
+
+| Row | What it does |
+|---|---|
+| Launcher, Service | Show the installed version and offer an update when the latest release is newer. |
+| Check for updates | Asks GitHub for the latest release. |
+| Go back to launcher x.y.z | Appears after a launcher update; swaps the previous version back in. |
+| Debloat | Turns the debloat on or off (boot script and running state). |
+| Input key | Turns the Input-key takeover on or off. |
+| Open the launcher | Opens Home. |
+| Restore LG's Home | LG's Home until the next reboot. |
+| Uninstall | Removes everything (asks first). |
 
 ## Using the launcher
 
@@ -101,6 +136,7 @@ order, the clock format and a reset.
   days).
 - **Inputs:** lists each HDMI port with the name of the connected device and whether it is connected or the active
   source.
+  Launching `com.webos.app.home` with the parameter `{"inputs": true}` opens this list directly.
 - **Language and clock:** menus follow the TV's language (English, Dutch, German, French and Spanish are
   translated). The clock uses the 24- or 12-hour format of that language unless you choose one in Customise.
 
@@ -144,9 +180,25 @@ follows.
 - The playlist address is stored only on the TV, in `/media/developer/cleanyourtv/live/`. `curl -X POST
   localhost:8765/api/live/reset` clears it; the uninstaller removes it.
 
+## Input key
+
+The remote's Input button opens an Inputs list over whatever is playing, instead of LG's picker.
+
+- **How:** the bundled inputhook ([`THIRD-PARTY.md`](THIRD-PARTY.md)) is injected into LG's input process
+  (`lginput2`, `micomservice` and a few others) by the service, and binds button 241 (Input) to
+  `inputkey.sh`. That script launches the hidden picker app `com.cleanyourtv.picker`.
+- **Why it is fast:** a web app takes about 8 seconds before it gets the remote, so the service starts the picker
+  once, hidden, and every press only wakes it (about 0.1 s). The picker redraws from the last known inputs and then
+  refreshes them. The service restarts the picker if the system closes it, and re-injects the hook if LG's input
+  process restarts.
+- **Use:** Up/Down, OK to switch, Back or Input again to close. The last row opens the launcher.
+- **After a reboot** LG's picker shows until the service is up, a few seconds after the boot scripts run.
+- **Off:** the *Input key* switch in the manager app removes our bind; LG's picker is back at once. The hook only
+  reacts to bound buttons. Other binds in `/home/root/.config/lginputhook/keybinds.json` are left alone.
+
 ## Picture notifications
 
-LG's toast notifications cannot show pictures on this TV. The optional `com.cleanyourtv.notify` app shows a card
+LG's toast notifications cannot show pictures on this TV. The `com.cleanyourtv.notify` app shows a card
 (picture, title, text) in a transparent window above whatever is on screen. It does not take the remote: the app
 underneath keeps working. Checked over Plex, Prime Video (DRM video) and an HDMI input.
 
@@ -157,11 +209,11 @@ ssh root@192.168.1.50 "curl -s -X POST localhost:8765/api/notify -d '{\"title\":
 | Field | Meaning |
 |---|---|
 | `title`, `text` | Up to 120 and 400 characters; either may be empty. |
-| `image` | `http(s)` address of a picture, up to 6 MB (self-signed certificates are accepted). The helper downloads it first, so the card appears complete. |
+| `image` | `http(s)` address of a picture, up to 6 MB (self-signed certificates are accepted). The service downloads it first, so the card appears complete. |
 | `seconds` | Display time, 2 to 120 (default 8). |
 | `position` | `top`, `middle` or `bottom` plus `left`, `center` or `right`, for example `bottom-center` (default `top-right`). |
 
-The helper listens on the TV only, so other machines send the request over SSH as above. Home Assistant example:
+The service listens on the TV only, so other machines send the request over SSH as above. Home Assistant example:
 
 ```yaml
 shell_command:
@@ -182,7 +234,8 @@ About a minute after every boot, the debloat:
 
 Nothing is uninstalled. `debloat-undo.sh` or a reboot without the boot script reverts it. It runs only while the
 launcher replaces Home, because LG's own Home does not start with those services blocked; *Restore LG Home* lifts it
-first. To turn it off: `touch /media/developer/cleanyourtv/DISABLE-DEBLOAT` and reboot.
+first. Turn it off with the *Debloat* switch in the manager app (it stops being applied at once and at every boot), or with
+`touch /media/developer/cleanyourtv/DISABLE-DEBLOAT` and a reboot.
 
 ## Back to LG's Home
 
@@ -194,22 +247,31 @@ first. To turn it off: `touch /media/developer/cleanyourtv/DISABLE-DEBLOAT` and 
 | Remove everything | `sh /media/developer/cleanyourtv/uninstall.sh` |
 | Boot crashed | The Homebrew Channel's failsafe mode skips all boot scripts; reboot again. |
 
-If the helper stops responding for about a minute, a watchdog restores LG's Home until the next reboot.
+If the service stops responding for about a minute, a watchdog restores LG's Home until the next reboot.
 
-## Helper API
+## Service API
 
-The helper runs as root on `127.0.0.1:8765` (JSON). The launcher uses it; scripts can too.
+The service runs as root on `127.0.0.1:8765` (JSON). The launcher and the manager app use it; scripts can too.
 
 | Endpoint | Purpose |
 |---|---|
 | `GET /api/apps` | Installed apps, config, usage scores, version |
 | `POST /api/launch` `{id, params}` | Launch an app |
 | `GET /api/inputs` | HDMI inputs and their state |
-| `POST /api/config` | Save dock, top buttons, hidden apps, sort, clock |
+| `POST /api/config` | Save dock, top buttons, hidden apps, sort, clock (other settings are kept) |
 | `POST /api/undo` | Restore LG's Home until the next reboot |
 | `GET /api/live/status`, `/api/live/channels`, `/api/live/epg` | Live TV data |
 | `POST /api/live/settings`, `/api/live/pair`, `/api/live/refresh`, `/api/live/reset` | Live TV setup |
 | `POST /api/notify` | Picture notification |
+| `GET /api/manager/status` | Versions, update availability, options, hook state, current job |
+| `POST /api/manager/check` | Look for a newer release |
+| `POST /api/manager/update-frontend`, `update-service` `{version}` | Install the latest release's launcher or package |
+| `POST /api/manager/rollback-frontend` | Back to the previous launcher |
+| `POST /api/manager/options` `{debloat, inputKey}` | Switch options |
+| `POST /api/manager/restore`, `uninstall` | Restore LG's Home until reboot; remove everything |
+
+`config.json` may hold `releasesUrl`, the address of a release description in GitHub's `releases/latest` format, to
+update from somewhere other than GitHub.
 
 ## How it works
 
@@ -217,12 +279,25 @@ The helper runs as root on `127.0.0.1:8765` (JSON). The launcher uses it; script
   `stage-home.sh` builds the mounted folder from the launcher page and an `appinfo.json` derived from the TV's own
   stock one (nothing of LG's is stored in this repository). The system app manager (`sam`) reads app definitions
   only at startup, so it is restarted after the mount.
-- The launcher is a plain web page. The helper (Node) wraps `luna-send` to list apps, serve icons, launch apps and
-  read input status.
+- The launcher is a plain web page. The service (Node, started from `/var/lib/webosbrew/init.d`) wraps `luna-send`
+  to list apps, serve icons, launch apps and read input status, and hosts Live TV, notifications, the Input-key
+  hook, the picker keep-alive and the manager API.
+- The package is installed by the system's package installer. A web app cannot start a root process, so the manager
+  app asks the Homebrew Channel's root service to run `bootstrap.sh` once; from then on the init.d entry starts the
+  service at every boot.
 - Picture notifications use a hidden web app with window type `topui`; `overlay` and `popup` windows take the
-  remote's focus, `topui` and `floating` do not.
-- Layout: `app/` launcher page and icons, `helper/` helper modules, `notify/` notification app, `scripts/` boot,
-  debloat and restore scripts, `install.sh`, `uninstall.sh`.
+  remote's focus, `topui` and `floating` do not. The Inputs picker uses `overlay` for that reason.
+- Layout: `app/` launcher page, `manager/`, `picker/` and `notify/` apps, `helper/` service modules, `scripts/` boot,
+  debloat, restore and bootstrap scripts, `third-party/` bundled inputhook, `ipk/build.py` release build,
+  `install.sh`, `uninstall.sh`.
+
+## Releases
+
+`python3 ipk/build.py` writes four files to `dist/`: `com.cleanyourtv.manager_<version>_all.ipk`, `frontend-<launcher
+version>.tgz` and a `.sha256` file for each. Attach all four to a GitHub release tagged `v<version>`. The manager app
+and the installer read `releases/latest`; they only install a file whose `.sha256` file matches. The service
+version is `VERSION` in `helper/helper.js`; the launcher version is `app/version.json` and `VERSION` in
+`app/index.html` (the build refuses to run if they differ).
 
 ## Troubleshooting
 
@@ -231,9 +306,14 @@ The helper runs as root on `127.0.0.1:8765` (JSON). The launcher uses it; script
 - **An app is missing from the grid:** check it is not under `hidden` in Customise. Apps without a launch icon are not
   listed.
 - **After a firmware update that removes root:** re-root the TV, then run the installer again.
+- **The Input key still opens LG's picker:** wait a few seconds after boot. Check the *Input key* switch in the manager
+  app, and `/tmp/lginput-hook-lginput2.log` on the TV for a `Launching command` line when you press the button.
+- **The package does not install (`FAILED_IPKG_INSTALL`):** an earlier failed install can leave a `half-installed`
+  entry for `com.cleanyourtv.manager` in `/media/developer/apps/var/lib/opkg/status`; remove that entry and install again.
 
 ## Credits and licence
 
 The home-screen design follows [CleanYourTV](https://github.com/Gathin23/cleanyourtv) (Android TV, MIT).
-MIT licence, see `LICENSE`. This modifies a running TV with root access; read `install.sh` and `scripts/` before
+MIT licence, see `LICENSE`. The package bundles the inputhook under its own licences, see
+[`THIRD-PARTY.md`](THIRD-PARTY.md). This modifies a running TV with root access; read `install.sh` and `scripts/` before
 running them, and use it at your own risk.

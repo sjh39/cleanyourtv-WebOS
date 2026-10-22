@@ -1,0 +1,89 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Inputs</title>
+<style>
+*{box-sizing:border-box;margin:0}
+:root{--ink:#f5f6f8;--font:"LG Smart UI","Helvetica Neue",Helvetica,Arial,sans-serif}
+html,body{width:1920px;height:1080px;overflow:hidden;background:transparent;color:var(--ink);font-family:var(--font)}
+#dim{position:absolute;left:0;top:0;width:1920px;height:1080px;background:rgba(5,6,9,.72);opacity:0;transition:opacity .2s linear}
+#panel{position:absolute;left:580px;top:50%;width:760px;display:flex;flex-direction:column;gap:12px;transform:translateY(-50%);opacity:0;transition:opacity .2s linear}
+.on #dim,.on #panel{opacity:1}
+h2{font-size:46px;font-weight:700;letter-spacing:-.02em;margin-bottom:14px}
+.row{display:flex;align-items:center;gap:22px;height:84px;padding:0 34px;border-radius:30px;font-size:30px;font-weight:500;background:rgba(28,30,36,.96);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.row svg{width:34px;height:34px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.row .lb{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .st{font-size:22px;opacity:.65}
+.row.dim{opacity:.6}
+.row.f{background:var(--ink);color:#0b0c10;opacity:1}
+#msg{font-size:28px;opacity:.7}
+</style></head><body>
+<div id="dim"></div><div id="panel"><h2 id="h"></h2><div id="list"></div><div id="msg"></div></div>
+<script>
+/* Inputs picker shown over whatever is playing, opened by the Input key (see the inputhook bind).
+   The app stays running: starting a web app takes ~8 s before it gets the remote, so the manager starts it once
+   ({"prewarm":true}) and it hides itself. Every later launch only fires webOSRelaunch and takes ~0.1 s. */
+var API='http://127.0.0.1:8765', rows=[], idx=0, moved=false, shown=false, shownAt=0, KEY='cytv.picker.rows';
+var HDMI='<svg viewBox="0 0 24 24"><path d="M4 8h16v7l-3 3H7l-3-3z"/><path d="M9 11v3M12 11v3M15 11v3"/></svg>';
+var HOME='<svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7"/><path d="M6 10v9h12v-9"/></svg>';
+var TX={nl:{Inputs:'Ingangen',Connected:'Verbonden',Active:'Actief',Home:'Home',nohelper:'De launcher-service draait niet'},
+  de:{Inputs:'Eing\u00E4nge',Connected:'Verbunden',Active:'Aktiv',Home:'Startseite',nohelper:'Der Launcher-Dienst l\u00E4uft nicht'},
+  fr:{Inputs:'Entr\u00E9es',Connected:'Connect\u00E9',Active:'Actif',Home:'Accueil',nohelper:'Le service du lanceur ne tourne pas'},
+  es:{Inputs:'Entradas',Connected:'Conectado',Active:'Activo',Home:'Inicio',nohelper:'El servicio del lanzador no est\u00E1 activo'}};
+var LANG=((window.webOSSystem&&webOSSystem.locale)||navigator.language||'en').slice(0,2);
+function t(k){return (TX[LANG]&&TX[LANG][k])||({nohelper:'The launcher service is not running'}[k])||k}
+function $(i){return document.getElementById(i)}
+function call(uri,p){try{var b=new PalmServiceBridge();b.onservicecallback=function(){};b.call(uri,JSON.stringify(p));return true}catch(e){return false}}
+function launch(id){
+  if(!call('luna://com.webos.applicationManager/launch',{id:id,params:{}})){
+    try{var x=new XMLHttpRequest();x.open('POST',API+'/api/launch');x.send(JSON.stringify({id:id,params:{}}))}catch(e){}}}
+function hide(){shown=false;document.body.classList.remove('on');try{webOSSystem.hide()}catch(e){}}
+function draw(){
+  var h='';
+  rows.forEach(function(r,i){h+='<div class="row'+(i===idx?' f':'')+(r.dim?' dim':'')+'" data-i="'+i+'">'+(r.home?HOME:HDMI)+'<span class="lb"></span>'+(r.sub?'<span class="st"></span>':'')+'</div>'});
+  $('list').innerHTML=h;
+  var el=$('list').children;
+  rows.forEach(function(r,i){el[i].querySelector('.lb').textContent=r.label;if(r.sub)el[i].querySelector('.st').textContent=r.sub})}
+function choose(i){var r=rows[i];if(!r)return;launch(r.id);setTimeout(hide,200)}
+function build(devs){
+  var r=(devs||[]).filter(function(v){return v.appId}).map(function(v){
+    var port='HDMI '+v.port,named=v.label&&v.label!==port,parts=[];
+    if(named)parts.push(port);if(v.hdmiPlugIn)parts.push(t('Connected'));if(v.activate)parts.push(t('Active'));
+    return {id:v.appId,label:v.label||port,sub:parts.join(' \u00B7 '),dim:!v.hdmiPlugIn,active:!!v.activate}});
+  r.push({id:'com.webos.app.home',label:t('Home'),home:true});
+  return r}
+function setRows(r,keepIdx){
+  rows=r;if(!keepIdx){idx=0;for(var i=0;i<rows.length;i++)if(rows[i].active){idx=i;break}}
+  if(idx>=rows.length)idx=0;draw()}
+function refresh(){
+  var x=new XMLHttpRequest();x.open('GET',API+'/api/inputs');x.timeout=4000;
+  x.onload=function(){var d=[];try{d=JSON.parse(x.responseText).devices||[]}catch(e){}
+    var r=build(d);try{localStorage.setItem(KEY,JSON.stringify(r))}catch(e){}
+    $('msg').textContent='';if(shown)setRows(r,moved)};
+  x.onerror=x.ontimeout=function(){if(shown&&rows.length<2)$('msg').textContent=t('nohelper')};
+  x.send()}
+function show(){
+  $('h').textContent=t('Inputs');
+  var c=null;try{c=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){}
+  setRows(c&&c.length?c:[{id:'com.webos.app.home',label:t('Home'),home:true}]);
+  shown=true;moved=false;shownAt=Date.now();
+  requestAnimationFrame(function(){requestAnimationFrame(function(){if(shown)document.body.classList.add('on')})});
+  refresh()}
+function params(){var p={};try{p=JSON.parse(webOSSystem.launchParams||'{}')}catch(e){}return p||{}}
+document.addEventListener('keydown',function(e){
+  if(!shown)return;
+  var k=e.keyCode;
+  if(k===38){moved=true;idx=(idx+rows.length-1)%rows.length;draw()}
+  else if(k===40){moved=true;idx=(idx+1)%rows.length;draw()}
+  else if(k===13){choose(idx)}
+  else if(k===461||k===27||k===8||k===10009){hide()}
+  e.preventDefault()});
+document.addEventListener('click',function(e){if(!shown)return;var r=e.target.closest&&e.target.closest('.row');if(r)choose(+r.getAttribute('data-i'));else hide()});
+document.addEventListener('mousemove',function(e){var r=e.target.closest&&e.target.closest('.row');if(r&&+r.getAttribute('data-i')!==idx){moved=true;idx=+r.getAttribute('data-i');draw()}});
+document.addEventListener('webOSRelaunch',function(){
+  if(params().prewarm)return;
+  if(shown){if(Date.now()-shownAt>700)hide()}   // Input pressed again closes it
+  else show()});
+if(params().prewarm){
+  var done=false,go=function(){if(done)return;done=true;setTimeout(hide,150)};
+  window.addEventListener('focus',go);setTimeout(go,12000);
+}else show();
+</script></body></html>
