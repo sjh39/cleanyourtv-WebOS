@@ -68,11 +68,12 @@ if [ "$MODE" = install ]; then
     *) warn "only webOS SDK $TESTED_SDK* (webOS 25) has been tested; other versions may behave differently. The original state is backed up and 'undo-home.sh' restores LG's Home." ;;
   esac
   SRCINFO=$D/backup/home-appinfo.orig.json; [ -f "$SRCINFO" ] || SRCINFO=$HOME_DIR/appinfo.json
-  python3 - "$SRCINFO" <<'PY' || { [ $FORCE = 1 ] && warn "continuing because of --force" || die "LG's Home app looks different from what this expects (use --force to try anyway)"; }
-import json, sys
-o = json.load(open(sys.argv[1]))
-sys.exit(0 if o.get('id') == 'com.webos.app.home' and o.get('type') in ('flutter', 'web') else 1)
-PY
+  HOMEKIND=$(python3 -c "import json,sys;o=json.load(open(sys.argv[1]));print(o.get('id',''),o.get('type',''))" "$SRCINFO" 2>/dev/null)
+  case "$HOMEKIND" in
+    "com.webos.app.home flutter"|"com.webos.app.home web") ;;
+    *) if [ $FORCE = 1 ]; then warn "LG's Home app is '${HOMEKIND:-unreadable}', not the flutter or web app this was tested with; continuing because of --force"
+       else die "LG's Home app looks different from what this expects (found: ${HOMEKIND:-unreadable}; tested with type flutter or web). To try anyway use 'Set up anyway' in the app, or run bootstrap.sh install --force. The original is saved and a failed start is rolled back with a restart." ; fi ;;
+  esac
 fi
 
 # ---- back up the original state (first run only) ----
@@ -179,9 +180,11 @@ if [ $VERIFY = 1 ]; then
   done
   if [ $ok = 0 ]; then
     warn "the new Home did not come up (app type: ${type:-none}, service: ${hv:-not answering}); rolling back"
-    sh $D/undo-home.sh temp </dev/null
+    # restoring LG's Home live does not always work; without the boot scripts a restart brings it back
     rm -f $INITD/10-cleanyourtv-home $INITD/15-cleanyourtv-debloat
-    die "rolled back: LG's Home is restored and the boot scripts are removed. Details: /tmp/cleanyourtv-helper.log"
+    echo '{"lastAppId":"com.webos.app.home"}' > /var/luna/preferences/bootd_last_foreground_app_id.json 2>/dev/null
+    (sleep 4; reboot) </dev/null >/dev/null 2>&1 &
+    die "rolled back: the boot scripts are removed and the TV restarts with LG's Home. Details: /tmp/cleanyourtv-helper.log"
   fi
 fi
 ensure_apps

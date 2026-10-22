@@ -25,6 +25,13 @@ license is in the frida-gum project). Anyone who received this package can ask f
 issue tracker, and we will provide it. The GPL-3.0 text is in `LICENSE-inputhookpp-GPL-3.0.txt`. This applies to
 that library only, not to the rest of this project.
 
+## qrcode-generator (QR code for sharing the log)
+
+`third-party/qrcode-generator/qrcode.js` is [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) 1.4.4 by
+Kazuhiko Arase, unmodified (npm package `qrcode-generator@1.4.4`, SHA-256 of the file
+`18ae399f81182bc9de916e9c77b195df20cc58d6f2d55a62b085a299f1bf1780`), licensed under the MIT license (the notice is in
+the file header). The manager app loads it to draw the QR code.
+
 ## Design
 
 The home-screen design follows the Android TV project [CleanYourTV](https://github.com/Gathin23/cleanyourtv) (MIT).

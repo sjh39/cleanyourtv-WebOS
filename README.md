@@ -39,6 +39,11 @@ untested.
 - An LG webOS TV that is already rooted with the [Homebrew Channel](https://webosbrew.org) ([rootmy.tv](https://rootmy.tv)).
 - SSH access as `root` (`ssh root@<tv-ip>`) for the install script, or any other way to install an `.ipk`.
 - Internet access on the TV and the tools webOS ships: `curl`, `tar`, `python3`, `node`.
+- Tested on one TV only: LG OLED65G26LA, webOS 25. The setup checks that LG's Home app is the flutter or web kind it was
+  written for. On other firmware it stops with "LG's Home app looks different" and shows what it found; **Set up
+  anyway** (or `bootstrap.sh install --force`) tries it regardless. **Share log** in the manager app gives a report you can paste into the issue. The original is backed up, and if the new Home
+  does not come up the setup removes the boot scripts and restarts the TV with LG's Home. If you try this on another
+  model, please open an issue with the output of `cat /usr/palm/applications/com.webos.app.home/appinfo.json`.
 
 ## Install
 
@@ -97,6 +102,7 @@ TV**, which brings LG's Home back. (The hook disappears with the restart.)
 |---|---|
 | Launcher, Service | Show the installed version and offer an update when the latest release is newer. |
 | Check for updates | Asks GitHub for the latest release. |
+| Share log | Shows a QR code. Scan it with a phone on the same Wi-Fi to open a page with a report (versions, TV model and firmware, LG's Home app type, the setup log, the service log) and a **Copy** button, for bug reports. Addresses, MAC addresses and URL paths are masked. The page closes after ten minutes. It works even when the setup failed. |
 | Go back to launcher x.y.z | Appears after a launcher update; swaps the previous version back in. |
 | Debloat | Turns the debloat on or off (boot script and running state). |
 | Input key | Turns the Input-key takeover on or off. |

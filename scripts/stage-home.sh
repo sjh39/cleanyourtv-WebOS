@@ -8,6 +8,9 @@ cp $L/app/* $S/
 python3 - "$L/backup/home-appinfo.orig.json" "$S/appinfo.json" <<'PY'
 import json, sys
 o = json.load(open(sys.argv[1]))
+if o.get('type') not in ('web', 'flutter'):   # another kind of Home app (e.g. native or QML): drop what only applies to that kind
+    for k in ('nativeLifeCycleInterfaceVersion', 'containerBasedApp', 'supportQuickStart', 'windowGroup', 'qmlIncludePath', 'qtModules'):
+        o.pop(k, None)
 o['type'] = 'web'
 o['main'] = 'index.html'
 for k in ('splashBackground', 'noSplashOnLaunch'):

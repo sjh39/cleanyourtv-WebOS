@@ -17,11 +17,24 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:var(--night);col
 .row.dim{opacity:.55}
 .row.f{background:var(--ink);color:#0b0c10;opacity:1}
 .sep{height:14px}
-</style></head><body>
+#share{position:absolute;left:0;top:0;width:1920px;height:1080px;background:var(--night);display:none;z-index:10}
+#share h2{position:absolute;left:96px;top:90px;font-size:64px;font-weight:700;letter-spacing:-.02em}
+#share ol{position:absolute;left:96px;top:210px;width:760px;font-size:34px;line-height:1.5;padding-left:44px;color:var(--ink2)}
+#share ol b{color:var(--ink);font-weight:600}
+#sharemsg{position:absolute;left:96px;top:660px;width:900px;font-size:28px;line-height:1.4;color:var(--ink2)}
+#shareurl{position:absolute;left:96px;top:760px;width:900px;font-size:30px;word-break:break-all;color:var(--ink)}
+#qrbox{position:absolute;left:1120px;top:170px;width:680px;height:680px;border-radius:44px;background:#fff;display:flex;align-items:center;justify-content:center}
+#qrbox canvas{width:600px;height:600px}
+#shareclose{position:absolute;left:96px;top:880px;padding:0 44px;height:84px;border-radius:30px;font-size:30px;font-weight:500;display:flex;align-items:center;background:var(--ink);color:#0b0c10}
+</style><script src="qrcode.js"></script></head><body>
 <div id="head"><h1>CleanYourTV</h1><p id="sub"></p></div>
 <div id="panel"><div id="banner"></div><div id="list"></div></div>
+<div id="share"><h2>Share the log</h2>
+  <ol><li>Phone on the <b>same Wi-Fi</b> as the TV.</li><li>Scan the code with the camera.</li><li>Tap <b>Copy</b> on the page and paste it into your message.</li></ol>
+  <div id="sharemsg"></div><div id="shareurl"></div><div id="shareclose">Close</div>
+  <div id="qrbox"><canvas id="qr"></canvas></div></div>
 <script>
-var API='http://127.0.0.1:8765', SVC='/media/developer/apps/usr/palm/services/com.cleanyourtv.manager.service';
+var forceOffer=false, API='http://127.0.0.1:8765', SVC='/media/developer/apps/usr/palm/services/com.cleanyourtv.manager.service';
 var st=null, rows=[], idx=0, view='main', pending=null, pollT=0, setup={debloat:true,inputKey:true}, offline=false, busyMsg='';
 function $(i){return document.getElementById(i)}
 function api(p,body){return new Promise(function(res,rej){var x=new XMLHttpRequest();x.open(body?'POST':'GET',API+p);x.timeout=30000;
@@ -34,10 +47,13 @@ function banner(text,cls){var b=$('banner');b.textContent=text||'';b.className=c
 
 function build(){
   rows=[];
+  if(view==='share'){rows.push({label:'Close',fn:closeShare});return}
   if(offline){
     rows.push({label:'Debloat LG’s ads and telemetry',sub:onoff(setup.debloat),fn:function(){setup.debloat=!setup.debloat;build();draw()}});
     rows.push({label:'Take over the Input key',sub:onoff(setup.inputKey),fn:function(){setup.inputKey=!setup.inputKey;build();draw()}});
-    rows.push({label:'Set up now',sub:'the screen blinks once',fn:doSetup});
+    rows.push({label:'Set up now',sub:'the screen blinks once',fn:function(){doSetup(false)}});
+    if(forceOffer)rows.push({label:'Set up anyway',sub:'untested firmware; a failed start restarts the TV',fn:function(){doSetup(true)}});
+    rows.push({label:'Share log',sub:'QR code for your phone',fn:openShare});
     return}
   if(view==='confirm-home'||view==='confirm-uninstall'){
     var un=view==='confirm-uninstall',on=!(st.home&&st.home.enabled);
@@ -57,6 +73,7 @@ function build(){
   rows.push({label:'Debloat LG’s ads and telemetry',sub:onoff(st.options.debloat),fn:function(){opt({debloat:!st.options.debloat})}});
   rows.push({label:'Input key opens our Inputs list',sub:st.inputhook&&st.inputhook.hooked&&st.options.inputKey?'On':onoff(st.options.inputKey),fn:function(){opt({inputKey:!st.options.inputKey})}});
   rows.push({sep:true});
+  rows.push({label:'Share log',sub:'QR code for your phone',fn:openShare});
   rows.push({label:'Open Home',fn:function(){launch('com.webos.app.home')}});
   rows.push({label:'CleanYourTV as Home',sub:onoff(st.home&&st.home.enabled),fn:function(){view='confirm-home';idx=0;build();draw()}});
   rows.push({label:'Uninstall',fn:function(){view='confirm-uninstall';idx=0;build();draw()}});
@@ -87,9 +104,25 @@ function load(keep){
     build();if(idx>=rows.length)idx=0;draw();
     if(s.checking)setTimeout(function(){load(true)},2000)
   },function(){offline=true;build();draw();banner('')})}
-function doSetup(){
+function drawQr(url){
+  var q=qrcode(0,'M');q.addData(url);q.make();var n=q.getModuleCount(),cell=Math.max(4,Math.floor(640/(n+8))),cv=$('qr'),size=cell*(n+8),g;
+  cv.width=cv.height=size;g=cv.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,size,size);g.fillStyle='#000';
+  for(var r=0;r<n;r++)for(var c=0;c<n;c++)if(q.isDark(r,c))g.fillRect((c+4)*cell,(r+4)*cell,cell,cell)}
+function openShare(){
+  view='share';build();idx=0;draw();$('share').style.display='block';$('shareurl').textContent='';$('qrbox').style.visibility='hidden';
+  $('sharemsg').textContent='Preparing the report\u2026';
+  rootExec('rm -f /tmp/cytv-sharelog.json; nohup node '+SVC+'/helper/sharelog.js > /tmp/cytv-sharelog.out 2>&1 &').then(function(){pollShare(0)})}
+function pollShare(n){
+  if(view!=='share')return;
+  rootExec('cat /tmp/cytv-sharelog.json 2>/dev/null').then(function(m){
+    var st=null;try{st=JSON.parse(JSON.parse(m).stdoutString||'null')}catch(e){}
+    if(st&&st.url){drawQr(st.url);$('qrbox').style.visibility='visible';$('shareurl').textContent=st.url;$('sharemsg').textContent='The page is open for ten minutes. It lists versions, the setup log and the service log; addresses and URL paths are masked.';return}
+    if(n>14){$('sharemsg').textContent='Could not prepare the report (is the Homebrew Channel installed?).';return}
+    setTimeout(function(){pollShare(n+1)},1000)})}
+function closeShare(){view='main';$('share').style.display='none';rootExec('pkill -f "[s]harelog.js"; rm -f /tmp/cytv-sharelog.json');idx=0;build();draw()}
+function doSetup(force){forceOffer=false;
   banner('Setting up\u2026 the screen blinks once while LG\u2019s system restarts','work');
-  var flags=(setup.debloat?'--debloat':'--no-debloat')+' '+(setup.inputKey?'--input-key':'--no-input-key');
+  var flags=(setup.debloat?'--debloat':'--no-debloat')+' '+(setup.inputKey?'--input-key':'--no-input-key')+(force?' --force':'');
   rootExec('rm -f /tmp/cytv-bootstrap.log; nohup sh '+SVC+'/bootstrap.sh install '+flags+' > /tmp/cytv-bootstrap.log 2>&1 &').then(function(m){
     var o={};try{o=JSON.parse(m)}catch(e){}
     if(o.returnValue===false){banner('Could not start the setup: '+(o.errorText||'no root access (is the Homebrew Channel installed?)'),'err');return}
@@ -97,16 +130,16 @@ function doSetup(){
 function logTail(cb){rootExec('tail -n 3 /tmp/cytv-bootstrap.log 2>/dev/null').then(function(m){var o={};try{o=JSON.parse(m)}catch(e){}cb(String(o.stdoutString||'').replace(/\[cleanyourtv\] /g,'').trim())})}
 function waitUp(n){api('/api/manager/status').then(function(){offline=false;banner('');load()},function(){
   logTail(function(t){
-    if(/ERROR|rolled back/.test(t)){banner('Setup stopped: '+t.split('\n').pop(),'err');return}
+    if(/ERROR|rolled back/.test(t)){forceOffer=/looks different/.test(t);build();draw();banner('Setup stopped: '+t.split('\n').pop().replace(/^ERROR: /,''),'err');return}
     if(n>90){banner('The service did not start. Log: /tmp/cytv-bootstrap.log on the TV. '+t.split('\n').pop(),'err');return}
     if(t)banner('Setting up\u2026 '+t.split('\n').pop(),'work');
     setTimeout(function(){waitUp(n+1)},2000)})})}
 
 document.addEventListener('keydown',function(e){var k=e.keyCode;
   if(k===38)next(-1);else if(k===40)next(1);else if(k===13)act();
-  else if(k===461||k===27||k===8||k===10009){if(view!=='main'){view='main';idx=0;build();draw()}else{try{window.close()}catch(x){}}}
+  else if(k===461||k===27||k===8||k===10009){if(view==='share')closeShare();else if(view!=='main'){view='main';idx=0;build();draw()}else{try{window.close()}catch(x){}}}
   e.preventDefault()});
-document.addEventListener('click',function(e){var r=e.target.closest&&e.target.closest('.row');if(r){idx=+r.getAttribute('data-i');draw();act()}});
+document.addEventListener('click',function(e){if(e.target.closest&&e.target.closest('#shareclose')){closeShare();return}var r=e.target.closest&&e.target.closest('.row');if(r){idx=+r.getAttribute('data-i');draw();act()}});
 document.addEventListener('mousemove',function(e){var r=e.target.closest&&e.target.closest('.row');if(r&&+r.getAttribute('data-i')!==idx){idx=+r.getAttribute('data-i');draw()}});
 document.addEventListener('webOSRelaunch',function(){view='main';idx=0;load()});
 banner('Reading status…','work');load();

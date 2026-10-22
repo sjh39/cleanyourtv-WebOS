@@ -66,6 +66,7 @@ for app_id, src in (('com.cleanyourtv.manager', 'manager/app'), ('com.cleanyourt
             if n == 'appinfo.json' and app_id == PKG:   # the package version is the service version
                 o = json.loads(body); o['version'] = version; body = json.dumps(o).encode()
             add(data, '.' + d + '/' + rel, body)
+add(data, './usr/palm/applications/com.cleanyourtv.manager/qrcode.js', open(P('third-party', 'qrcode-generator', 'qrcode.js'), 'rb').read())   # QR code for sharing the log
 s = '.' + '/usr/palm/services/' + SERVICE
 add(data, s + '/bootstrap.sh', open(P('scripts', 'bootstrap.sh'), 'rb').read(), 0o755)
 add_dir(data, s + '/helper', P('helper'))
