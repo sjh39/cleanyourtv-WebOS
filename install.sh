@@ -1,14 +1,32 @@
 #!/bin/sh
 # CleanYourTV for LG webOS: installer. Run ON the TV, as root (see README.md).
 #
-#   curl -fsSL https://raw.githubusercontent.com/lasharor/cleanyourtv-WebOS/main/install.sh | sh
-#   curl -fsSL .../install.sh | sh -s -- --no-debloat     # launcher only, leave LG's services alone
-#   curl -fsSL .../install.sh | sh -s -- --no-start       # install, but only take effect on the next reboot
-#   curl -fsSL .../install.sh | sh -s -- --no-verify      # skip the post-install check and automatic rollback
-#   curl -fsSL .../install.sh | sh -s -- --force          # continue even if this TV looks unsupported
-#   curl -fsSL .../install.sh | sh -s -- --no-notify      # do not install the picture-notification overlay
+# Interactive (asks what to install; needs a terminal, so use ssh -t):
+#   ssh -t root@<tv-ip> 'sh -c "$(curl -fsSL https://raw.githubusercontent.com/lasharor/cleanyourtv-WebOS/main/install.sh)"'
+# Without a terminal it installs everything with the defaults:
+#   ssh root@<tv-ip> 'curl -fsSL https://raw.githubusercontent.com/lasharor/cleanyourtv-WebOS/main/install.sh | sh'
+#
+# Options (they also skip the matching question):
+#   -y, --yes        do not ask anything, use the defaults
+#   --no-debloat     launcher only, leave LG's services and the hosts file alone
+#   --no-notify      do not install the picture-notification overlay
+#   --no-start       install, but only take effect on the next reboot
+#   --no-verify      skip the post-install check and the automatic rollback
+#   --force          continue even if this TV looks unsupported
 #
 # Environment: CYTV_REPO=owner/name  CYTV_REF=branch  CYTV_SRC=/path/to/repo-checkout (use a local copy instead of downloading)
+
+usage() {
+  cat <<'USAGE'
+CleanYourTV for LG webOS: installer (run on the TV, as root)
+  -y, --yes        do not ask anything, use the defaults
+  --no-debloat     launcher only, leave LG's services and the hosts file alone
+  --no-notify      do not install the picture-notification overlay
+  --no-start       install, but only take effect on the next reboot
+  --no-verify      skip the post-install check and the automatic rollback
+  --force          continue even if this TV looks unsupported
+USAGE
+}
 
 main() {
   REPO="${CYTV_REPO:-lasharor/cleanyourtv-WebOS}"
@@ -16,16 +34,17 @@ main() {
   D=/media/developer/cleanyourtv
   INITD=/var/lib/webosbrew/init.d
   TESTED_SDK="10."          # firmware this has been tried on: webOS 25 (sdkVersion 10.x)
-  DEBLOAT=1; START=1; VERIFY=1; FORCE=0; NOTIFY=1
+  DEBLOAT=""; START=""; NOTIFY=""; VERIFY=1; FORCE=0; YES=0
   for a in "$@"; do
     case "$a" in
+      -y|--yes) YES=1 ;;
       --no-debloat) DEBLOAT=0 ;;
       --no-start) START=0 ;;
       --no-verify) VERIFY=0 ;;
       --force) FORCE=1 ;;
       --no-notify) NOTIFY=0 ;;
-      -h|--help) sed -n '2,11p' "$0" 2>/dev/null; return 0 ;;
-      *) echo "unknown option: $a"; return 1 ;;
+      -h|--help) usage; return 0 ;;
+      *) echo "unknown option: $a (try --help)"; return 1 ;;
     esac
   done
   export PATH=/usr/bin:/usr/sbin:/bin:/sbin:$PATH
@@ -58,6 +77,54 @@ main() {
   if grep -q " $HOME_DIR " /proc/mounts && [ ! -f $D/backup/home-appinfo.orig.json ]; then
     die "Home is already replaced but no backup exists; reboot the TV once, then run this again"
   fi
+
+  # ---- what to install (asked only when a terminal is available) ----
+  INTERACTIVE=0
+  if [ $YES = 0 ] && ( : </dev/tty ) 2>/dev/null; then INTERACTIVE=1; fi
+  ask() {   # ask "question" default(y|n)  ->  0 = yes, 1 = no
+    while :; do
+      if [ "$2" = y ]; then printf '%s [Y/n] ' "$1" >/dev/tty; else printf '%s [y/N] ' "$1" >/dev/tty; fi
+      read -r ans </dev/tty || return 1
+      case "$ans" in "") [ "$2" = y ]; return ;; y|Y|yes|YES|Yes) return 0 ;; n|N|no|NO|No) return 1 ;; *) echo "please answer y or n" >/dev/tty ;; esac
+    done
+  }
+  if [ $INTERACTIVE = 1 ]; then
+    {
+      echo
+      echo "CleanYourTV for LG webOS"
+      echo "------------------------"
+      echo "The launcher (a clean Apple TV-style Home with a built-in Live TV player for your own M3U playlist)"
+      echo "is always installed. Everything else is optional; Enter accepts the suggestion."
+      echo
+    } >/dev/tty
+    if [ -z "$DEBLOAT" ]; then
+      echo "Debloat: stops LG's ad, recommendation and telemetry services and blocks a few ad servers." >/dev/tty
+      echo "Nothing is uninstalled; a reboot without the boot script undoes it." >/dev/tty
+      ask "Debloat LG's ads and telemetry?" y && DEBLOAT=1 || DEBLOAT=0; echo >/dev/tty
+    fi
+    if [ -z "$NOTIFY" ]; then
+      echo "Notifications with a picture: a small hidden app that shows a card with a photo (for example a camera" >/dev/tty
+      echo "snapshot) on top of any app when you send it a message from your network." >/dev/tty
+      ask "Install the picture-notification overlay?" y && NOTIFY=1 || NOTIFY=0; echo >/dev/tty
+    fi
+    if [ -z "$START" ]; then
+      echo "Starting now restarts the system app manager (the screen blinks once). Otherwise everything" >/dev/tty
+      echo "takes effect at the next reboot." >/dev/tty
+      ask "Start now?" y && START=1 || START=0; echo >/dev/tty
+    fi
+    {
+      echo "Summary:"
+      echo "  launcher + Live TV        yes"
+      echo "  debloat                   $([ "$DEBLOAT" = 1 ] && echo yes || echo no)"
+      echo "  picture notifications     $([ "$NOTIFY" = 1 ] && echo yes || echo no)"
+      echo "  start now                 $([ "$START" = 1 ] && echo yes || echo 'no, at next reboot')"
+      echo
+    } >/dev/tty
+    ask "Go ahead?" y || { echo "Nothing was changed." >/dev/tty; return 0; }
+  fi
+  [ -z "$DEBLOAT" ] && DEBLOAT=1
+  [ -z "$NOTIFY" ] && NOTIFY=1
+  [ -z "$START" ] && START=1
 
   # ---- is this a TV we know? (a warning, not a block, unless the Home app looks different) ----
   info=$(luna com.webos.service.tv.systemproperty/getSystemInfo '{"keys":["modelName","firmwareVersion","sdkVersion"]}')
