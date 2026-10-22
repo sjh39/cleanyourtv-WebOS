@@ -79,6 +79,7 @@ for n in sorted(os.listdir(P('third-party', 'inputhook'))):
         add(data, s + '/licenses/' + n, open(P('third-party', 'inputhook', n), 'rb').read())
 add(data, s + '/licenses/THIRD-PARTY.md', open(P('THIRD-PARTY.md'), 'rb').read())
 add(data, s + '/licenses/LICENSE', open(P('LICENSE'), 'rb').read())
+add(data, s + '/compat.json', open(P('compat.json'), 'rb').read())
 add(data, s + '/config.example.json', open(P('config.example.json'), 'rb').read())
 add_dir(data, s + '/payload/app', P('app'))
 add(data, './usr/palm/packages/%s/packageinfo.json' % PKG, json.dumps({'id': PKG, 'version': version, 'app': PKG}).encode())

@@ -39,11 +39,10 @@ untested.
 - An LG webOS TV that is already rooted with the [Homebrew Channel](https://webosbrew.org) ([rootmy.tv](https://rootmy.tv)).
 - SSH access as `root` (`ssh root@<tv-ip>`) for the install script, or any other way to install an `.ipk`.
 - Internet access on the TV and the tools webOS ships: `curl`, `tar`, `python3`, `node`.
-- Tested on one TV only: LG OLED65G26LA, webOS 25. The setup checks that LG's Home app is the flutter or web kind it was
-  written for. On other firmware it stops with "LG's Home app looks different" and shows what it found; **Set up
-  anyway** (or `bootstrap.sh install --force`) tries it regardless. **Share log** in the manager app gives a report you can paste into the issue. The original is backed up, and if the new Home
-  does not come up the setup removes the boot scripts and restarts the TV with LG's Home. If you try this on another
-  model, please open an issue with the output of `cat /usr/palm/applications/com.webos.app.home/appinfo.json`.
+- A firmware on the compatibility list (see **Compatibility**). Other firmware may still work: the setup continues if LG's
+  Home app is the flutter or web kind it was written for, and otherwise offers **Set up anyway**. The original is
+  backed up, and if the new Home does not come up the setup removes the boot scripts and restarts the TV with LG's
+  Home. On another model, please attach the output of **Share log** (in the manager app) to an issue.
 
 ## Install
 
@@ -98,19 +97,37 @@ TV**, which brings LG's Home back. (The hook disappears with the restart.)
 
 ## The manager app
 
-**CleanYourTV** in the app list:
+**CleanYourTV** in the app list. The rows are grouped: updates, settings, support.
 
 | Row | What it does |
 |---|---|
 | Launcher, Service | Show the installed version and offer an update when the latest release is newer. |
 | Check for updates | Asks GitHub for the latest release. |
-| Share log | Shows a QR code. Scan it with a phone on the same Wi-Fi to open a page with a report (versions, TV model and firmware, LG's Home app type, the setup log, the service log) and a **Copy** button, for bug reports. Addresses, MAC addresses and URL paths are masked. The page closes after ten minutes. It works even when the setup failed. |
 | Go back to launcher x.y.z | Appears after a launcher update; swaps the previous version back in. |
-| Debloat | Turns the debloat on or off (boot script and running state). |
-| Input key | Turns the Input-key takeover on or off. |
-| Open the launcher | Opens Home. |
 | CleanYourTV as Home | Switch: choose LG's Home or ours. Either way the TV restarts (asks first). |
-| Uninstall | Removes everything (asks first). |
+| Debloat LG's ads and telemetry | Turns the debloat on or off (boot script and running state). |
+| Input key | Opens a screen with the switch for the Input-key takeover, **Learn the Input key** and the optional **Learn the Home key**. |
+| Share log | Shows a QR code. Scan it with a phone on the same Wi-Fi to open a page with a report (versions, TV model and firmware, LG's Home app type, the learned keys, the setup log, the service log) and a **Copy** button, for bug reports. Addresses, MAC addresses and URL paths are masked. The page closes after ten minutes. It works even when the setup failed. |
+| Uninstall | Removes everything and restarts the TV (asks first). |
+
+Before the setup the app shows the choices (debloat, Input key), **Set up now** (focused by default), then **Check for
+updates** and **Share log**; a newer package is offered first. Back always returns to the screen you came from.
+
+## Compatibility
+
+The setup knows which firmware is confirmed to work (`compat.json` in this repository; the setup fetches the newest copy
+from GitHub when it can, and falls back to the copy in the package). A firmware on the list is set up without any
+extra step.
+
+| Firmware (software version) | Status |
+|---|---|
+| 33.23.05 (OLED65G26LA, webOS 25) | tested |
+| 23.25.55 | reported working on two models |
+
+Anything else: if LG's Home app is the flutter or web kind, the setup continues with a note that the firmware is not on
+the list. If it is another kind, the setup stops and the manager app offers **Set up anyway**. To add a firmware, open
+an issue or pull request with the output of **Share log**; the entry goes in `compat.json` and reaches every TV without a
+new release.
 
 ## Using the launcher
 

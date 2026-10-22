@@ -63,17 +63,34 @@ if [ "$MODE" = install ]; then
   fw=$(echo "$info" | sed -n 's/.*"firmwareVersion": *"\([^"]*\)".*/\1/p')
   sdk=$(echo "$info" | sed -n 's/.*"sdkVersion": *"\([^"]*\)".*/\1/p')
   say "TV: ${model:-unknown model}, firmware ${fw:-?}, webOS SDK ${sdk:-?}"
-  case "$sdk" in
-    $TESTED_SDK*) ;;
-    *) warn "only webOS SDK $TESTED_SDK* (webOS 25) has been tested; other versions may behave differently. The original state is backed up and 'undo-home.sh' restores LG's Home." ;;
-  esac
+  # the compatibility list: firmware known to work is set up without --force (a newer copy is fetched from the repository when possible)
+  mkdir -p $D
+  COMPATREPO=$(cut -d' ' -f1 $D/source 2>/dev/null); [ -n "$COMPATREPO" ] || COMPATREPO=lasharor/cleanyourtv-WebOS
+  curl -fsSL -m 6 "https://raw.githubusercontent.com/$COMPATREPO/main/compat.json" -o /tmp/cytv-compat.json 2>/dev/null && python3 -c "import json;json.load(open('/tmp/cytv-compat.json'))" 2>/dev/null && cp /tmp/cytv-compat.json $D/compat.json
+  COMPATNOTE=$(python3 - "$fw" "$sdk" $D/compat.json $S/compat.json <<'PY'
+import json, sys
+fw, sdk = sys.argv[1:3]
+for f in sys.argv[3:]:
+    try: d = json.load(open(f))
+    except Exception: continue
+    for e in d.get('entries', []):
+        w = e.get('firmware', '')
+        if w and (fw == w or sdk == w or (w.endswith('*') and fw.startswith(w[:-1]))):
+            print(e.get('note') or 'listed'); sys.exit(0)
+PY
+)
   SRCINFO=$D/backup/home-appinfo.orig.json; [ -f "$SRCINFO" ] || SRCINFO=$HOME_DIR/appinfo.json
   HOMEKIND=$(python3 -c "import json,sys;o=json.load(open(sys.argv[1]));print(o.get('id',''),o.get('type',''))" "$SRCINFO" 2>/dev/null)
-  case "$HOMEKIND" in
-    "com.webos.app.home flutter"|"com.webos.app.home web") ;;
-    *) if [ $FORCE = 1 ]; then warn "LG's Home app is '${HOMEKIND:-unreadable}', not the flutter or web app this was tested with; continuing because of --force"
-       else die "LG's Home app looks different from what this expects (found: ${HOMEKIND:-unreadable}; tested with type flutter or web). To try anyway use 'Set up anyway' in the app, or run bootstrap.sh install --force. The original is saved and a failed start is rolled back with a restart." ; fi ;;
-  esac
+  case "$HOMEKIND" in com.webos.app.home*) HOMEID=1 ;; *) HOMEID=0 ;; esac
+  if [ -n "$COMPATNOTE" ] && [ $HOMEID = 1 ]; then
+    say "this firmware is in the compatibility list ($COMPATNOTE); LG's Home app is '${HOMEKIND#com.webos.app.home }'"
+  else
+    case "$HOMEKIND" in
+      "com.webos.app.home flutter"|"com.webos.app.home web") warn "firmware ${fw:-?} is not in the compatibility list; continuing because LG's Home is the flutter or web kind this was written for. The original state is saved and a failed start restarts the TV with LG's Home." ;;
+      *) if [ $FORCE = 1 ]; then warn "firmware ${fw:-?} is not in the compatibility list and LG's Home app is '${HOMEKIND:-unreadable}', not the flutter or web app this was tested with; continuing because of --force"
+         else die "LG's Home app looks different from what this expects (found: ${HOMEKIND:-unreadable}; firmware ${fw:-?} is not in the compatibility list). To try anyway use 'Set up anyway' in the app, or run bootstrap.sh install --force. The original is saved and a failed start is rolled back with a restart." ; fi ;;
+    esac
+  fi
 fi
 
 # ---- back up the original state (first run only) ----
@@ -94,6 +111,7 @@ mkdir -p $D/inputhook && cp $S/inputhook/* $D/inputhook/ && chmod 755 $D/inputho
 [ -d $S/licenses ] && { mkdir -p $D/licenses; cp $S/licenses/* $D/licenses/; }
 chmod +x $D/*.sh $D/10-cleanyourtv-home $D/15-cleanyourtv-debloat
 [ -f $D/config.json ] || cp $S/config.example.json $D/config.json
+[ -f $D/compat.json ] || cp $S/compat.json $D/compat.json
 
 # the launcher that ships with the package, unless a newer one is already installed
 newer() { python3 - "$1" "$2" <<'PY'
