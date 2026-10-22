@@ -21,7 +21,7 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:var(--night);col
 #top .sp{flex:1}
 #bar{display:flex}
 .pill{display:flex;align-items:center;gap:14px;height:64px;padding:0 30px 0 24px;margin-left:16px;border-radius:32px;font-size:26px;font-weight:500;
-  background:rgba(255,255,255,.09);box-shadow:inset 0 0 0 1px rgba(255,255,255,.10);transition:transform .15s ease-out;will-change:transform}
+  background:rgba(255,255,255,.09);box-shadow:inset 0 0 0 1px rgba(255,255,255,.10);transition:transform .12s cubic-bezier(.3,1.35,.5,1);will-change:transform}
 .pill svg{width:30px;height:30px;flex:none}
 .pill.f{background:var(--ink);color:#0b0c10;transform:scale(1.07)}
 
@@ -35,7 +35,10 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:var(--night);col
 #grid{position:absolute;left:96px;top:350px;width:1728px;display:grid;grid-template-columns:repeat(10,151px);gap:26px 24px}
 
 .tile{--c:74,84,112;--b:20,22,27;position:relative;display:flex;align-items:center;justify-content:center;will-change:transform;
-  background:rgb(var(--b));transition:transform .15s ease-out}
+  background:rgb(var(--b));transition:transform .12s cubic-bezier(.3,1.35,.5,1)}
+.snap .tile,.snap .pill{transition:none}   /* held arrow key: follow the focus without animating each step */
+.tile.press{transform:scale(.96)!important;transition-duration:.06s}
+.tile.launching{opacity:.82}
 .tile img{object-fit:contain}
 .tile svg{fill:none;stroke:var(--ink);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;opacity:.9}
 .tile .t{font-size:26px;font-weight:600;padding:12px;text-align:center;line-height:1.15;opacity:.9}
@@ -139,7 +142,7 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:var(--night);col
 <div id="lv"><div id="lv-stage"></div><div id="lv-spin" class="layer"></div><div id="lv-osd" class="layer"><img class="logo" id="lv-ologo" alt=""><div class="num" id="lv-onum"></div><div class="info"><div class="name" id="lv-oname"></div><div class="now" id="lv-onow"></div><div class="next" id="lv-onext"></div><div class="pbar"><i id="lv-obar"></i></div></div></div><div id="lv-numin" class="layer"></div><div id="lv-guide" class="layer"><div id="lv-glow"></div><div id="lv-gtop"><div id="lv-gtitle"></div><div id="lv-gtabs"></div><div id="lv-gclock"></div></div><div id="lv-rows"></div><div id="lv-detail"></div></div><div id="lv-msg" class="layer"></div></div>
 <div id="toast"></div>
 <script>
-var API='http://127.0.0.1:8765', CACHE_KEY='cytv.cache.v2', VERSION='1.4.2';
+var API='http://127.0.0.1:8765', CACHE_KEY='cytv.cache.v2', VERSION='1.4.3';
 var DEFAULTS={
   dock:['netflix','youtube.leanback.v4','amazon','com.disney.disneyplus-prod'],
   topbar:[{label:'Inputs',icon:'inputs',action:'inputs'},{label:'Live TV',icon:'tv',action:'live'},{label:'Settings',icon:'settings',app:'com.palm.app.settings'}]
@@ -225,7 +228,7 @@ function tile(a){
   i.onload=function(){if(!colors[a.id]){colors[a.id]=iconColor(i,a.id);paint(d,colors[a.id]);storeSoon();if(rows[r]&&rows[r][c]===d)glowNow(d)}};
   i.onerror=function(){i.remove();var t=document.createElement('div');t.className='t';t.textContent=a.title;d.appendChild(t);
     if(!colors[a.id]){var f=hsl2rgb(hashHue(a.id),.42,.42);colors[a.id]={c:f,b:hsl2rgb(hashHue(a.id),.4,.2)};paint(d,colors[a.id])}};
-  i.src=a.id==='__live'?LIVE_ICON:API+'/icon/'+encodeURIComponent(a.id);d.appendChild(i);
+  i.src=a.id==='__live'?LIVE_ICON:API+'/icon/'+encodeURIComponent(a.id);d.appendChild(i);if(i.decode)i.decode().catch(function(){});
   return d}
 
 /* ---------- ambient glow: two layers cross-fade, updated only once focus settles ---------- */
@@ -243,7 +246,7 @@ function setFocus(nr,nc,first){
   if(n.textContent!==nm)n.textContent=nm;
   if(first)glowNow(e);else glowSoon(e);
   var sh=0;
-  if(r>=2){var g=$('grid');sh=Math.min(0,Math.max(50-(350+e.offsetTop),726-(350+g.offsetHeight)))}
+  if(r>=2){var gr=rows.length-2;sh=Math.min(0,Math.max(50-(350+(r-2)*177),726-(350+gr*151+(gr-1)*26)))}   /* row height 151 + gap 26: no layout reads */
   $('scroll').style.transform=sh?'translateY('+sh+'px)':''}
 function mapCol(from,to,col){return from>1?Math.round(col*(to-1)/(from-1)):0}
 function posOf(e){for(var i=0;i<rows.length;i++){var j=rows[i].indexOf(e);if(j>=0)return [i,j]}return null}
@@ -267,7 +270,7 @@ function title(id){for(var i=0;i<apps.length;i++)if(apps[i].id===id)return apps[
 function act(e){
   var a=e._a;
   if(a){
-    if(a.id==='__undo'){toast(t('Switching to LG Home: the TV restarts...'));return void api('/api/undo',{})}
+    if(!a.sys){e.classList.add('launching');setTimeout(function(){e.classList.remove('launching')},4000)}
     return launch(a.id)}
   var o=e._o||{};
   if(o.action==='customize')return customizeMenu();
@@ -357,7 +360,6 @@ function rebuild(){
   var by={};apps.forEach(function(a){by[a.id]=a});
   var di=dockIds(),dock=di.map(function(i){return by[i]});
   var rest=apps.filter(function(a){return !isHidden(a.id)&&di.indexOf(a.id)<0}).sort(byOrder);
-  rest.push({id:'__undo',title:t('Restore LG Home'),sys:true,icon:'restore'});
   var oldE=rows[r]&&rows[r][c],keep=oldE&&oldE._a?oldE._a.id:null;
   if(oldE)oldE.classList.remove('f');
   var dk=$('dock'),gd=$('grid'),bar=$('bar');
@@ -383,7 +385,7 @@ function load(){api('/api/apps').then(function(x){
 }).catch(function(){toast(t('Helper not reachable, retrying...'));setTimeout(load,3000)})}
 
 /* ---------- input: tap OK to open, hold OK for options ---------- */
-var downT=0,held=false,downEnter=false,swallowUp=false,pressT=0,lastKey=0,lastMX=-1,lastMY=-1,lastEnter=0;
+var lastMove=0,snapT=0,downT=0,held=false,downEnter=false,swallowUp=false,pressT=0,lastKey=0,lastMX=-1,lastMY=-1,lastEnter=0;
 function hit(e){
   e.addEventListener('mousedown',function(){held=false;clearTimeout(pressT);pressT=setTimeout(function(){held=true;options(e)},650)});
   e.addEventListener('mouseup',function(){clearTimeout(pressT)});
@@ -409,19 +411,21 @@ document.addEventListener('keydown',function(e){
     if(k===13){if(downEnter&&Date.now()-lastEnter<1500){lastEnter=Date.now();e.preventDefault();return}downEnter=true;lastEnter=Date.now();swallowUp=true}
     if(menuKey(k))e.preventDefault();return}
   var len=rows[r].length;
+  if(k>=37&&k<=40){var tn=performance.now();if(e.repeat||tn-lastMove<90){document.body.classList.add('snap');clearTimeout(snapT);snapT=setTimeout(function(){document.body.classList.remove('snap')},180)}lastMove=tn}
   if(k===37&&c>0)setFocus(r,c-1);
   else if(k===39&&c<len-1)setFocus(r,c+1);
   else if(k===38&&r>0)setFocus(r-1,mapCol(len,rows[r-1].length,c));
   else if(k===40&&r<rows.length-1)setFocus(r+1,mapCol(len,rows[r+1].length,c));
   else if(k===13){
     /* webOS repeats keydown while OK is held, sometimes without e.repeat: only the first one starts the hold timer */
-    if(!downEnter||Date.now()-lastEnter>1500){downEnter=true;held=false;clearTimeout(downT);var t=rows[r][c];downT=setTimeout(function(){held=true;options(t)},650)}
+    if(!downEnter||Date.now()-lastEnter>1500){downEnter=true;held=false;clearTimeout(downT);var t=rows[r][c];t.classList.add('press');downT=setTimeout(function(){held=true;t.classList.remove('press');options(t)},650)}
     lastEnter=Date.now()}
   else return;
   e.preventDefault()});
 document.addEventListener('keyup',function(e){
   if(e.keyCode!==13)return;
   lastKey=Date.now();clearTimeout(downT);
+  var pr=document.querySelector('.press');if(pr)pr.classList.remove('press');
   if(swallowUp){swallowUp=false;downEnter=false;return}
   if(downEnter&&!held)act(rows[r][c]);
   downEnter=false;held=false});

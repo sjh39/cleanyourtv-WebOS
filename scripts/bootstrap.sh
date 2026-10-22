@@ -188,4 +188,4 @@ if [ $VERIFY = 1 ]; then
 fi
 ensure_apps
 say "done. Hold OK on an app to customise the dock, or use the Customise button at the top right."
-say "Back to LG's Home any time: pick 'Restore LG Home' at the end of the app grid, or run: sh $D/undo-home.sh"
+say "Back to LG's Home any time: switch off 'CleanYourTV as Home' in the manager app, or run: sh $D/undo-home.sh"
