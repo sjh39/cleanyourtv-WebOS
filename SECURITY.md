@@ -2,9 +2,9 @@
 
 ## What this changes on a TV
 
-CleanYourTV runs a service as root on a rooted TV. It listens on `127.0.0.1:8765` only. Two short-lived pages open on
+CleanYourTV runs a service as root on a rooted TV. It listens on `127.0.0.1:8765` only. Three short-lived pages open on
 the local network on request, and an optional notification endpoint (off by default): the Live TV pairing page (port 8766, a 6-digit code shown on the TV, ten minutes) and the
-share-log page (port 8768 and up, a random address, ten minutes, masked report).
+share-log page (port 8768 and up, a random address, ten minutes, masked report) and, for the optional voice function, the voice setup page (port 8769, a random address, ten minutes; see Voice below).
 
 ## Network notifications
 
@@ -13,6 +13,18 @@ Off until switched on in the manager app. It then listens on port 8767 for `POST
 the notification call. Wrong tokens lock an address out for ten minutes, requests are limited to 20 a minute and 32 KB,
 and an optional `allow` list restricts addresses. It is plain HTTP: the token can be read by anyone who can watch the
 traffic on your network.
+
+## Voice
+
+Optional and off by default. Installing it downloads files over HTTPS from PyPI, Ubuntu's archive and Moonshine's
+model server; each file is checked against a SHA-256 value written in the code, and a mismatch stops the install. The
+recogniser is a 64-bit program started by the root service with its own copy of the C library; it reads audio from a
+pipe and prints text. Audio from the remote's microphone is held in memory only while recognising. Only the recognised
+text is sent, and only to the address you set (plain `http://` is possible: the token is then visible on your network)
+and, if you switch on AI chat, to `openrouter.ai` over HTTPS with your OpenRouter key and the model you chose; OpenRouter and
+that model's provider see the text. The phone setup page is a short-lived page on the local network (port 8769, a random 128-bit address, ten minutes,
+closed after saving, plain HTTP: the key is visible on the network while it is typed). The key is kept in `config.json` (readable by root only) and is never returned by the
+service. Pausing LG's voice assistant sends it SIGSTOP; nothing of LG's is modified.
 
 ## Trust
 

@@ -43,8 +43,8 @@ function setHome(enabled) {
 }
 
 function create(ctx) {
-  const { luna, readConf, writeConf, inputhook, VERSION, pickerShown, notifyApi } = ctx;
-  const keys = () => { const k = Object.assign({ input: '', home: '', learned: false }, readConf().keys || {}); return Object.assign(k, { inputIsDefault: !k.input, input: k.input || '241' }); };
+  const { luna, readConf, writeConf, inputhook, VERSION, pickerShown, notifyApi, voice } = ctx;
+  const keys = () => { const k = Object.assign({ input: '', home: '', voice: '', learned: false }, readConf().keys || {}); return Object.assign(k, { inputIsDefault: !k.input, input: k.input || '241' }); };
   let job = { state: 'idle', message: '', at: 0 }, release = null, releaseAt = 0, releaseErr = '', frontendOk = null, checking = false;
   const setJob = (state, message) => { job = { state, message, at: Date.now() }; };
   const busy = () => job.state === 'working';
@@ -84,7 +84,7 @@ function create(ctx) {
       frontend: { version: fe.version || '?', previous: prevInfo() && prevInfo().version || null,
         updateTo: lat && lat.frontend && cmp(lat.frontend, fe.version) > 0 ? lat.frontend : null },
       release: lat ? { version: lat.version, frontend: lat.frontend, service: lat.service, notes: lat.notes } : null, checkedAt: releaseAt, checking, checkError: releaseErr,
-      options: options(), notifyApi: notifyApi ? { enabled: notifyApi.info().enabled, port: notifyApi.info().port } : { enabled: false }, home: { enabled: !fs.existsSync(D + '/DISABLE'), ours: (() => { try { return fs.readFileSync('/proc/mounts', 'utf8').includes(' /usr/palm/applications/com.webos.app.home '); } catch (_) { return false; } })() },
+      options: options(), voice: voice ? (v => ({ installed: v.installed, enabled: v.enabled }))(voice.status()) : null, notifyApi: notifyApi ? { enabled: notifyApi.info().enabled, port: notifyApi.info().port } : { enabled: false }, home: { enabled: !fs.existsSync(D + '/DISABLE'), ours: (() => { try { return fs.readFileSync('/proc/mounts', 'utf8').includes(' /usr/palm/applications/com.webos.app.home '); } catch (_) { return false; } })() },
       inputhook: inputhook.status(keys().input), keys: keys(), job, repo: repoUrl().replace(/^https:\/\/api\.github\.com\/repos\//, '').replace(/\/releases.*$/, ''),
     };
   }
@@ -196,10 +196,10 @@ function create(ctx) {
     if (act === 'learn-state') {   // the code of the key just pressed; saved here once it arrives
       const l = inputhook.learnState();
       if (l.state === 'got' && !l.saved) {
-        const c = readConf(), k = Object.assign({ input: '241', home: '' }, c.keys || {});
+        const c = readConf(), k = Object.assign({ input: '241', home: '', voice: '' }, c.keys || {});
         k[l.name] = l.code; c.keys = k; writeConf(c);   // 'learned' is set when the Input flow is finished (keys-done)
         inputhook.markSaved && inputhook.markSaved();
-        if (l.name === 'input') inputhook.ensure(options().inputKey, l.code);
+        if (l.name === 'input') inputhook.ensure(options().inputKey, l.code); else if (l.name === 'voice') inputhook.ensure(options().inputKey, keys().input);
       }
       return json(l);
     }
@@ -209,11 +209,11 @@ function create(ctx) {
     const b = await body(req);
     if (act === 'check') { await check(); return json(status()); }
     if (act === 'notify-api') return json(notifyApi ? notifyApi.set(b) : { enabled: false });
-    if (act === 'learn-key') { inputhook.startLearn(b.name === 'home' ? 'home' : 'input'); return json({ returnValue: true }); }
+    if (act === 'learn-key') { inputhook.startLearn(['home', 'voice'].includes(b.name) ? b.name : 'input'); return json({ returnValue: true }); }
     if (act === 'clear-key') {   // forget a learned code: Input goes back to the default, Home to none
-      const name = b.name === 'home' ? 'home' : 'input', c = readConf(), k = Object.assign({ input: '', home: '' }, c.keys || {});
+      const name = ['home', 'voice'].includes(b.name) ? b.name : 'input', c = readConf(), k = Object.assign({ input: '', home: '', voice: '' }, c.keys || {});
       k[name] = ''; if (name === 'input') k.learned = false; c.keys = k; writeConf(c);
-      if (name === 'input') inputhook.ensure(options().inputKey, keys().input);
+      if (name !== 'home') inputhook.ensure(options().inputKey, keys().input);
       return json({ returnValue: true });
     }
     if (act === 'keys-done') { const c = readConf(); c.keys = Object.assign({ input: '241', home: '' }, c.keys || {}, { learned: true }); writeConf(c); return json({ returnValue: true }); }

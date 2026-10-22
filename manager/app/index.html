@@ -37,7 +37,7 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:var(--night);col
   <div id="qrbox"><canvas id="qr"></canvas></div></div>
 <script>
 var kFlow='input', kText='', kRows=[], kTimer=0, upd=null, checkedOffline=false, forceOffer=false, API='http://127.0.0.1:8765', SVC='/media/developer/apps/usr/palm/services/com.cleanyourtv.manager.service';
-var napi=null, idxStack=[], setupIdx=0, updIdx=0, st=null, rows=[], idx=0, view='main', pending=null, pollT=0, setup={debloat:true,inputKey:true}, offline=false, busyMsg='';
+var napi=null, vo=null, mdl=[], shareMode='log', pairBase=0,  idxStack=[], setupIdx=0, updIdx=0, st=null, rows=[], idx=0, view='main', pending=null, pollT=0, setup={debloat:true,inputKey:true}, offline=false, busyMsg='';
 function $(i){return document.getElementById(i)}
 function api(p,body){return new Promise(function(res,rej){var x=new XMLHttpRequest();x.open(body?'POST':'GET',API+p);x.timeout=30000;
   x.onload=function(){try{res(JSON.parse(x.responseText))}catch(e){rej(e)}};x.onerror=x.ontimeout=function(){rej(new Error('no answer'))};x.send(body?JSON.stringify(body):null)})}
@@ -53,7 +53,36 @@ function build(){
   rows=[];
   if(view==='share'){rows.push({label:'Close',fn:closeShare});return}
   if(view==='keys'){rows=kRows;return}
-  if(view==='notifyhow'){rows.push({label:'Back',fn:pop});return}
+  if(view==='notifyhow'||view==='voicehow'){rows.push({label:'Back',fn:pop});return}
+  if(view==='models'){
+    var cur=((vo||{}).llm||{}).model;
+    mdl.forEach(function(x){rows.push({label:x.name,sub:x.id+(x.price!=null?' \u00B7 $'+x.price+' per million words in':'')+(x.id===cur?' \u00B7 selected':''),fn:function(){pickModel(x.id)}})});
+    rows.push({sep:true});rows.push({label:'Back',fn:pop});return}
+  if(view==='voice'){
+    var v=vo||{},wk=v.job&&v.job.state==='working';
+    if(!v.installed){
+      rows.push({label:'Install voice',sub:wk?'installing…':'downloads about 80 MB',dim:wk,fn:function(){if(wk)return;api('/api/voice/install',{}).then(function(x){vo=x;build();draw();voiceRefresh()},function(){banner('The service did not answer','err')})}});
+    }else{
+      var vk=(st.keys&&st.keys.voice)||'';
+      rows.push({label:'Listen on the voice button',sub:vk?onoff(v.enabled):'learn a button first',dim:!vk,fn:function(){if(!vk)return;api('/api/voice/set',{enabled:!v.enabled}).then(function(x){vo=x;return api('/api/manager/status')}).then(function(s2){st=s2;build();draw()},function(){banner('The service did not answer','err')})}});
+      rows.push({label:'Switch off LG\u2019s voice assistant',sub:onoff(v.suppressLg)+(v.suppressLg&&v.enabled&&!v.lgPaused?' \u00B7 not paused yet':''),fn:function(){api('/api/voice/set',{suppressLg:!v.suppressLg}).then(function(x){vo=x;build();draw()},function(){banner('The service did not answer','err')})}});
+      rows.push({label:'Learn the voice button',sub:vk?'now: '+vk:'not learned',fn:function(){openKeys('voice')}});
+      rows.push({label:'Try it now',sub:v.listening?'listening…':'speak when the card appears',dim:v.listening,fn:function(){if(v.listening)return;api('/api/voice/listen',{}).then(function(x){if(x.error)banner(x.error,'err');else banner('Speak now…','work');voiceRefresh()},function(){banner('The service did not answer','err')})}});
+      rows.push({label:'Send the text to',sub:v.url?v.url.replace(/^(https?:\/\/[^\/]+).*/,'$1'):'not set · shows a card only',fn:function(){
+        kText='Set the address of your server (from a shell on the TV):\n\ncurl -X POST localhost:8765/api/voice/set -d \'{"url":"http://server:port/path","token":"optional secret"}\'\n\nThe TV sends: POST, JSON {"text":"..."}, with \"Authorization: Bearer <token>\" when a token is set. If your server answers with JSON {"text":"..."} (or plain text), the answer is shown as a card. Only the recognised text is sent, never audio.';push('voicehow')}});
+      rows.push({sep:true});
+      rows.push({label:'Remove voice',sub:'deletes the '+Math.round((v.bytes||0)/1048576)+' MB download',fn:function(){api('/api/voice/uninstall',{}).then(function(x){vo=x;return api('/api/manager/status')}).then(function(s2){st=s2;banner('Voice removed','ok');build();draw()},function(){banner('The service did not answer','err')})}});
+    }
+    rows.push({sep:true});
+    var lm=v.llm||{};
+    rows.push({label:'AI chat (OpenRouter)',sub:lm.hasKey?(onoff(lm.enabled)+' \u00B7 '+lm.model):'no key set',fn:function(){
+      if(!lm.hasKey){openPair();return}
+      api('/api/voice/set',{llm:{enabled:!lm.enabled}}).then(function(x){if(x.error){banner(x.error,'err');return}vo=x;build();draw()},function(){banner('The service did not answer','err')})}});
+    rows.push({label:'Set up from your phone',sub:'key, model, instructions, server',fn:openPair});
+    rows.push({label:'Model',sub:lm.model||'openrouter/auto',fn:openModels});
+    rows.push({label:'Set up with commands',sub:'for scripts and ssh',fn:function(){kText=aiHelp();push('voicehow')}});
+    rows.push({label:'Forget the conversation',fn:function(){api('/api/voice/forget',{}).then(function(){banner('Conversation cleared','ok')},function(){banner('The service did not answer','err')})}});
+    rows.push({sep:true});rows.push({label:'Back',fn:pop});return}
   if(view==='notifyapi'){
     rows.push({label:'Accept notifications from the network',sub:onoff(napi&&napi.enabled),fn:function(){api('/api/manager/notify-api',{enabled:!(napi&&napi.enabled)}).then(function(n){napi=n;api('/api/manager/status').then(function(s2){st=s2;build();draw()})},function(){banner('The service did not answer','err')})}});
     if(napi&&napi.enabled){
@@ -101,6 +130,7 @@ function build(){
   rows.push({label:'CleanYourTV as Home',sub:onoff(st.home&&st.home.enabled),fn:function(){push('confirm-home')}});
   rows.push({label:'Debloat LG’s ads and telemetry',sub:onoff(st.options.debloat),fn:function(){opt({debloat:!st.options.debloat})}});
   rows.push({label:'Network notifications',sub:onoff(st.notifyApi&&st.notifyApi.enabled),fn:function(){api('/api/manager/notify-api').then(function(n){napi=n;push('notifyapi')},function(){banner('The service did not answer','err')})}});
+  rows.push({label:'Voice',sub:st.voice?(st.voice.installed?onoff(st.voice.enabled):'not installed'):'',fn:function(){api('/api/voice/status').then(function(v){vo=v;push('voice');if(v.job&&v.job.state==='working'||v.listening)voiceRefresh()},function(){banner('The service did not answer','err')})}});
   rows.push({label:'Input key',sub:(st.inputhook&&st.inputhook.hook&&!st.inputhook.hook.attached)?'not available':onoff(st.options.inputKey),fn:function(){push('inputkey')}});
   rows.push({sep:true});
   rows.push({label:'Share log',sub:'QR code for your phone',fn:openShare});
@@ -119,6 +149,19 @@ var INFO={
  'Accept notifications from the network':'On: the TV listens on port 8767 for POST /notify with the token. Anyone who has the token and network access can show cards on this screen.',
  'How to send':'Shows the address, the token and an example request.',
  'New token':'Creates a new secret token. Devices using the old one stop working.',
+ 'Voice':'Optional. Speak into the remote and the TV turns it into text on the TV itself (Moonshine, English). The text can be sent to a server you run. Audio never leaves the TV. Needs a download of about 80 MB.',
+ 'Install voice':'Downloads the speech engine, a 64-bit C library and the model (checksums are verified), then tests them. About a minute. Nothing is installed in the system folders.',
+ 'Listen on the voice button':'On: pressing the button you learned starts listening. A card shows what was heard.',
+ 'AI chat (OpenRouter)':'On: what you say is also sent as text to a language model through OpenRouter and the answer is shown on screen. Needs your OpenRouter key; the text goes to OpenRouter and the model provider, never audio.',
+ 'Set up from your phone':'Shows a QR code. Scan it with a phone on the same Wi-Fi to enter your OpenRouter key, choose a model, write instructions and set a server address. Nothing is typed on the TV.',
+ 'Model':'Choose the model that answers. The list is read from OpenRouter: the newest models of the main providers, with the price per million words in. The phone page lists every model.',
+ 'Set up with commands':'Shows the commands to set the key, model and instructions from a shell, and how to ask by text.',
+ 'Forget the conversation':'The model remembers the last few turns for ten minutes. This clears them.',
+ 'Switch off LG\u2019s voice assistant':'LG\u2019s own assistant reacts to the same button and sends the audio to LG. On: it is paused while voice is on. A reboot or switching this off undoes it.',
+ 'Learn the voice button':'Records the code of the remote button that starts listening. Try the microphone button first; any spare button works.',
+ 'Try it now':'Starts listening without the button: speak when the card appears.',
+ 'Send the text to':'Where the recognised text goes. Shows how to set the address of your server. Without one, the text is only shown on screen.',
+ 'Remove voice':'Deletes the downloaded engine and model. The rest of CleanYourTV is not affected.',
  'Input key':'The remote\u2019s Input button opens our Inputs list over the running app instead of LG\u2019s picker. Open this screen to switch it off or to learn the button.',
  'Share log':'Shows a QR code. Scan it with a phone on the same Wi-Fi to copy a report for a bug report. Addresses and URL paths are masked; the page closes after ten minutes.',
  'Uninstall':'Removes the apps, the boot scripts and your settings, then restarts the TV so LG\u2019s Home comes back.',
@@ -141,8 +184,11 @@ function draw(){
   $('list').innerHTML=h;var el=$('list').children;rows.forEach(function(r,i){if(r.sep)return;el[i].querySelector('.lb').textContent=r.label;if(r.sub)el[i].querySelector('.st').textContent=r.sub});
   var inf=infoFor(rows[idx]),ie=$('info');ie.textContent='';
   $('sub').style.wordBreak='';
-  if(view==='notifyhow'){$('sub').textContent=kText;$('sub').style.whiteSpace='pre-line';$('sub').style.wordBreak='break-all';return}
+  if(view==='notifyhow'||view==='voicehow'){$('sub').textContent=kText;$('sub').style.whiteSpace='pre-line';$('sub').style.wordBreak='break-all';return}
   if(view==='notifyapi'){$('sub').textContent='Network notifications';return}
+  if(view==='models'){$('sub').textContent='Choose the model that answers';return}
+  if(view==='voice'){var vv=vo||{},ls=vv.last?(vv.last.text?'Last heard: \u201C'+vv.last.text+'\u201D'+(vv.last.ms?' ('+(vv.last.ms/1000).toFixed(1)+' s)':'')+(vv.last.error?'\nNot sent: '+vv.last.error:''):'Last try: '+vv.last.state+(vv.last.error?'\n'+vv.last.error:'')):'';
+    $('sub').textContent='Voice \u00B7 '+(vv.engine||'')+(ls?'\n'+ls:'');$('sub').style.whiteSpace='pre-line';if(inf){var b2=document.createElement('b');b2.textContent=inf.t;ie.appendChild(b2);ie.appendChild(document.createTextNode(inf.d))}return}
   if(view==='keys'){$('sub').textContent=kText;$('sub').style.whiteSpace='pre-line';return}
   if(inf){var b=document.createElement('b');b.textContent=inf.t;ie.appendChild(b);ie.appendChild(document.createTextNode(inf.d))}
   if(view==='inputkey'){$('sub').textContent='Input key';return}
@@ -155,6 +201,38 @@ function draw(){
 function next(dir){var n=rows.length,i=idx;do{i=(i+dir+n)%n}while(rows[i].sep);idx=i;draw()}
 function act(){var r=rows[idx];if(r&&r.fn&&!(st&&st.job&&st.job.state==='working'&&r.dim))r.fn()}
 
+function aiHelp(){return 'Chat with a language model through OpenRouter. Run these on the TV (ssh):\n\ncurl -X POST localhost:8765/api/voice/set -d \'{"llm":{"key":"sk-or-...","model":"openrouter/auto"}}\'\ncurl -X POST localhost:8765/api/voice/set -d \'{"llm":{"enabled":true}}\'\n\nOptional: "system" sets the instructions. Ask by text from anywhere on the TV:\ncurl -X POST localhost:8765/api/voice/ask -d \'{"text":"What is the capital of Peru?"}\'\n\nSpoken and typed questions go to OpenRouter and the model you chose; no audio does. The key stays on the TV.'}
+function openModels(){
+  banner('Loading the model list\u2026','work');
+  api('/api/voice/models').then(function(r){
+    if(r.error){banner(r.error,'err');return}
+    banner('');mdl=[{id:'openrouter/auto',name:'Auto (OpenRouter picks)',price:null}].concat(r.picks);
+    var cur=((vo||{}).llm||{}).model;if(cur&&!mdl.some(function(x){return x.id===cur}))mdl.splice(1,0,{id:cur,name:cur,price:null});
+    push('models');
+    for(var k=0;k<rows.length;k++)if(rows[k].sub&&/selected$/.test(rows[k].sub)){idx=k;draw();break}
+  },function(){banner('The service did not answer','err')})}
+function pickModel(id){api('/api/voice/set',{llm:{model:id}}).then(function(x){if(x.error){banner(x.error,'err');return}vo=x;banner('Model: '+id,'ok');pop()},function(){banner('The service did not answer','err')})}
+function openPair(){
+  shareMode='pair';pairBase=(vo&&vo.pairedAt)||0;
+  push('share');$('share').style.display='block';$('shareurl').textContent='';$('qrbox').style.visibility='hidden';
+  $('share').querySelector('h2').textContent='Set up from your phone';
+  $('share').querySelector('ol').innerHTML='<li>Phone on the <b>same Wi-Fi</b> as the TV.</li><li>Scan the code with the camera.</li><li>Enter your <b>OpenRouter key</b>, choose a model and tap <b>Save</b>.</li>';
+  $('sharemsg').textContent='Preparing\u2026';
+  api('/api/voice/pair',{}).then(function(r){
+    if(view!=='share')return;
+    drawQr(r.url);$('qrbox').style.visibility='visible';$('shareurl').textContent=r.url;
+    $('sharemsg').textContent='The page stays open for ten minutes, or until you save. It is not encrypted: the key travels over your Wi-Fi, so use a network you trust.';
+    pollPair(0)},function(){$('sharemsg').textContent='The service did not answer.'})}
+function pollPair(n){
+  if(view!=='share'||shareMode!=='pair')return;
+  api('/api/voice/status').then(function(v){
+    if(v.pairedAt>pairBase){vo=v;closeShare();banner('Saved','ok');return}
+    if(!v.pairing&&n>1){$('sharemsg').textContent='The page has closed. Close this and try again.';return}
+    setTimeout(function(){pollPair(n+1)},2000)},function(){setTimeout(function(){pollPair(n+1)},3000)})}
+function voiceRefresh(){clearTimeout(pollT);api('/api/voice/status').then(function(v){vo=v;var j=v.job||{};
+  if(j.state==='working')banner(j.message,'work');else if(j.state==='error')banner(j.message,'err');else if(v.listening)banner('Listening…','work');else banner('');
+  if(view==='voice'){build();if(idx>=rows.length)idx=0;draw()}
+  if(j.state==='working'||v.listening)pollT=setTimeout(voiceRefresh,1000);else api('/api/manager/status').then(function(s){st=s})},function(){pollT=setTimeout(voiceRefresh,2000)})}
 function refreshDone(){load(true)}
 function run(path,body){api(path,body).then(function(r){if(r.error)banner(r.error,'err');else poll()},function(){banner('The service did not answer','err')})}
 function opt(o){api('/api/manager/options',o).then(function(s){st=s;build();draw()},function(){banner('The service did not answer','err')})}
@@ -192,9 +270,9 @@ function pollUpdate(n){
     setTimeout(function(){pollUpdate(n+1)},2000)})}
 /* the remote's Input and Home buttons differ between remotes and firmware: learn their codes from the hook, then test */
 function kShow(text,list){kText=text;kRows=list;build();idx=0;draw()}
-function openKeys(flow){kFlow=flow||'input';if(view!=='keys')push('keys');kStep(kFlow==='home'?'home':'input')}
+function openKeys(flow){kFlow=flow||'input';if(view!=='keys')push('keys');kStep(kFlow==='home'||kFlow==='voice'?kFlow:'input')}
 function closeKeys(){clearTimeout(kTimer);banner('');pop();load(true)}
-function kName(n){return n==='input'?'Input':'Home'}
+function kName(n){return n==='input'?'Input':(n==='voice'?'voice':'Home')}
 function kStep(n){
   clearTimeout(kTimer);
   var k=(st&&st.keys)||{input:'241',home:''};
@@ -202,12 +280,14 @@ function kStep(n){
     {label:'Start',sub:k.inputIsDefault?'default: '+k.input:'learned: '+k.input,fn:function(){kLearn('input')}},{label:'Skip',fn:function(){kStep('test')}},{label:'Clear',sub:'back to the default (241)',dim:k.inputIsDefault,fn:function(){if(!k.inputIsDefault)kClear('input')}},{label:'Close',fn:closeKeys}]);
   if(n==='home')return kShow('The Home key (optional).\nChoose Start, then press the Home button on your remote.',[
     {label:'Start',sub:k.home?'now: '+k.home:'',fn:function(){kLearn('home')}},{label:'Clear',sub:'forget the code',dim:!k.home,fn:function(){if(k.home)kClear('home')}},{label:'Close',fn:closeKeys}]);
+  if(n==='voice')return kShow('The voice button.\nChoose Start, then press the button you want to use for voice. The remote\u2019s microphone button may not reach the hook; any spare button works.',[
+    {label:'Start',sub:k.voice?'now: '+k.voice:'',fn:function(){kLearn('voice')}},{label:'Clear',sub:'forget the code',dim:!k.voice,fn:function(){if(k.voice)kClear('voice')}},{label:'Close',fn:closeKeys}]);
   if(n==='test')return kTest();
   if(n==='done')return api('/api/manager/keys-done',{}).then(function(){return api('/api/manager/status')}).then(function(s){st=s;
     kShow('Done.\nInput key '+((s.keys||{}).input||'241')+'.\nThe Home key is optional: learn it from the main list if you want it recorded.',[{label:'Close',fn:closeKeys}])},function(){closeKeys()})}
 function kClear(name){
   api('/api/manager/clear-key',{name:name}).then(function(){return api('/api/manager/status')}).then(function(s){st=s;
-    kShow(name==='input'?'Input key cleared.\nIt uses the default code ('+((s.keys||{}).input||'241')+').':'Home key cleared.',[{label:'Close',fn:closeKeys}])},function(){closeKeys()})}
+    kShow(name==='input'?'Input key cleared.\nIt uses the default code ('+((s.keys||{}).input||'241')+').':(name==='voice'?'Voice button cleared.':'Home key cleared.'),[{label:'Close',fn:closeKeys}])},function(){closeKeys()})}
 function kLearn(name){
   api('/api/manager/learn-key',{name:name}).then(function(){
     kShow('Press the '+kName(name)+' button now\u2026',[{label:'Cancel',fn:function(){kStep(name)}}]);
@@ -231,7 +311,8 @@ function drawQr(url){
   cv.width=cv.height=size;g=cv.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,size,size);g.fillStyle='#000';
   for(var r=0;r<n;r++)for(var c=0;c<n;c++)if(q.isDark(r,c))g.fillRect((c+4)*cell,(r+4)*cell,cell,cell)}
 function openShare(){
-  push('share');$('share').style.display='block';$('shareurl').textContent='';$('qrbox').style.visibility='hidden';
+  shareMode='log';
+  push('share');$('share').querySelector('h2').textContent='Share the log';$('share').querySelector('ol').innerHTML='<li>Phone on the <b>same Wi-Fi</b> as the TV.</li><li>Scan the code with the camera.</li><li>Tap <b>Copy</b> on the page and paste it into your message.</li>';$('share').style.display='block';$('shareurl').textContent='';$('qrbox').style.visibility='hidden';
   $('sharemsg').textContent='Preparing the report\u2026';
   rootExec('rm -f /tmp/cytv-sharelog.json; nohup node '+SVC+'/helper/sharelog.js > /tmp/cytv-sharelog.out 2>&1 &').then(function(){pollShare(0)})}
 function pollShare(n){
@@ -241,7 +322,7 @@ function pollShare(n){
     if(st&&st.url){drawQr(st.url);$('qrbox').style.visibility='visible';$('shareurl').textContent=st.url;$('sharemsg').textContent='The page is open for ten minutes. It lists versions, the setup log and the service log; addresses and URL paths are masked.';return}
     if(n>45){$('sharemsg').textContent='Could not prepare the report (is the Homebrew Channel installed?).';return}
     setTimeout(function(){pollShare(n+1)},1000)})}
-function closeShare(){$('share').style.display='none';rootExec('pkill -f "[s]harelog.js"; rm -f /tmp/cytv-sharelog.json');pop()}
+function closeShare(){$('share').style.display='none';if(shareMode==='pair'){api('/api/voice/pair-stop',{}).catch(function(){});pop();voiceRefresh();return}rootExec('pkill -f "[s]harelog.js"; rm -f /tmp/cytv-sharelog.json');pop()}
 function doSetup(force){forceOffer=false;
   banner('Setting up\u2026 the screen blinks once while LG\u2019s system restarts','work');
   var flags=(setup.debloat?'--debloat':'--no-debloat')+' '+(setup.inputKey?'--input-key':'--no-input-key')+(force?' --force':'');

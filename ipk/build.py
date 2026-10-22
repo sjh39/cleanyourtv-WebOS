@@ -72,6 +72,7 @@ add(data, s + '/bootstrap.sh', open(P('scripts', 'bootstrap.sh'), 'rb').read(), 
 add_dir(data, s + '/helper', P('helper'))
 add_dir(data, s + '/scripts', P('scripts'), skip=('bootstrap.sh',))
 add(data, s + '/scripts/uninstall.sh', open(P('uninstall.sh'), 'rb').read(), 0o755)
+add(data, s + '/voice/cytv-asr', open(P('voice', 'cytv-asr'), 'rb').read(), 0o755)   # optional voice feature: downloads its engine on request
 add(data, s + '/inputhook/ezinject', open(P('third-party', 'inputhook', 'ezinject'), 'rb').read(), 0o755)
 add(data, s + '/inputhook/libinputhookpp.so', open(P('third-party', 'inputhook', 'libinputhookpp.so'), 'rb').read())
 for n in sorted(os.listdir(P('third-party', 'inputhook'))):

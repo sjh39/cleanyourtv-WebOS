@@ -33,6 +33,19 @@ function luna(uri, payload) {
 // "topui" windows sit above every app and, unlike "overlay" ones, leave the remote with the app underneath.
 async function launch(params) { return luna('luna://com.webos.applicationManager/launch', { id: 'com.cleanyourtv.notify', params }); }
 
+async function show(b, internal) {
+  const kind = internal && /^(listening|thinking|answer)$/.test(b.kind) ? b.kind : '';   // the voice function's own look; not available to network senders
+  const p = { title: String(b.title || '').slice(0, 120), text: String(b.text || '').slice(0, kind ? 1500 : 400),
+    seconds: Math.max(2, Math.min(120, +b.seconds || 8)), position: /^(top|middle|bottom)-(left|center|right)$/.test(b.position) ? b.position : (kind ? 'bottom-center' : 'top-right') };
+  if (kind) { p.kind = kind; p.question = String(b.question || '').slice(0, 300); }
+  if (b.image) {
+    try { const id = String(++seq); images.set(id, await fetchImage(String(b.image))); if (images.size > 5) images.delete(images.keys().next().value); p.image = 'http://127.0.0.1:8765/api/notify/img?id=' + id; }
+    catch (e) { p.text = (p.text ? p.text + '\n' : '') + '(image: ' + e.message + ')'; }
+  }
+  if (!p.title && !p.text && !p.image && !kind) return { error: 'nothing to show' };
+  return launch(p);
+}
+
 async function handle(req, res, u, body) {
   const json = (o, c) => { res.writeHead(c || 200, { 'content-type': 'application/json' }); res.end(JSON.stringify(o)); };
   if (u === '/api/notify/img') {
@@ -41,15 +54,9 @@ async function handle(req, res, u, body) {
     res.writeHead(200, { 'content-type': e.type, 'cache-control': 'no-store' }); return res.end(e.buf);
   }
   if (u === '/api/notify' && req.method === 'POST') {
-    const b = await body(req), p = { title: String(b.title || '').slice(0, 120), text: String(b.text || '').slice(0, 400),
-      seconds: Math.max(2, Math.min(120, +b.seconds || 8)), position: /^(top|middle|bottom)-(left|center|right)$/.test(b.position) ? b.position : 'top-right' };
-    if (b.image) {
-      try { const id = String(++seq); images.set(id, await fetchImage(String(b.image))); if (images.size > 5) images.delete(images.keys().next().value); p.image = 'http://127.0.0.1:8765/api/notify/img?id=' + id; }
-      catch (e) { p.text = (p.text ? p.text + '\n' : '') + '(image: ' + e.message + ')'; }
-    }
-    if (!p.title && !p.text && !p.image) return json({ error: 'nothing to show' }, 400);
-    return json(await launch(p));
+    const r = await show(await body(req));
+    return json(r.error ? { error: r.error } : r, r.error ? 400 : 200);
   }
   res.writeHead(404); res.end();
 }
-module.exports = { handle };
+module.exports = { handle, show };

@@ -5,6 +5,7 @@ picture notifications and an optional debloat of LG's ads and telemetry.
 
 - **Launcher:** replaces LG's Home with a dock of four apps, a top shelf, an app grid sorted by use, an Inputs picker,
   a Settings shortcut and a clock.
+- **Voice (optional):** speech recognition on the TV (Moonshine, English), answers from a language model through OpenRouter or from your own server, shown as text on screen. Home Assistant support is planned.
 - **Live TV:** plays your M3U playlist with a channel list, programme guide and number entry.
 - **Input key:** the remote's Input button opens an Inputs list over the running app.
 - **Picture notifications:** a card with a photo over any app, triggered from your network.
@@ -89,6 +90,7 @@ and usage history). It removes the apps, boot scripts and Input-key bind and res
 | CleanYourTV as Home | Choose LG's Home or ours. The TV restarts. |
 | Debloat | Turns the debloat on or off. |
 | Network notifications | Switch, address, token and example for sending picture notifications from other devices. |
+| Voice | Optional. Installs the speech recogniser (about 80 MB), learns the voice button, tries it, sets where the text goes. |
 | Input key | The takeover switch, **Learn the Input key**, and the optional **Learn the Home key**. |
 | Share log | A QR code that opens a masked diagnostic report on a phone, with a **Copy** button. |
 | Uninstall | Removes everything and restarts the TV. |
@@ -199,6 +201,94 @@ HTTP, so the token is visible to anyone who can watch your network traffic; keep
 wrong tokens lock an address out for ten minutes, and at most 20 notifications a minute are accepted. From a shell on
 the TV, `POST localhost:8765/api/notify` accepts the same body without a token.
 
+## Voice (optional)
+
+Speak into the remote and the TV turns it into text on the TV itself. The text is shown on screen and can be sent to
+a server you run, to a language model through OpenRouter, or both; the answer comes back as text on screen. English
+only. No audio is recorded or sent anywhere.
+
+It is off and not installed by default. **Voice** in the manager app downloads about 80 MB into
+`/media/developer/cleanyourtv/voice` (checksums are pinned; **Remove voice** deletes it):
+
+| Part | From |
+|---|---|
+| Speech engine `libmoonshine.so` and ONNX Runtime | the `moonshine-voice` 0.1.5 package on PyPI (MIT) |
+| 64-bit C library | `ubuntu-base` 22.04.5 for arm64 (this TV has a 32-bit userland on a 64-bit kernel, so the 64-bit recogniser brings its own) |
+| Model `tiny-streaming-en` (34 million parameters, int8) | download.moonshine.ai (MIT) |
+| `cytv-asr`, a small program that feeds audio to the engine | this repository (`voice/asr.c`, built with `voice/build.sh`) |
+
+How it works: the voice button starts a microphone stream of LG's voice service (`voiceinput`, 16 kHz audio). The
+service stops after a short silence, runs the recogniser for the speech it heard and shows the result. The recogniser
+runs only while recognising: about 190 MB of memory for one to two seconds. A three second phrase took about 1.4 s on
+the G2.
+
+| Step | How |
+|---|---|
+| Choose the button | **Voice** > **Learn the voice button**. Try the remote's microphone button; if the hook does not see it, any spare button works. Then switch **Listen on the voice button** on. |
+| Try without a button | **Voice** > **Try it now**, or `curl -X POST localhost:8765/api/voice/listen` |
+| Send the text to a server | `curl -X POST localhost:8765/api/voice/set -d '{"url":"http://server:port/path","token":"optional"}'` |
+| Pause LG's voice assistant | **Voice** > **Switch off LG's voice assistant**. It pauses LG's `voiceconductor` process while voice is on, so LG's own screen and its cloud recognition do not start on the same button. A reboot or turning the switch off undoes it. |
+
+The TV sends `POST` with the JSON body `{"text":"...","source":"cleanyourtv","language":"en","time":"..."}` and, when a
+token is set, `Authorization: Bearer <token>`. If the server answers with JSON (`{"title","text","image","seconds"}`)
+or plain text, the answer is shown as a card. The address and token are stored in `config.json` on the TV only.
+
+**AI chat (OpenRouter).** In **Voice**, **Set up from your phone** shows a QR code. Scan it with a phone on the same
+Wi-Fi and enter your OpenRouter key, choose a model (the list is read from OpenRouter; any model name can be typed),
+write instructions and, if you like, the address of your own server. The page is open for ten minutes or until you
+save, at a random address; it is plain HTTP, so use it on a network you trust. **Model** on the TV chooses among the
+newest models of the main providers, with their price. **AI chat (OpenRouter)** switches the answers on and off.
+
+The same from a shell:
+
+```
+curl -X POST localhost:8765/api/voice/set -d '{"llm":{"key":"sk-or-...","model":"openrouter/auto"}}'
+curl -X POST localhost:8765/api/voice/set -d '{"llm":{"enabled":true}}'
+```
+
+What you say is sent as text to `openrouter.ai` with the model you chose (a short instruction asks for one to three
+plain sentences; change it with `"system"`), and the answer appears on screen. The model remembers the last six
+exchanges for ten minutes (**Forget the conversation** clears them). The key is stored in `config.json` on the TV only.
+With a server address set as well, the server also receives the text and the model's answer (`{"text","answer"}`).
+You can also ask by text, with the same result: `curl -X POST localhost:8765/api/voice/ask -d '{"text":"..."}'` answers
+`{"text","answer","error"}`; add `"card":false` to skip the screen. This works without the speech download.
+
+On screen, a card changes in place while you speak: Listening (moving bars), Recognising or Thinking (dots), then your
+question in small type above the answer. Reading time follows the length of the answer.
+
+### The speech model
+
+Speech is turned into text by [Moonshine](https://github.com/moonshine-ai/moonshine) (Moonshine AI, MIT licence), an
+open speech-recognition model made for small devices. The TV runs it itself; there is no cloud recogniser.
+
+| | |
+|---|---|
+| Model | `tiny-streaming-en`: a transformer with about 34 million parameters (an encoder that listens and a decoder that writes the words), trained for English. Weights are 8-bit integers (int8), 45 MB on disk. |
+| Streaming | The encoder processes audio in small steps, so recognition does not wait for a long block of audio; this build recognises once you stop speaking. |
+| Runtime | ONNX Runtime on the CPU (two ARM cores of the G2). No GPU or NPU is used. |
+| Speech detection | A small voice-activity model inside the engine cuts the audio into phrases. A separate level check in the service stops the recording after about 1.2 s of silence, after 7 s without speech, or after 15 s. |
+| Cost on the G2 | Loading 0.3 s; a 3 s phrase is recognised in about 1.4 s; about 190 MB of memory, only while recognising. When idle nothing of it is in memory. |
+| Accuracy | The Moonshine project reports 12.0 % average word error rate for this model across the Open ASR Leaderboard datasets, and 4.8 % on clean read speech (LibriSpeech). A remote's microphone across a living room is much harder: expect good results for short commands and questions, and mistakes on names and rare words. |
+| Language | English only. Moonshine also publishes German, Spanish, Arabic, Japanese, Mandarin, Tagalog and Vietnamese models, and bigger English ones (small 123 M, medium 245 M parameters); there is no Dutch model. Other models can be added later. |
+| Audio | 16 kHz mono, taken from the microphone stream of LG's `voiceinput` service while you speak. It is held in memory, recognised, then discarded. Nothing is written to disk or sent anywhere. |
+
+Why it brings its own C library: the TV's programs are 32-bit ARM on a 64-bit kernel, and the recogniser is a 64-bit
+program. `cytv-asr` is started through a copy of the 64-bit loader and libraries that the download places next to it,
+so nothing in the TV's system folders is touched and removing the voice download removes all of it.
+
+Only text goes further: to your server, to OpenRouter, or nowhere. LG's own assistant is a separate path with its own
+cloud recognition; the **Switch off LG's voice assistant** option pauses it while voice is on.
+
+### Planned: Home Assistant
+
+The next builds add Home Assistant support: send what you say to Home Assistant's conversation (Assist) API and show
+its answer, so spoken commands can control lights, scenes and media, with the AI chat as the fallback for open
+questions. Until then, the server address and the `/api/voice/ask` call can already forward text to a Home Assistant
+webhook or any other service.
+
+Limits: English only (Moonshine has no Dutch model); recognition from the remote's microphone is rough for names and
+long words, and good for short commands. Answers are text only; the TV does not speak them.
+
 ## Debloat
 
 About a minute after every boot, the debloat stops `remotelogger`, `service-logger`, `contentminer` and `nudge`,
@@ -230,6 +320,7 @@ The service runs as root on `127.0.0.1:8765` (JSON).
 | `POST /api/launch` `{id, params}` | Launch an app |
 | `GET /api/inputs` | HDMI inputs and their state |
 | `POST /api/notify` | Picture notification (on the network: `POST :8767/notify` with the token) |
+| `GET /api/voice/status`, `POST /api/voice/install`, `/uninstall`, `/set`, `/listen`, `/ask`, `/forget` | Optional voice function and AI chat |
 | `GET /api/live/status`, `/api/live/channels`, `/api/live/epg` | Live TV data |
 | `POST /api/live/settings`, `/api/live/refresh`, `/api/live/reset` | Live TV setup |
 | `GET /api/manager/status` | Versions, updates, options, hook state |
@@ -252,7 +343,7 @@ service version is `VERSION` in `helper/helper.js`; the launcher version is `app
 `app/index.html`.
 
 Layout: `app/` launcher, `manager/`, `picker/`, `notify/` apps, `helper/` service, `scripts/` boot, setup and
-restore scripts, `third-party/` bundled inputhook and QR library, `compat.json`, `install.sh`, `uninstall.sh`.
+restore scripts, `voice/` source of the speech program, `third-party/` bundled inputhook and QR library, `compat.json`, `install.sh`, `uninstall.sh`.
 
 ## Credits and licence
 

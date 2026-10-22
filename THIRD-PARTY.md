@@ -25,6 +25,17 @@ license is in the frida-gum project). Anyone who received this package can ask f
 issue tracker, and we will provide it. The GPL-3.0 text is in `LICENSE-inputhookpp-GPL-3.0.txt`. This applies to
 that library only, not to the rest of this project.
 
+## Voice (optional download)
+
+Nothing below is shipped in the package; the manager app downloads it on request (see README, Voice) and
+`voice/cytv-asr` (MIT, source in `voice/asr.c`) is built against the Moonshine C header.
+
+| Component | License | Source |
+|---|---|---|
+| Moonshine speech engine and models (`moonshine-voice` 0.1.5) | MIT | [moonshine-ai/moonshine](https://github.com/moonshine-ai/moonshine) |
+| ONNX Runtime (inside the `moonshine-voice` package) | MIT | [microsoft/onnxruntime](https://github.com/microsoft/onnxruntime) |
+| 64-bit GNU C library, libstdc++, libgcc (from `ubuntu-base` 22.04.5) | LGPL-2.1 / GPL-3.0 with runtime library exception | Ubuntu source packages `glibc` and `gcc-12` |
+
 ## qrcode-generator (QR code for sharing the log)
 
 `third-party/qrcode-generator/qrcode.js` is [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) 1.4.4 by

@@ -4,7 +4,7 @@
 const fs = require('fs'), cp = require('child_process');
 const D = '/media/developer/cleanyourtv', HOOK = D + '/inputhook', CFGDIR = '/home/root/.config/lginputhook', BINDS = CFGDIR + '/keybinds.json';
 const TARGETS = ['RELEASE', 'lginput2', 'micomservice', 'tvservice', 'testapp'];
-const DEFAULT_KEY = '241', COMMAND = 'sh ' + D + '/inputkey.sh';   // 241: the Input button on the remote this was written with; learned in the setup
+const DEFAULT_KEY = '241', COMMAND = 'sh ' + D + '/inputkey.sh', VOICE_COMMAND = 'sh ' + D + '/voicekey.sh';   // 241: the Input button on the remote this was written with; learned in the setup
 const ENV = Object.assign({}, process.env, { PATH: '/usr/bin:/usr/sbin:/bin:/sbin:' + (process.env.PATH || '') });
 
 function procs() {
@@ -17,12 +17,13 @@ function procs() {
 }
 const hooked = pid => { try { return fs.readFileSync('/proc/' + pid + '/maps', 'utf8').includes('libinputhookpp'); } catch (_) { return false; } };
 
-function writeBinds(on, key) {
+function writeBinds(on, key, vkey) {
   let b = {};
   try { b = JSON.parse(fs.readFileSync(BINDS, 'utf8')); } catch (_) {}
   const before = JSON.stringify(b);
-  for (const k of Object.keys(b)) if (b[k] && b[k].command === COMMAND && (!on || k !== key)) delete b[k];   // our bind only, wherever it was
+  for (const k of Object.keys(b)) if (b[k] && ((b[k].command === COMMAND && (!on || k !== key)) || (b[k].command === VOICE_COMMAND && (!vkey || k !== vkey)))) delete b[k];   // our binds only, wherever they were
   if (on) b[key] = { action: 'exec', command: COMMAND };
+  if (vkey) b[vkey] = { action: 'exec', command: VOICE_COMMAND };
   if (JSON.stringify(b) === before) return;
   fs.mkdirSync(CFGDIR, { recursive: true });
   fs.writeFileSync(BINDS + '.tmp', JSON.stringify(b)); fs.renameSync(BINDS + '.tmp', BINDS);
@@ -30,9 +31,12 @@ function writeBinds(on, key) {
 
 let busy = false;
 // Idempotent: call at start and every so often (LG's input service restarts now and then and loses the hook).
+let voiceFn = () => '';   // the key bound to the voice function, or '' (set by the service)
+const setVoiceKey = f => { voiceFn = f; };
 function ensure(enabled, key) {
-  try { writeBinds(enabled, String(key || DEFAULT_KEY)); } catch (e) { console.error('inputhook: keybinds:', e.message); }
-  if (!enabled || busy || !fs.existsSync(HOOK + '/ezinject')) return;
+  const vkey = voiceFn();
+  try { writeBinds(enabled, String(key || DEFAULT_KEY), vkey ? String(vkey) : ''); } catch (e) { console.error('inputhook: keybinds:', e.message); }
+  if (!(enabled || vkey) || busy || !fs.existsSync(HOOK + '/ezinject')) return;
   const todo = procs().filter(p => !hooked(p.pid));
   if (!todo.length) return;
   busy = true;
@@ -57,7 +61,7 @@ const status = (key) => ({ hooked: procs().filter(p => ['lginput2', 'micomservic
   bound: (() => { try { const b = JSON.parse(fs.readFileSync(BINDS, 'utf8')); const k = String(key || DEFAULT_KEY); return !!(b[k] && b[k].command === COMMAND); } catch (_) { return false; } })(), hook: hookInfo() });
 
 // ---- learning a key: the code of the next button press, read from the hook's log ----
-const IGNORE = { input: [28, 103, 105, 106, 108, 272, 273, 274, 352, 412], home: [28, 103, 105, 106, 108, 272, 273, 274, 352] };   // arrows, OK, pointer, Back
+const IGNORE = { input: [28, 103, 105, 106, 108, 272, 273, 274, 352, 412], home: [28, 103, 105, 106, 108, 272, 273, 274, 352], voice: [28, 103, 105, 106, 108, 272, 273, 274, 352, 412] };   // arrows, OK, pointer, Back
 let learn = null;
 const markSaved = () => { if (learn && learn.result) learn.result.saved = true; };
 function startLearn(name) {
@@ -75,4 +79,4 @@ function learnState() {
   }
   return { state: Date.now() - learn.at > 45000 ? 'timeout' : 'waiting', name: learn.name, seconds: Math.round((Date.now() - learn.at) / 1000) };
 }
-module.exports = { ensure, status, markSaved, startLearn, learnState, hookInfo, DEFAULT_KEY };
+module.exports = { setVoiceKey, ensure, status, markSaved, startLearn, learnState, hookInfo, DEFAULT_KEY };
