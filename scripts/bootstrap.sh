@@ -8,6 +8,7 @@ export PATH=/usr/bin:/usr/sbin:/bin:/sbin:$PATH
 S=$(cd "$(dirname "$0")" && pwd)
 D=/media/developer/cleanyourtv
 INITD=/var/lib/webosbrew/init.d
+J="node $S/scripts/jtool.js"   # JSON helper (node, not python3)
 HOME_DIR=/usr/palm/applications/com.webos.app.home
 TESTED_SDK="10."   # firmware this has been tried on: webOS 25 (sdkVersion 10.x)
 
@@ -51,7 +52,7 @@ ensure_apps() {
 command -v luna-send >/dev/null || die "this does not look like webOS (no luna-send)"
 [ -d "$INITD" ] || die "$INITD not found: root with the Homebrew Channel is required (https://rootmy.tv)"
 [ -w /media/developer ] || die "/media/developer is not writable"
-for t in tar python3 node; do command -v $t >/dev/null || die "missing tool: $t"; done
+for t in tar node; do command -v $t >/dev/null || die "missing tool: $t"; done
 [ -f $S/helper/helper.js ] && [ -f $S/scripts/10-cleanyourtv-home ] || die "the service files are incomplete in $S"
 [ -f $HOME_DIR/appinfo.json ] || die "stock Home app not found at $HOME_DIR"
 if grep -q " $HOME_DIR " /proc/mounts && [ ! -f $D/backup/home-appinfo.orig.json ]; then
@@ -66,21 +67,11 @@ if [ "$MODE" = install ]; then
   # the compatibility list: firmware known to work is set up without --force (a newer copy is fetched from the repository when possible)
   mkdir -p $D
   COMPATREPO=$(cut -d' ' -f1 $D/source 2>/dev/null); [ -n "$COMPATREPO" ] || COMPATREPO=lasharor/cleanyourtv-WebOS
-  curl -fsSL -m 6 "https://raw.githubusercontent.com/$COMPATREPO/main/compat.json" -o /tmp/cytv-compat.json 2>/dev/null && python3 -c "import json;json.load(open('/tmp/cytv-compat.json'))" 2>/dev/null && cp /tmp/cytv-compat.json $D/compat.json
-  COMPATNOTE=$(python3 - "$fw" "$sdk" $D/compat.json $S/compat.json <<'PY'
-import json, sys
-fw, sdk = sys.argv[1:3]
-for f in sys.argv[3:]:
-    try: d = json.load(open(f))
-    except Exception: continue
-    for e in d.get('entries', []):
-        w = e.get('firmware', '')
-        if w and (fw == w or sdk == w or (w.endswith('*') and fw.startswith(w[:-1]))):
-            print(e.get('note') or 'listed'); sys.exit(0)
-PY
-)
+  curl -fsSL -m 6 "https://raw.githubusercontent.com/$COMPATREPO/main/compat.json" -o /tmp/cytv-compat.json 2>/dev/null && node -e 'JSON.parse(require("fs").readFileSync("/tmp/cytv-compat.json","utf8"))' 2>/dev/null && cp /tmp/cytv-compat.json $D/compat.json
+  COMPATNOTE=$($J compat "$fw" "$sdk" $D/compat.json $S/compat.json)
+
   SRCINFO=$D/backup/home-appinfo.orig.json; [ -f "$SRCINFO" ] || SRCINFO=$HOME_DIR/appinfo.json
-  HOMEKIND=$(python3 -c "import json,sys;o=json.load(open(sys.argv[1]));print(o.get('id',''),o.get('type',''))" "$SRCINFO" 2>/dev/null)
+  HOMEKIND=$($J kind "$SRCINFO" 2>/dev/null)
   case "$HOMEKIND" in com.webos.app.home*) HOMEID=1 ;; *) HOMEID=0 ;; esac
   if [ -n "$COMPATNOTE" ] && [ $HOMEID = 1 ]; then
     say "this firmware is in the compatibility list ($COMPATNOTE); LG's Home app is '${HOMEKIND#com.webos.app.home }'"
@@ -114,14 +105,7 @@ chmod +x $D/*.sh $D/10-cleanyourtv-home $D/15-cleanyourtv-debloat
 [ -f $D/compat.json ] || cp $S/compat.json $D/compat.json
 
 # the launcher that ships with the package, unless a newer one is already installed
-newer() { python3 - "$1" "$2" <<'PY'
-import json, sys
-def v(f):
-    try: return [int(x) for x in json.load(open(f)).get('version', '0').split('.')]
-    except Exception: return [0]
-sys.exit(0 if v(sys.argv[1]) > v(sys.argv[2]) else 1)
-PY
-}
+newer() { $J newer "$1" "$2"; }
 if [ ! -f $D/app/index.html ] || newer $S/payload/app/version.json $D/app/version.json; then
   rm -rf $D/app.prev; [ -d $D/app ] && mv $D/app $D/app.prev
   mkdir -p $D/app && cp $S/payload/app/* $D/app/
@@ -130,18 +114,8 @@ if [ ! -f $D/app/index.html ] || newer $S/payload/app/version.json $D/app/versio
 fi
 
 # ---- options (stored in config.json, changed later in the manager) ----
-python3 - "$D/config.json" "$DEBLOAT" "$INPUTKEY" <<'PY'
-import json, sys
-p, deb, key = sys.argv[1:4]
-try: c = json.load(open(p))
-except Exception: c = {}
-o = c.setdefault('options', {})
-o.setdefault('debloat', True); o.setdefault('inputKey', True)
-if deb != '': o['debloat'] = deb == '1'
-if key != '': o['inputKey'] = key == '1'
-json.dump(c, open(p, 'w'), indent=2)
-PY
-opt() { python3 -c "import json;print(1 if json.load(open('$D/config.json'))['options']['$1'] else 0)"; }
+$J options "$D/config.json" "$DEBLOAT" "$INPUTKEY"
+opt() { $J opt "$D/config.json" "$1"; }
 [ -n "$CYTV_REPO" ] && echo "$CYTV_REPO ${CYTV_REF:-main}" > $D/source
 [ "$MODE" = install ] && rm -f $D/DISABLE $D/DISABLE-DEBLOAT   # setting up selects our Home; an update keeps the choice
 

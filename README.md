@@ -38,7 +38,7 @@ untested.
 
 - An LG webOS TV that is already rooted with the [Homebrew Channel](https://webosbrew.org) ([rootmy.tv](https://rootmy.tv)).
 - SSH access as `root` (`ssh root@<tv-ip>`) for the install script, or any other way to install an `.ipk`.
-- Internet access on the TV and the tools webOS ships: `curl`, `tar`, `python3`, `node`.
+- Internet access on the TV and the tools webOS ships: `curl`, `tar` and `node`. (Python is not needed.)
 - A firmware on the compatibility list (see **Compatibility**). Other firmware may still work: the setup continues if LG's
   Home app is the flutter or web kind it was written for, and otherwise offers **Set up anyway**. The original is
   backed up, and if the new Home does not come up the setup removes the boot scripts and restarts the TV with LG's

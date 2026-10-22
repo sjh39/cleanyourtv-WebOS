@@ -18,7 +18,7 @@ main() {
   [ "$(id -u)" = 0 ] || die "run as root (ssh root@<tv-ip>)"
   command -v luna-send >/dev/null || die "this does not look like webOS (no luna-send)"
   [ -d /var/lib/webosbrew/init.d ] || die "/var/lib/webosbrew/init.d not found: root with the Homebrew Channel is required (https://rootmy.tv)"
-  for t in curl python3; do command -v $t >/dev/null || die "missing tool: $t"; done
+  for t in curl node; do command -v $t >/dev/null || die "missing tool: $t"; done
 
   T=$(mktemp -d /tmp/cytv.XXXXXX) || die "mktemp failed"
   trap 'rm -rf "$T"' EXIT
@@ -28,19 +28,12 @@ main() {
   else
     say "looking for the latest release of $REPO"
     curl -fsSL -H 'User-Agent: cleanyourtv-installer' "https://api.github.com/repos/$REPO/releases/latest" > $T/release.json || die "could not read the release list (is there a release yet?)"
-    python3 - $T/release.json > $T/assets.txt <<'PY' || die "the release has no package (com.cleanyourtv.manager_<version>_all.ipk with a .sha256 file)"
-import json, sys
-j = json.load(open(sys.argv[1])); a = {x['name']: x['browser_download_url'] for x in j.get('assets', [])}
-for n, u in a.items():
-    if n.startswith('com.cleanyourtv.manager_') and n.endswith('_all.ipk') and n + '.sha256' in a:
-        print(u); print(a[n + '.sha256']); sys.exit(0)
-sys.exit(1)
-PY
+    node -e 'var j=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")),a={};(j.assets||[]).forEach(function(x){a[x.name]=x.browser_download_url});var k=Object.keys(a).filter(function(n){return /^com\.cleanyourtv\.manager_.*_all\.ipk$/.test(n)&&a[n+".sha256"]})[0];if(!k)process.exit(1);console.log(a[k]);console.log(a[k+".sha256"])' $T/release.json > $T/assets.txt || die "the release has no package (com.cleanyourtv.manager_<version>_all.ipk with a .sha256 file)"
     IPKURL=$(sed -n 1p $T/assets.txt); SHAURL=$(sed -n 2p $T/assets.txt)
     say "downloading $(basename "$IPKURL")"
     curl -fsSL "$IPKURL" -o $T/pkg.ipk || die "download failed"
     want=$(curl -fsSL "$SHAURL" | awk '{print $1}')
-    got=$(python3 -c "import hashlib,sys;print(hashlib.sha256(open(sys.argv[1],'rb').read()).hexdigest())" $T/pkg.ipk)
+    got=$(node -e 'console.log(require("crypto").createHash("sha256").update(require("fs").readFileSync(process.argv[1])).digest("hex"))' $T/pkg.ipk)
     [ -n "$want" ] && [ "$want" = "$got" ] || die "the package does not match its checksum; nothing was installed"
     IPK=$T/pkg.ipk
   fi

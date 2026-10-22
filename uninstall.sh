@@ -18,16 +18,7 @@ grep -q cleanyourtv $LASTAPP 2>/dev/null && echo '{"lastAppId":"com.webos.app.ho
 pkill -f "[1]0-cleanyourtv-home"   # the watchdog would restart the service
 pkill -f "[c]leanyourtv/helper.js"
 # our Input-key bind
-python3 - <<'PY'
-import json
-p = '/home/root/.config/lginputhook/keybinds.json'
-try:
-    b = json.load(open(p))
-    if '241' in b and 'cleanyourtv' in b['241'].get('command', ''):
-        del b['241']; json.dump(b, open(p, 'w'))
-except Exception:
-    pass
-PY
+node $D/jtool.js rmbind 2>/dev/null
 case " $* " in *" --no-reboot "*) if grep -q " /usr/palm/applications/com.webos.app.home " /proc/mounts; then sh $D/undo-home.sh temp </dev/null; fi ;; esac
 KEEP=0; case " $* " in *" --keep-config "*) KEEP=1 ;; esac
 if [ $KEEP = 1 ]; then mkdir -p /media/developer/cytv-keep; cp $D/config.json $D/usage.json /media/developer/cytv-keep/ 2>/dev/null; fi
