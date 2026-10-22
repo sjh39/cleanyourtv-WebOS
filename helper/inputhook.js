@@ -1,7 +1,7 @@
 // Input key: injects the bundled inputhook (see third-party/inputhook) into LG's input processes and binds the remote's
 // Input button (id 241) to scripts/inputkey.sh, which opens the Inputs picker overlay. Removing our bind gives the key
 // back to LG's own picker. Other binds in keybinds.json are left alone.
-const fs = require('fs'), cp = require('child_process');
+const fs = require('fs'), cp = require('child_process'), nc = require('./netcompat');
 const D = '/media/developer/cleanyourtv', HOOK = D + '/inputhook', CFGDIR = '/home/root/.config/lginputhook', BINDS = CFGDIR + '/keybinds.json';
 const TARGETS = ['RELEASE', 'lginput2', 'micomservice', 'tvservice', 'testapp'];
 const DEFAULT_KEY = '241', COMMAND = 'sh ' + D + '/inputkey.sh', VOICE_COMMAND = 'sh ' + D + '/voicekey.sh';   // 241: the Input button on the remote this was written with; learned in the setup
@@ -25,7 +25,7 @@ function writeBinds(on, key, vkey) {
   if (on) b[key] = { action: 'exec', command: COMMAND };
   if (vkey) b[vkey] = { action: 'exec', command: VOICE_COMMAND };
   if (JSON.stringify(b) === before) return;
-  fs.mkdirSync(CFGDIR, { recursive: true });
+  nc.mkdirp(CFGDIR);
   fs.writeFileSync(BINDS + '.tmp', JSON.stringify(b)); fs.renameSync(BINDS + '.tmp', BINDS);
 }
 

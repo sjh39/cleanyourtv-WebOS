@@ -10,8 +10,7 @@ sh $L/stage-home.sh
 if grep -q " $H " /proc/mounts; then
   # already replaced (an update): the served files were refreshed in place; reload Home unless asked not to ($1 = keep)
   [ "$1" = keep ] && exit 0
-  pkill -f "[a]pp-id=com.webos.app.home"; sleep 2
-  luna-send -n 1 -w 10000 -f luna://com.webos.applicationManager/launch '{"id":"com.webos.app.home"}' </dev/null >/dev/null
+  sh $L/reload-home.sh
   exit 0
 fi
 mount --bind $L/home-overlay $H && { (sleep 3; pkill -9 -f /usr/palm/applications/airplay/LunaExecutable) </dev/null >/dev/null 2>&1 & systemctl restart sam; }

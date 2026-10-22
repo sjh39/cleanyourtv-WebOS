@@ -1,10 +1,11 @@
 // Live TV backend for the launcher: reads an M3U playlist (and its XMLTV guide), serves them to the Live TV app,
 // and runs a short-lived pairing page on the LAN so the playlist address can be entered from a phone or computer.
 const http = require('http'), https = require('https'), fs = require('fs'), os = require('os'), zlib = require('zlib'), crypto = require('crypto');
+const nc = require('./netcompat'), { URL, URLSearchParams } = nc;
 const DIR = process.env.CYTV_LIVE_DIR || '/media/developer/cleanyourtv/live';
 const SETTINGS = DIR + '/settings.json', PLAYLIST = DIR + '/playlist.json', EPG = DIR + '/epg.json';
 const PAIR_PORT = 8766, PAIR_MS = 10 * 60 * 1000, REFRESH_MS = 12 * 3600 * 1000;
-try { fs.mkdirSync(DIR, { recursive: true }); } catch (_) {}
+try { nc.mkdirp(DIR); } catch (_) {}
 
 const readJson = (f, d) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch (_) { return d; } };
 const writeJson = (f, o) => { fs.writeFileSync(f + '.tmp', JSON.stringify(o), { mode: 0o600 }); fs.renameSync(f + '.tmp', f); };   // the playlist address holds an access key: owner only
@@ -18,7 +19,7 @@ function get(url, depth = 0) {
     let u; try { u = new URL(url); } catch (_) { return reject(new Error('not a valid address')); }
     if (u.protocol !== 'http:' && u.protocol !== 'https:') return reject(new Error('address must start with http:// or https://'));
     const lib = u.protocol === 'https:' ? https : http;
-    const req = lib.get(u, { headers: { 'user-agent': 'cleanyourtv-live', 'accept-encoding': 'gzip' }, timeout: 20000 }, res => {
+    const req = nc.get(lib, u, { headers: { 'user-agent': 'cleanyourtv-live', 'accept-encoding': 'gzip' }, timeout: 20000 }, res => {
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
         res.resume(); return resolve(get(new URL(res.headers.location, u).toString(), depth + 1));
       }

@@ -142,7 +142,7 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:var(--night);col
 <div id="lv"><div id="lv-stage"></div><div id="lv-spin" class="layer"></div><div id="lv-osd" class="layer"><img class="logo" id="lv-ologo" alt=""><div class="num" id="lv-onum"></div><div class="info"><div class="name" id="lv-oname"></div><div class="now" id="lv-onow"></div><div class="next" id="lv-onext"></div><div class="pbar"><i id="lv-obar"></i></div></div></div><div id="lv-numin" class="layer"></div><div id="lv-guide" class="layer"><div id="lv-glow"></div><div id="lv-gtop"><div id="lv-gtitle"></div><div id="lv-gtabs"></div><div id="lv-gclock"></div></div><div id="lv-rows"></div><div id="lv-detail"></div></div><div id="lv-msg" class="layer"></div></div>
 <div id="toast"></div>
 <script>
-var API='http://127.0.0.1:8765', CACHE_KEY='cytv.cache.v2', VERSION='1.4.3';
+var API='http://127.0.0.1:8765', CACHE_KEY='cytv.cache.v2', VERSION='1.4.5';
 var DEFAULTS={
   dock:['netflix','youtube.leanback.v4','amazon','com.disney.disneyplus-prod'],
   topbar:[{label:'Inputs',icon:'inputs',action:'inputs'},{label:'Live TV',icon:'tv',action:'live'},{label:'Settings',icon:'settings',app:'com.palm.app.settings'}]
@@ -227,7 +227,7 @@ function tile(a){
   if(!known)i.crossOrigin='anonymous';
   i.onload=function(){if(!colors[a.id]){colors[a.id]=iconColor(i,a.id);paint(d,colors[a.id]);storeSoon();if(rows[r]&&rows[r][c]===d)glowNow(d)}};
   i.onerror=function(){i.remove();var t=document.createElement('div');t.className='t';t.textContent=a.title;d.appendChild(t);
-    if(!colors[a.id]){var f=hsl2rgb(hashHue(a.id),.42,.42);colors[a.id]={c:f,b:hsl2rgb(hashHue(a.id),.4,.2)};paint(d,colors[a.id])}};
+    if(!colors[a.id]){var f=hsl2rgb(hashHue(a.id),.42,.42);paint(d,{c:f,b:hsl2rgb(hashHue(a.id),.4,.2)})}};   /* not remembered: a failed load must not pin a made-up colour */
   i.src=a.id==='__live'?LIVE_ICON:API+'/icon/'+encodeURIComponent(a.id);d.appendChild(i);if(i.decode)i.decode().catch(function(){});
   return d}
 
@@ -445,27 +445,44 @@ setInterval(tick,15000);tick();
 /* ---------- Live TV (plays the user's M3U playlist in the TV's own video player) ---------- */
 var LIVE_ICON='data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 130"><rect width="130" height="130" fill="#ef4f5f"/><rect x="25" y="36" width="80" height="54" rx="13" fill="none" stroke="#fff" stroke-width="8"/><path d="M58 52 L58 74 L77 63 Z" fill="#fff"/><path d="M48 104 H82" stroke="#fff" stroke-width="8" stroke-linecap="round"/></svg>');
 var LIVE=(function(){
-  var chans=[],groups=[],byNum={},cur=0,epgNow={},video=null,variants=[],vi=0,osdT=0,numT=0,numBuf='',spinT=0,failed=false,loaded=false,setupT=0,fetchT=0;
+  var chans=[],groups=[],byNum={},cur=0,epgNow={},video=null,variants=[],vi=0,beginT=0,pend=false,osdT=0,numT=0,numBuf='',spinT=0,failed=false,loaded=false,setupT=0,fetchT=0;
   var L={open:false,g:0,col:'c',ci:0,list:[]},o={on:false};
   function lesc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
   function layer(id,on){$(id).classList.toggle('on',!!on)}
   function msg(h){$('lv-msg').innerHTML=h;layer('lv-msg',true)}
-  function variantsFor(url){var v=[];if(/\/live\/.+\.ts(\?|$)/.test(url))v.push({src:url.replace(/\.ts(\?|$)/,'.m3u8$1'),type:'application/x-mpegURL'});v.push({src:url,type:'application/x-mpegURL'});v.push({src:url,type:''});return v}
-  function stop(){clearTimeout(spinT);if(video){try{video.pause();video.removeAttribute('src');video.load()}catch(e){}video=null}$('lv-stage').innerHTML=''}
-  function startVariant(){
-    stop();
+  /* A plain .m3u8 address is set as the element's src (the type is not needed); anything else keeps its <source type> variants. */
+  function variantsFor(url){var v=[];if(/\.m3u8(\?|$)/.test(url))return [{src:url,type:''}];if(/\/live\/.+\.ts(\?|$)/.test(url))v.push({src:url.replace(/\.ts(\?|$)/,'.m3u8$1'),type:'application/x-mpegURL'});v.push({src:url,type:'application/x-mpegURL'});v.push({src:url,type:''});return v}
+  /* One <video> element for the whole session: creating and destroying it on every channel change makes the TV rebuild its video plane. */
+  function ensureVideo(){
+    if(video)return video;
     var v=document.createElement('video');v.autoplay=true;video=v;
-    var d=variants[vi],src=document.createElement('source');src.src=d.src;if(d.type)src.type=d.type;v.appendChild(src);
-    $('lv-stage').appendChild(v);layer('lv-spin',true);
-    v.addEventListener('playing',function(){if(v===video)layer('lv-spin',false)});
-    v.addEventListener('waiting',function(){if(v===video)layer('lv-spin',true)});
-    v.addEventListener('error',function(){if(v!==video)return;if(vi<variants.length-1){vi++;startVariant()}else{layer('lv-spin',false);failed=true;msg('<b>'+lesc(byNum[cur].name)+'</b><div>'+t('This channel is not available.')+'</div><div class="small">'+t('Press OK to try again.')+'</div>')}});
-    spinT=setTimeout(function(){if(v===video&&v.readyState<3&&!failed)v.dispatchEvent(new Event('error'))},20000)}
-  function play(num,quiet){
+    v.addEventListener('playing',function(){layer('lv-spin',false)});
+    v.addEventListener('waiting',function(){layer('lv-spin',true)});
+    v.addEventListener('error',onError);
+    $('lv-stage').appendChild(v);return v}
+  function release(){clearTimeout(spinT);clearTimeout(beginT);pend=false;if(video){try{video.pause();video.removeAttribute('src');while(video.firstChild)video.removeChild(video.firstChild);video.load()}catch(e){}if(video.parentNode)video.parentNode.removeChild(video);video=null}}
+  function onError(){
+    if(!video||pend)return;
+    if(vi<variants.length-1){vi++;startVariant()}
+    else{clearTimeout(spinT);layer('lv-spin',false);failed=true;msg('<b>'+lesc(byNum[cur].name)+'</b><div>'+t('This channel is not available.')+'</div><div class="small">'+t('Press OK to try again.')+'</div>')}}
+  function startVariant(){
+    clearTimeout(spinT);pend=false;
+    var v=ensureVideo(),d=variants[vi];layer('lv-spin',true);
+    while(v.firstChild)v.removeChild(v.firstChild);
+    if(!d.type){v.src=d.src}
+    else{v.removeAttribute('src');var src=document.createElement('source');src.src=d.src;src.type=d.type;v.appendChild(src);v.load()}
+    spinT=setTimeout(function(){if(v===video&&v.readyState<3&&!failed)onError()},20000)}
+  /* defer: while zapping (Up/Down) the new channel starts only once the keys have paused, so skipped channels never reach the provider */
+  function play(num,quiet,defer){
     var c=byNum[num];if(!c)return;
     cur=num;try{localStorage.setItem('live.last',String(num))}catch(e){}
-    failed=false;variants=variantsFor(c.url);vi=0;layer('lv-msg',false);startVariant();
-    if(!quiet)showOsd();else fillOsd();loadEpg([c.id])}
+    failed=false;variants=variantsFor(c.url);vi=0;layer('lv-msg',false);
+    clearTimeout(beginT);clearTimeout(spinT);
+    if(defer){
+      pend=true;if(video){try{video.pause()}catch(e){}}layer('lv-spin',true);
+      beginT=setTimeout(function(){startVariant();loadEpg([c.id])},defer)}
+    else{startVariant();loadEpg([c.id])}
+    if(!quiet)showOsd();else fillOsd()}
   function hm(ts){var d=new Date(ts*1000);return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)}
   function fillOsd(){
     var c=byNum[cur];if(!c)return;
@@ -542,9 +559,9 @@ var LIVE=(function(){
           layer('lv-msg',false);play(byNum[last]?last:chans[0].num)})
       })()
     }).catch(function(){msg('<div>'+t('The helper is not reachable.')+'</div>');setTimeout(function(){if(o.on)boot()},3000)})}
-  function step(d){var i=chans.indexOf(byNum[cur]);i=(i+d+chans.length)%chans.length;play(chans[i].num)}
+  function step(d){var i=chans.indexOf(byNum[cur]);i=(i+d+chans.length)%chans.length;play(chans[i].num,false,180)}
   o.enter=function(){o.on=true;$('lv').classList.add('on');if(loaded&&byNum[cur])play(cur);else boot()};
-  o.exit=function(){o.on=false;closeList();full={};stop();clearTimeout(osdT);clearTimeout(numT);clearInterval(setupT);layer('lv-osd',false);layer('lv-numin',false);layer('lv-msg',false);layer('lv-spin',false);$('lv').classList.remove('on')};
+  o.exit=function(){o.on=false;closeList();full={};release();clearTimeout(osdT);clearTimeout(numT);clearInterval(setupT);layer('lv-osd',false);layer('lv-numin',false);layer('lv-msg',false);layer('lv-spin',false);$('lv').classList.remove('on')};
   o.key=function(e){
     var k=e.keyCode;e.preventDefault();
     if(!loaded){if(k===461||k===27||k===8)o.exit();return}

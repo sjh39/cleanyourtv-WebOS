@@ -4,6 +4,7 @@
 // removable again. It is a 64-bit program, so it runs through its own copy of the 64-bit C library, which this TV (32-bit
 // userland on a 64-bit kernel) does not have. API (loopback only): GET /api/voice/status, POST install | uninstall | set | listen.
 const fs = require('fs'), path = require('path'), cp = require('child_process'), crypto = require('crypto'), https = require('https'), http = require('http'), zlib = require('zlib'), net = require('net');
+const nc = require('./netcompat'), { URL, URLSearchParams } = nc;
 const D = '/media/developer/cleanyourtv', V = D + '/voice', LIB = V + '/lib', MODEL = V + '/model', TMP = V + '/tmp';
 const SERVICE_DIR = '/media/developer/apps/usr/palm/services/com.cleanyourtv.manager.service';
 const ENV = Object.assign({}, process.env, { PATH: '/usr/bin:/usr/sbin:/bin:/sbin:' + (process.env.PATH || '') });
@@ -43,7 +44,7 @@ function download(url, file, sha256, hops) {
   return new Promise((resolve, reject) => {
     if ((hops || 0) > 6) return reject(new Error('too many redirects'));
     if (!url.startsWith('https:')) return reject(new Error('refusing a download over plain http'));
-    const req = https.get(url, { headers: { 'User-Agent': 'cleanyourtv-voice' }, timeout: 30000 }, res => {
+    const req = nc.get(https, url, { headers: { 'User-Agent': 'cleanyourtv-voice' }, timeout: 30000 }, res => {
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) { res.resume(); return resolve(download(new URL(res.headers.location, url).toString(), file, sha256, (hops || 0) + 1)); }
       if (res.statusCode !== 200) { res.resume(); return reject(new Error('HTTP ' + res.statusCode + ' from ' + new URL(url).host)); }
       const h = crypto.createHash('sha256'), w = fs.createWriteStream(file);
@@ -74,7 +75,7 @@ function unzip(file, want) {
 const run = (cmd, args, ms) => new Promise((res, rej) => cp.execFile(cmd, args, { env: ENV, timeout: ms || 120000, maxBuffer: 4 << 20 }, (e, o, er) => e ? rej(new Error(String(er || e.message).trim().split('\n').pop())) : res(o)));
 
 async function doInstall() {
-  rmrf(V); fs.mkdirSync(TMP, { recursive: true }); fs.mkdirSync(LIB, { recursive: true }); fs.mkdirSync(MODEL, { recursive: true });
+  rmrf(V); nc.mkdirp(TMP); nc.mkdirp(LIB); nc.mkdirp(MODEL);
   setJob('working', 'Downloading the speech engine (18 MB)');
   await download(SRC.wheel.url, TMP + '/engine.whl', SRC.wheel.sha256);
   const f = unzip(TMP + '/engine.whl', n => /^moonshine_voice\/libmoonshine\.so$|^moonshine_voice\.libs\/libonnxruntime-[\w]+\.so\.1$/.test(n));
@@ -161,7 +162,7 @@ function request(url, headers, payload, ms) {
     let u; try { u = new URL(url); } catch (_) { return reject(new Error('the address is not valid')); }
     if (u.protocol !== 'http:' && u.protocol !== 'https:') return reject(new Error('the address must start with http:// or https://'));
     const data = Buffer.from(JSON.stringify(payload)), lib = u.protocol === 'https:' ? https : http;
-    const req = lib.request(u, { method: 'POST', headers: Object.assign({ 'content-type': 'application/json', 'content-length': data.length }, headers), timeout: ms || 30000 }, res => {
+    const req = nc.request(lib, u, { method: 'POST', headers: Object.assign({ 'content-type': 'application/json', 'content-length': data.length }, headers), timeout: ms || 30000 }, res => {
       const b = []; let n = 0;
       res.on('data', c => { n += c.length; if (n > 1 << 20) req.destroy(new Error('the answer is too large')); else b.push(c); });
       res.on('end', () => resolve({ status: res.statusCode, text: Buffer.concat(b).toString('utf8') }));
@@ -302,7 +303,7 @@ const MAJOR = ['anthropic', 'openai', 'google', 'meta-llama', 'mistralai', 'deep
 function models() {
   if (modelCache && Date.now() - modelCache.at < 3600000) return Promise.resolve(modelCache);
   return new Promise((resolve, reject) => {
-    const req = https.get('https://openrouter.ai/api/v1/models', { headers: { 'User-Agent': 'cleanyourtv-voice' }, timeout: 15000 }, res => {
+    const req = nc.get(https, 'https://openrouter.ai/api/v1/models', { headers: { 'User-Agent': 'cleanyourtv-voice' }, timeout: 15000 }, res => {
       if (res.statusCode !== 200) { res.resume(); return reject(new Error('OpenRouter answered ' + res.statusCode)); }
       const b = []; let n = 0;
       res.on('data', c => { n += c.length; if (n > 8 << 20) req.destroy(new Error('the model list is too large')); else b.push(c); });

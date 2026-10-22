@@ -1,6 +1,7 @@
 // Notifications with pictures: the TV's own toasts are text-only, so this shows a card in a small transparent
 // overlay window (the notify app) on top of whatever is running. POST /api/notify {title, text, image, seconds, position}
 const http = require('http'), https = require('https'), cp = require('child_process');
+const nc = require('./netcompat'), { URL, URLSearchParams } = nc;
 const ENV = Object.assign({}, process.env, { PATH: '/usr/bin:/usr/sbin:/bin:/sbin:' + (process.env.PATH || '') });
 const images = new Map();   // id -> {type, buf}; kept in memory, newest few only
 let seq = 0;
@@ -12,7 +13,7 @@ function fetchImage(url, depth = 0) {
     if (u.protocol !== 'http:' && u.protocol !== 'https:') return reject(new Error('image address must be http(s)'));
     if (/^(localhost|127\.|0\.0\.0\.0|\[?::1\]?$)/i.test(u.hostname)) return reject(new Error('image address must not point at the TV itself'));   // not a way to read the service's own pages
     const lib = u.protocol === 'https:' ? https : http;
-    const req = lib.get(u, { timeout: 8000, rejectUnauthorized: false }, res => {
+    const req = nc.get(lib, u, { timeout: 8000, rejectUnauthorized: false }, res => {
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) { res.resume(); return resolve(fetchImage(new URL(res.headers.location, u).toString(), depth + 1)); }
       if (res.statusCode !== 200) { res.resume(); return reject(new Error('image server answered ' + res.statusCode)); }
       const b = []; let n = 0;

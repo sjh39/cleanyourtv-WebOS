@@ -16,6 +16,11 @@ fe = json.load(open(P('app', 'version.json')))['version']
 if not re.search(r"VERSION='%s'" % re.escape(fe), open(P('app', 'index.html')).read()):
     sys.exit('app/version.json (%s) and VERSION in app/index.html do not match' % fe)
 
+FLEXGAP = open(os.path.join(ROOT, 'shared', 'flexgap.js'), 'rb').read()
+def page(body):   # every HTML page gets the flex-gap script for webOS 6 (see shared/flexgap.js)
+    i = body.rindex(b'</body>')
+    return body[:i] + b'<script>' + FLEXGAP + b'</script>\n' + body[i:]
+
 def add(files, arc, data, mode=0o644):
     files.append((arc, data, mode))
 
@@ -27,7 +32,8 @@ def add_dir(files, arc_root, src, mode_for=None, skip=()):
             p = os.path.join(root, n)
             rel = os.path.relpath(p, src)
             mode = 0o755 if (n.endswith('.sh') or n in ('ezinject', '10-cleanyourtv-home', '15-cleanyourtv-debloat')) else 0o644
-            add(files, arc_root + '/' + rel, open(p, 'rb').read(), mode)
+            body = open(p, 'rb').read()
+            add(files, arc_root + '/' + rel, page(body) if n == 'index.html' else body, mode)
 
 def tgz(files, prefix=''):
     b = io.BytesIO()
@@ -63,6 +69,7 @@ for app_id, src in (('com.cleanyourtv.manager', 'manager/app'), ('com.cleanyourt
     for root, _, names in os.walk(P(src)):
         for n in sorted(names):
             p = os.path.join(root, n); rel = os.path.relpath(p, P(src)); body = open(p, 'rb').read()
+            if n == 'index.html': body = page(body)
             if n == 'appinfo.json' and app_id == PKG:   # the package version is the service version
                 o = json.loads(body); o['version'] = version; body = json.dumps(o).encode()
             add(data, '.' + d + '/' + rel, body)

@@ -1,7 +1,7 @@
 // Root service of CleanYourTV: bridges the launcher web app to luna, serves app icons, runs Live TV and picture
 // notifications, keeps the Input-key picker alive and hosts the manager API. Listens on 127.0.0.1 only.
 const http = require('http'), fs = require('fs'), path = require('path'), cp = require('child_process');
-const VERSION = '1.5.1';
+const VERSION = '1.5.3';
 const PORT = 8765, DIR = '/media/developer/cleanyourtv', CONF = DIR + '/config.json', USAGE = DIR + '/usage.json';
 const ENV = Object.assign({}, process.env, { PATH: '/usr/bin:/usr/sbin:/bin:/sbin:' + (process.env.PATH || '') });
 
@@ -87,9 +87,14 @@ const body = req => new Promise(r => { let b = ''; req.on('data', c => b += c); 
 http.createServer(async (req, res) => {
   // Our apps are local files (their requests carry Origin "null"); curl and scripts send no Origin. A web page opened in the
   // TV's browser has an http(s) origin and is refused, so it cannot drive this root service.
-  const origin = req.headers.origin;
+  let origin = req.headers.origin;
+  const rawOrigin = origin;
+  // webOS 6 sends "file://<appId>-webos" for local apps instead of "null": accept that for our own apps and the Home slot only
+  if (/^file:\/\/(com\.webos\.app\.home|com\.cleanyourtv\.(manager|picker|notify|live))-webos$/.test(origin || '')) origin = 'null';
   if (origin !== undefined && origin !== 'null') { console.log('refused origin ' + origin + ' ' + req.method + ' ' + req.url.slice(0, 60)); res.writeHead(403, { 'content-type': 'application/json' }); return res.end('{"error":"origin not allowed"}'); }
-  if (origin === 'null') { res.setHeader('Access-Control-Allow-Origin', 'null'); res.setHeader('Vary', 'Origin'); }
+  // Chromium 79 (webOS 6) compares the answer with its own serialisation of a file origin, so for those origins echoing fails CORS: answer * there.
+  // Only origins accepted above get this far.
+  if (origin === 'null') { res.setHeader('Access-Control-Allow-Origin', rawOrigin === 'null' ? 'null' : '*'); res.setHeader('Vary', 'Origin'); }
   res.setHeader('Access-Control-Allow-Headers', 'content-type');
   if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
   const json = (o, c) => { res.writeHead(c || 200, { 'content-type': 'application/json' }); res.end(JSON.stringify(o)); };

@@ -1,6 +1,7 @@
 // Manager API (/api/manager/*): status, update checks, launcher (frontend) updates with rollback, service updates,
 // options, and restoring LG's Home. Used by the CleanYourTV manager app on the TV.
 const fs = require('fs'), path = require('path'), cp = require('child_process'), crypto = require('crypto'), https = require('https'), http = require('http');
+const nc = require('./netcompat'), { URL, URLSearchParams } = nc;
 const D = '/media/developer/cleanyourtv';
 const SERVICE_DIR = '/media/developer/apps/usr/palm/services/com.cleanyourtv.manager.service';
 const DEFAULT_REPO = 'lasharor/cleanyourtv-WebOS';
@@ -18,7 +19,7 @@ function fetch(url, file, hops) {
     if ((hops || 0) > 6) return reject(new Error('too many redirects'));
     if (!url.startsWith('https:') && !allowHttp()) return reject(new Error('refusing a download over plain http'));
     const mod = url.startsWith('https:') ? https : http;
-    const req = mod.get(url, { headers: { 'User-Agent': 'cleanyourtv-manager', Accept: file ? 'application/octet-stream, */*' : 'application/vnd.github+json, application/json, */*' }, timeout: 20000 }, res => {
+    const req = nc.get(mod, url, { headers: { 'User-Agent': 'cleanyourtv-manager', Accept: file ? 'application/octet-stream, */*' : 'application/vnd.github+json, application/json, */*' }, timeout: 20000 }, res => {
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) { res.resume(); return resolve(fetch(new URL(res.headers.location, url).toString(), file, (hops || 0) + 1)); }
       if (res.statusCode !== 200) { res.resume(); return reject(new Error('HTTP ' + res.statusCode)); }
       if (!file) { const b = []; res.on('data', c => b.push(c)); res.on('end', () => resolve(Buffer.concat(b))); return; }

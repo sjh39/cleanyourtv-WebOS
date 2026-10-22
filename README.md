@@ -107,6 +107,13 @@ falls back to the one in the package). A listed firmware is set up directly.
 | 33.23.05 (OLED65G26LA, webOS 25) | tested |
 | 23.25.55 | reported working on two models |
 
+**webOS 6 (Node.js 8, Chromium 79).** The service and the pages avoid what those versions lack: `netcompat.js` supplies
+`URL`, `URLSearchParams`, `mkdir -p` and the `http(s).get(url, options)` form; `shared/flexgap.js` (added to every page
+when the package is built) applies flex `gap` as margins where the browser ignores it; the service accepts the
+`file://<appId>-webos` origin that webOS 6 apps send; and `scripts/reload-home.sh` restarts `webapp-mgr` there to reload
+Home. These changes follow a community fork for webOS 6 and have not been tried on a webOS 6 TV: the pieces were tested
+under Node 8.17 and in a current Chrome with the detection switched off.
+
 For an unlisted firmware the setup continues when LG's Home app is the flutter or web kind, and otherwise stops and
 offers **Set up anyway**. To add a firmware, open an issue with the output of **Share log**.
 
@@ -146,7 +153,7 @@ curl -X POST localhost:8765/api/live/settings -d '{"playlistUrl":"http://...","e
 | Info, Left / Right | Channel banner (now and next) |
 | Back, Home | Return to the launcher |
 
-The TV's player plays HLS (`.m3u8`). The guide (XMLTV) is refreshed twice a day and keeps 36 hours. There is no
+Stepping through channels with Up / Down starts the new channel when the keys have paused for 180 ms, so channels you skip are never requested from the provider (some accounts allow only one connection). The player uses one video element for the whole session. The TV's player plays HLS (`.m3u8`). The guide (XMLTV) is refreshed twice a day and keeps 36 hours. There is no
 recording, pause or favourites. The playlist address is stored only on the TV, in `/media/developer/cleanyourtv/live/`;
 `curl -X POST localhost:8765/api/live/reset` clears it.
 
@@ -335,7 +342,7 @@ The service runs as root on `127.0.0.1:8765` (JSON).
 service version is `VERSION` in `helper/helper.js`; the launcher version is `app/version.json` and `VERSION` in
 `app/index.html`.
 
-Layout: `app/` launcher, `manager/`, `picker/`, `notify/` apps, `helper/` service, `scripts/` boot, setup and
+Layout: `app/` launcher, `shared/` script added to every page by the build, `manager/`, `picker/`, `notify/` apps, `helper/` service, `scripts/` boot, setup and
 restore scripts, `voice/` source of the speech program, `third-party/` bundled inputhook and QR library, `compat.json`, `install.sh`, `uninstall.sh`.
 
 ## Credits and licence

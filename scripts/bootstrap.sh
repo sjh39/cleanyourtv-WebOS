@@ -156,8 +156,7 @@ if [ "$MODE" = update ]; then
   # the overlay apps and the launcher may have new pages: restart the hidden picker (the service starts it again) and reload Home
   luna-send -n 1 -w 3000 luna://com.webos.applicationManager/closeByAppId '{"id":"com.cleanyourtv.picker"}' </dev/null >/dev/null 2>&1
   if [ "$FRONTEND_NEW" = 1 ] && grep -q " $HOME_DIR " /proc/mounts; then
-    pkill -f "[a]pp-id=com.webos.app.home"; sleep 2
-    luna-send -n 1 -w 10000 -f luna://com.webos.applicationManager/launch '{"id":"com.webos.app.home"}' </dev/null >/dev/null
+    sh $D/reload-home.sh </dev/null
   fi
   exit 0
 fi
