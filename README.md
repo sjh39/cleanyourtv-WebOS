@@ -37,7 +37,7 @@ untested.
 ## Requirements
 
 - An LG webOS TV that is already rooted with the [Homebrew Channel](https://webosbrew.org) ([rootmy.tv](https://rootmy.tv)).
-- SSH access as `root` (`ssh root@<tv-ip>`) for the installer. The manager app can also set itself up without SSH.
+- SSH access as `root` (`ssh root@<tv-ip>`) for the install script, or any other way to install an `.ipk`.
 - Internet access on the TV and the tools webOS ships: `curl`, `tar`, `python3`, `node`.
 
 ## Install
@@ -45,57 +45,45 @@ untested.
 CleanYourTV is one package, `com.cleanyourtv.manager_<version>_all.ipk`, from the
 [Releases](https://github.com/lasharor/cleanyourtv-WebOS/releases) page. It contains the manager app, the Inputs
 picker and notification overlay apps, the service, the launcher and the bundled inputhook (see
-[`THIRD-PARTY.md`](THIRD-PARTY.md)).
+[`THIRD-PARTY.md`](THIRD-PARTY.md)). Installing it only adds the apps; nothing on the TV changes until you run the
+setup in the manager app.
 
-**With the installer** (downloads the latest package, checks its SHA-256, installs it and sets everything up). Run
-from your computer, with your TV's IP address; it asks what to set up:
-
-```sh
-ssh -t root@192.168.1.50 'sh -c "$(curl -fsSL https://raw.githubusercontent.com/lasharor/cleanyourtv-WebOS/main/install.sh)"'
-```
-
-| Question | Default |
-|---|---|
-| Debloat LG's ads and telemetry | yes |
-| Take over the Input key | yes |
-| Start now (the screen blinks once) or at the next reboot | now |
-
-Without a terminal (no `-t`) it asks nothing and uses the defaults:
+**1. Install the manager app.** Run from your computer, with your TV's IP address. The script downloads the latest
+release package, checks its SHA-256 and installs it:
 
 ```sh
 ssh root@192.168.1.50 'curl -fsSL https://raw.githubusercontent.com/lasharor/cleanyourtv-WebOS/main/install.sh | sh'
 ```
 
-| Option | Effect |
+Or download the `.ipk` yourself and install it with the Homebrew Channel's tools or `ares-install`.
+
+**2. Set up, on the TV.** Open **CleanYourTV** in the app list. Choose the options, then **Set up now**:
+
+| Option | Default |
 |---|---|
-| `-y`, `--yes` | Ask nothing, use the defaults. |
-| `--no-debloat` | Do not install the debloat. |
-| `--no-input-key` | Leave the Input key to LG's picker. |
-| `--no-start` | Install, but only take effect at the next reboot. |
-| `--no-verify` | Skip the post-install check and the automatic rollback. |
-| `--force` | Continue even if LG's Home app looks different from what the installer expects. |
+| Debloat LG's ads and telemetry | on |
+| Take over the Input key | on |
 
-**Without SSH:** install the `.ipk` with the Homebrew Channel's tools (or `ares-install`), open **CleanYourTV** in
-the app list and choose **Set up now**. It runs the same setup as the installer through the Homebrew Channel's root
-service.
+The setup runs through the Homebrew Channel's root service and takes about a minute; the screen blinks once while
+LG's system app manager restarts. It does the following:
 
-**What the setup does**
-
-1. Checks for root and a rooted webOS TV, prints the model and firmware, and saves the original state (stock Home
-   `appinfo.json`, `/etc/hosts`, process and service lists) in `/media/developer/cleanyourtv/backup`.
+1. Checks for root and a rooted webOS TV, and saves the original state (stock Home `appinfo.json`, `/etc/hosts`,
+   process and service lists) in `/media/developer/cleanyourtv/backup`.
 2. Copies the service files, the launcher and the inputhook to `/media/developer/cleanyourtv`.
 3. Adds boot scripts to `/var/lib/webosbrew/init.d/`: `10-cleanyourtv-home` starts the service and mounts the
    launcher over LG's Home; `15-cleanyourtv-debloat` runs the debloat a minute after boot.
-4. Applies everything, registers the overlay apps (one restart of the system app manager) and checks that the new
-   Home is registered and the service answers with the matching version. If that fails within two minutes, it
-   restores LG's Home and removes the boot scripts.
+4. Applies everything, registers the overlay apps and checks that the new Home is registered and the service
+   answers with the matching version. If that fails within two minutes, it restores LG's Home and removes the boot
+   scripts. The setup's log is `/tmp/cytv-bootstrap.log` on the TV.
+
+Over SSH the same setup is `sh /media/developer/apps/usr/palm/services/com.cleanyourtv.manager.service/bootstrap.sh install`
+(options `--no-debloat`, `--no-input-key`, `--no-start`, `--no-verify`, `--force`).
 
 **Update:** open the **CleanYourTV** app. It checks the latest GitHub release; the launcher and the service update
 separately. A launcher update is downloaded, checked against the release's `.sha256` file, installed and started;
 if the new launcher does not report in within 40 seconds, the previous one is put back. A service update installs the
 new package and restarts the service; if the new service does not come up, the previous files are restored. The
-manager can also go back to the previous launcher version. Running the installer again also updates. Settings and
-usage history are kept.
+manager can also go back to the previous launcher version. Settings and usage history are kept.
 
 **Uninstall:** **Uninstall** in the manager app, or `sh /media/developer/cleanyourtv/uninstall.sh` (`--keep-config`
 keeps settings and usage history). It restores LG's Home, removes the apps and the boot scripts, and removes our
@@ -305,7 +293,7 @@ version is `VERSION` in `helper/helper.js`; the launcher version is `app/version
   `sh /media/developer/cleanyourtv/undo-home.sh temp` over SSH.
 - **An app is missing from the grid:** check it is not under `hidden` in Customise. Apps without a launch icon are not
   listed.
-- **After a firmware update that removes root:** re-root the TV, then run the installer again.
+- **After a firmware update that removes root:** re-root the TV, then run the install script again and the setup in the manager app.
 - **The Input key still opens LG's picker:** wait a few seconds after boot. Check the *Input key* switch in the manager
   app, and `/tmp/lginput-hook-lginput2.log` on the TV for a `Launching command` line when you press the button.
 - **The package does not install (`FAILED_IPKG_INSTALL`):** an earlier failed install can leave a `half-installed`

@@ -87,15 +87,19 @@ function load(keep){
     if(s.checking)setTimeout(function(){load(true)},2000)
   },function(){offline=true;build();draw();banner('')})}
 function doSetup(){
-  banner('Setting up… the screen blinks once while LG’s system restarts','work');
+  banner('Setting up\u2026 the screen blinks once while LG\u2019s system restarts','work');
   var flags=(setup.debloat?'--debloat':'--no-debloat')+' '+(setup.inputKey?'--input-key':'--no-input-key');
-  rootExec('nohup sh '+SVC+'/bootstrap.sh install '+flags+' > /tmp/cytv-bootstrap.log 2>&1 &').then(function(m){
+  rootExec('rm -f /tmp/cytv-bootstrap.log; nohup sh '+SVC+'/bootstrap.sh install '+flags+' > /tmp/cytv-bootstrap.log 2>&1 &').then(function(m){
     var o={};try{o=JSON.parse(m)}catch(e){}
     if(o.returnValue===false){banner('Could not start the setup: '+(o.errorText||'no root access (is the Homebrew Channel installed?)'),'err');return}
     waitUp(0)})}
+function logTail(cb){rootExec('tail -n 3 /tmp/cytv-bootstrap.log 2>/dev/null').then(function(m){var o={};try{o=JSON.parse(m)}catch(e){}cb(String(o.stdoutString||'').replace(/\[cleanyourtv\] /g,'').trim())})}
 function waitUp(n){api('/api/manager/status').then(function(){offline=false;banner('');load()},function(){
-  if(n>90){banner('The service did not start. See /tmp/cytv-bootstrap.log on the TV.','err');return}
-  setTimeout(function(){waitUp(n+1)},2000)})}
+  logTail(function(t){
+    if(/ERROR|rolled back/.test(t)){banner('Setup stopped: '+t.split('\n').pop(),'err');return}
+    if(n>90){banner('The service did not start. Log: /tmp/cytv-bootstrap.log on the TV. '+t.split('\n').pop(),'err');return}
+    if(t)banner('Setting up\u2026 '+t.split('\n').pop(),'work');
+    setTimeout(function(){waitUp(n+1)},2000)})})}
 
 document.addEventListener('keydown',function(e){var k=e.keyCode;
   if(k===38)next(-1);else if(k===40)next(1);else if(k===13)act();
