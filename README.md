@@ -5,7 +5,7 @@ picture notifications and an optional debloat of LG's ads and telemetry.
 
 - **Launcher:** replaces LG's Home with a dock of four apps, a top shelf, an app grid sorted by use, an Inputs picker,
   a Settings shortcut and a clock.
-- **Voice (optional):** speech recognition on the TV (Moonshine, English), answers from a language model through OpenRouter or from your own server, shown as text on screen. Home Assistant support is planned.
+- **Voice (optional):** speech recognition on the TV (Moonshine), answers from a language model through OpenRouter or from your own server, shown as text on screen.
 - **Live TV:** plays your M3U playlist with a channel list, programme guide and number entry.
 - **Input key:** the remote's Input button opens an Inputs list over the running app.
 - **Picture notifications:** a card with a photo over any app, triggered from your network.
@@ -203,9 +203,9 @@ the TV, `POST localhost:8765/api/notify` accepts the same body without a token.
 
 ## Voice (optional)
 
-Speak into the remote and the TV turns it into text on the TV itself. The text is shown on screen and can be sent to
-a server you run, to a language model through OpenRouter, or both; the answer comes back as text on screen. English
-only. No audio is recorded or sent anywhere.
+Recognises speech from the remote's microphone on the TV. The text is shown on screen and can be sent to a server you
+run, to a language model through OpenRouter, or both; the answer is shown as text on screen. Answers are not spoken.
+No audio is recorded or sent anywhere.
 
 It is off and not installed by default. **Voice** in the manager app downloads about 80 MB into
 `/media/developer/cleanyourtv/voice` (checksums are pinned; **Remove voice** deletes it):
@@ -258,36 +258,29 @@ question in small type above the answer. Reading time follows the length of the 
 
 ### The speech model
 
-Speech is turned into text by [Moonshine](https://github.com/moonshine-ai/moonshine) (Moonshine AI, MIT licence), an
-open speech-recognition model made for small devices. The TV runs it itself; there is no cloud recogniser.
+[Moonshine](https://github.com/moonshine-ai/moonshine) (Moonshine AI, MIT licence) runs on the TV; there is no cloud recogniser.
 
 | | |
 |---|---|
-| Model | `tiny-streaming-en`: a transformer with about 34 million parameters (an encoder that listens and a decoder that writes the words), trained for English. Weights are 8-bit integers (int8), 45 MB on disk. |
-| Streaming | The encoder processes audio in small steps, so recognition does not wait for a long block of audio; this build recognises once you stop speaking. |
-| Runtime | ONNX Runtime on the CPU (two ARM cores of the G2). No GPU or NPU is used. |
-| Speech detection | A small voice-activity model inside the engine cuts the audio into phrases. A separate level check in the service stops the recording after about 1.2 s of silence, after 7 s without speech, or after 15 s. |
-| Cost on the G2 | Loading 0.3 s; a 3 s phrase is recognised in about 1.4 s; about 190 MB of memory, only while recognising. When idle nothing of it is in memory. |
-| Accuracy | The Moonshine project reports 12.0 % average word error rate for this model across the Open ASR Leaderboard datasets, and 4.8 % on clean read speech (LibriSpeech). A remote's microphone across a living room is much harder: expect good results for short commands and questions, and mistakes on names and rare words. |
-| Language | English only. Moonshine also publishes German, Spanish, Arabic, Japanese, Mandarin, Tagalog and Vietnamese models, and bigger English ones (small 123 M, medium 245 M parameters); there is no Dutch model. Other models can be added later. |
-| Audio | 16 kHz mono, taken from the microphone stream of LG's `voiceinput` service while you speak. It is held in memory, recognised, then discarded. Nothing is written to disk or sent anywhere. |
+| Model | `tiny-streaming-en`: about 34 million parameters, encoder and decoder, int8 weights, 45 MB. |
+| Runtime | ONNX Runtime on the CPU (two ARM cores on the G2). |
+| Segmentation | The engine's voice-activity detection splits the audio into phrases. The service stops recording after 1.2 s of silence, after 7 s without speech, or after 15 s. |
+| Cost on the G2 | Load 0.3 s; a 3 s phrase takes about 1.4 s; about 190 MB of memory while recognising, none when idle. |
+| Reported accuracy | 12.0 % average word error rate on the Open ASR Leaderboard datasets, 4.8 % on LibriSpeech test-clean (figures from the Moonshine project; not measured through the remote's microphone). |
+| Language | English. Moonshine also publishes German, Spanish, Arabic, Japanese, Mandarin, Tagalog and Vietnamese models and larger English ones (small 123 M, medium 245 M parameters). |
+| Audio | 16 kHz mono from the microphone stream of LG's `voiceinput` service. Held in memory while recognising, then discarded; not written to disk or sent anywhere. |
 
-Why it brings its own C library: the TV's programs are 32-bit ARM on a 64-bit kernel, and the recogniser is a 64-bit
-program. `cytv-asr` is started through a copy of the 64-bit loader and libraries that the download places next to it,
-so nothing in the TV's system folders is touched and removing the voice download removes all of it.
+The TV's programs are 32-bit ARM on a 64-bit kernel and the recogniser is a 64-bit program, so `cytv-asr` runs through
+the 64-bit loader and libraries that the download places in the same folder. Nothing in the system folders is changed;
+**Remove voice** deletes all of it.
 
 Only text goes further: to your server, to OpenRouter, or nowhere. LG's own assistant is a separate path with its own
-cloud recognition; the **Switch off LG's voice assistant** option pauses it while voice is on.
+cloud recognition; **Switch off LG's voice assistant** pauses it while voice is on.
 
 ### Planned: Home Assistant
 
-The next builds add Home Assistant support: send what you say to Home Assistant's conversation (Assist) API and show
-its answer, so spoken commands can control lights, scenes and media, with the AI chat as the fallback for open
-questions. Until then, the server address and the `/api/voice/ask` call can already forward text to a Home Assistant
-webhook or any other service.
-
-Limits: English only (Moonshine has no Dutch model); recognition from the remote's microphone is rough for names and
-long words, and good for short commands. Answers are text only; the TV does not speak them.
+Sending recognised text to Home Assistant's conversation (Assist) API and showing its answer. Until then, the server
+address and `/api/voice/ask` can forward text to a Home Assistant webhook or any other service.
 
 ## Debloat
 
