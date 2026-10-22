@@ -83,7 +83,7 @@ Over SSH the same setup is `sh /media/developer/apps/usr/palm/services/com.clean
 separately. A launcher update is downloaded, checked against the release's `.sha256` file, installed and started;
 if the new launcher does not report in within 40 seconds, the previous one is put back. A service update installs the
 new package and restarts the service; if the new service does not come up, the previous files are restored. The
-manager can also go back to the previous launcher version. Settings and usage history are kept.
+manager can also go back to the previous launcher version. Settings and usage history are kept. Running the install script again on a set-up TV also updates the service.
 
 **Uninstall:** **Uninstall** in the manager app, or `sh /media/developer/cleanyourtv/uninstall.sh` (`--keep-config`
 keeps settings and usage history). It restores LG's Home, removes the apps and the boot scripts, and removes our

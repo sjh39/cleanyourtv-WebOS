@@ -16,7 +16,7 @@ function fetch(url, file, hops) {
   return new Promise((resolve, reject) => {
     if ((hops || 0) > 6) return reject(new Error('too many redirects'));
     const mod = url.startsWith('https:') ? https : http;
-    const req = mod.get(url, { headers: { 'User-Agent': 'cleanyourtv-manager', Accept: 'application/octet-stream, application/json' }, timeout: 20000 }, res => {
+    const req = mod.get(url, { headers: { 'User-Agent': 'cleanyourtv-manager', Accept: file ? 'application/octet-stream, */*' : 'application/vnd.github+json, application/json, */*' }, timeout: 20000 }, res => {
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) { res.resume(); return resolve(fetch(new URL(res.headers.location, url).toString(), file, (hops || 0) + 1)); }
       if (res.statusCode !== 200) { res.resume(); return reject(new Error('HTTP ' + res.statusCode)); }
       if (!file) { const b = []; res.on('data', c => b.push(c)); res.on('end', () => resolve(Buffer.concat(b))); return; }
@@ -46,7 +46,12 @@ function create(ctx) {
       const j = JSON.parse((await fetch(repoUrl())).toString());
       const ver = String(j.tag_name || '').replace(/^v/, ''), assets = {};
       for (const a of j.assets || []) assets[a.name] = a.browser_download_url;
-      release = { version: ver, assets, notes: String(j.body || '').slice(0, 600) };
+      let fv = null, sv = null;
+      for (const n of Object.keys(assets)) {   // the launcher and the package are versioned separately
+        let m = /^frontend-(\d+\.\d+\.\d+)\.tgz$/.exec(n); if (m && assets[n + '.sha256']) fv = m[1];
+        m = /^com\.cleanyourtv\.manager_(\d+\.\d+\.\d+)_all\.ipk$/.exec(n); if (m && assets[n + '.sha256']) sv = m[1];
+      }
+      release = { version: ver, frontend: fv, service: sv, assets, notes: String(j.body || '').slice(0, 600) };
       releaseErr = '';
     } catch (e) { release = null; releaseErr = e.message === 'HTTP 404' ? 'no release published yet' : String(e.message || e); }
     releaseAt = Date.now(); checking = false;
@@ -60,10 +65,10 @@ function create(ctx) {
     const fe = frontendInfo(), c = readConf();
     const lat = release;
     return {
-      service: { version: VERSION, updateTo: lat && cmp(lat.version, VERSION) > 0 && lat.assets['com.cleanyourtv.manager_' + lat.version + '_all.ipk'] ? lat.version : null },
+      service: { version: VERSION, updateTo: lat && lat.service && cmp(lat.service, VERSION) > 0 ? lat.service : null },
       frontend: { version: fe.version || '?', previous: prevInfo() && prevInfo().version || null,
-        updateTo: lat && cmp(lat.version, fe.version) > 0 && lat.assets['frontend-' + lat.version + '.tgz'] ? lat.version : null },
-      release: lat ? { version: lat.version, notes: lat.notes } : null, checkedAt: releaseAt, checking, checkError: releaseErr,
+        updateTo: lat && lat.frontend && cmp(lat.frontend, fe.version) > 0 ? lat.frontend : null },
+      release: lat ? { version: lat.version, frontend: lat.frontend, service: lat.service, notes: lat.notes } : null, checkedAt: releaseAt, checking, checkError: releaseErr,
       options: options(), home: { ours: (() => { try { return fs.readFileSync('/proc/mounts', 'utf8').includes(' /usr/palm/applications/com.webos.app.home '); } catch (_) { return false; } })() },
       inputhook: inputhook.status(), job, repo: repoUrl().replace(/^https:\/\/api\.github\.com\/repos\//, '').replace(/\/releases.*$/, ''),
     };
@@ -96,8 +101,8 @@ function create(ctx) {
     setJob('working', 'Downloading launcher ' + ver);
     const T = D + '/tmp-frontend';
     try {
-      if (!release || release.version !== ver) await check();
-      if (!release || release.version !== ver) throw new Error('version ' + ver + ' is not the latest release');
+      if (!release || release.frontend !== ver) await check();
+      if (!release || release.frontend !== ver) throw new Error('launcher ' + ver + ' is not in the latest release');
       await sh('rm -rf ' + T + ' && mkdir -p ' + T);
       await download('frontend-' + ver + '.tgz', ver, T + '/f.tgz');
       setJob('working', 'Checking the download');
@@ -137,8 +142,8 @@ function create(ctx) {
     setJob('working', 'Downloading service ' + ver);
     const f = D + '/tmp-service.ipk', name = 'com.cleanyourtv.manager_' + ver + '_all.ipk';
     try {
-      if (!release || release.version !== ver) await check();
-      if (!release || release.version !== ver) throw new Error('version ' + ver + ' is not the latest release');
+      if (!release || release.service !== ver) await check();
+      if (!release || release.service !== ver) throw new Error('service ' + ver + ' is not in the latest release');
       await download(name, ver, f);
       setJob('working', 'Installing service ' + ver);
       const r = await luna('luna://com.webos.appInstallService/dev/install', { id: 'com.cleanyourtv.manager', ipkUrl: f, subscribe: false });

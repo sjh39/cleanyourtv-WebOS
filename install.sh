@@ -60,6 +60,11 @@ PY
   rm -f /tmp/cytv-manager.ipk
   [ $ok = 1 ] || die "the package did not install (see Troubleshooting in the README)"
   say "the CleanYourTV app is installed."
-  say "Next, on the TV: open CleanYourTV in the app list and choose 'Set up now'."
+  if [ -f /media/developer/cleanyourtv/helper.js ] && [ -e /var/lib/webosbrew/init.d/10-cleanyourtv-home ]; then
+    # already set up: this is an update, so bring the running service to the new version
+    sh /media/developer/apps/usr/palm/services/$ID.service/bootstrap.sh update "$(sed -n "s/^const VERSION = '\(.*\)';/\1/p" /media/developer/apps/usr/palm/services/$ID.service/helper/helper.js | head -1)"
+  else
+    say "Next, on the TV: open CleanYourTV in the app list and choose 'Set up now'."
+  fi
 }
 main "$@"
