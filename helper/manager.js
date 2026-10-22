@@ -38,7 +38,7 @@ function create(ctx) {
     const c = readConf();
     if (c.releasesUrl) return c.releasesUrl;
     const src = (() => { try { return fs.readFileSync(D + '/source', 'utf8').trim().split(/\s+/)[0]; } catch (_) { return ''; } })();
-    return 'https://api.github.com/repos/' + (src || DEFAULT_REPO) + '/releases/latest';
+    return 'https://api.github.com/repos/' + (/^[\w.-]+\/[\w.-]+$/.test(src) ? src : DEFAULT_REPO) + '/releases/latest';
   };
   async function check() {
     checking = true;

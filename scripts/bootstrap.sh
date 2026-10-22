@@ -122,7 +122,7 @@ if key != '': o['inputKey'] = key == '1'
 json.dump(c, open(p, 'w'), indent=2)
 PY
 opt() { python3 -c "import json;print(1 if json.load(open('$D/config.json'))['options']['$1'] else 0)"; }
-echo "$CYTV_REPO ${CYTV_REF:-main}" | grep -q '[a-z]' && echo "$CYTV_REPO ${CYTV_REF:-main}" > $D/source
+[ -n "$CYTV_REPO" ] && echo "$CYTV_REPO ${CYTV_REF:-main}" > $D/source
 rm -f $D/DISABLE $D/DISABLE-DEBLOAT
 
 # ---- boot scripts ----
