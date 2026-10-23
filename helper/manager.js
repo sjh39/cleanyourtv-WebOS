@@ -46,7 +46,7 @@ function setHome(enabled) {
 
 function create(ctx) {
   const { luna, readConf, writeConf, inputhook, VERSION, pickerShown, notifyApi, voice } = ctx;
-  const keys = () => { const k = Object.assign({ input: '', home: '', voice: '', learned: false }, readConf().keys || {}); return Object.assign(k, { inputIsDefault: !k.input, input: k.input || '241' }); };
+  const keys = () => { const k = Object.assign({ input: '', home: '', voice: '', guide: '', learned: false }, readConf().keys || {}); return Object.assign(k, { inputIsDefault: !k.input, input: k.input || '241' }); };
   let job = { state: 'idle', message: '', at: 0 }, release = null, releaseAt = 0, releaseErr = '', frontendOk = null, checking = false;
   const setJob = (state, message) => { job = { state, message, at: Date.now() }; };
   const busy = () => job.state === 'working';
@@ -95,7 +95,7 @@ function create(ctx) {
   }
   const frontendInfo = () => readJson(D + '/app/version.json', {});
   const prevInfo = () => readJson(D + '/app.prev/version.json', null);
-  const options = () => Object.assign({ debloat: true, inputKey: true }, readConf().options || {});
+  const options = () => Object.assign({ debloat: true, inputKey: true, liveTv: true }, readConf().options || {});
 
   function status() {
     const fe = frontendInfo(), c = readConf();
@@ -207,6 +207,7 @@ function create(ctx) {
     const c = readConf(), cur = options(), next = Object.assign({}, cur);
     if (typeof o.debloat === 'boolean') next.debloat = o.debloat;
     if (typeof o.inputKey === 'boolean') next.inputKey = o.inputKey;
+    if (typeof o.liveTv === 'boolean') next.liveTv = o.liveTv;
     c.options = next; writeConf(c);
     if (next.debloat !== cur.debloat) {
       if (next.debloat) await sh('ln -sf ' + D + '/15-cleanyourtv-debloat /var/lib/webosbrew/init.d/15-cleanyourtv-debloat; sh ' + D + '/debloat-stop.sh', 60000);
@@ -226,7 +227,7 @@ function create(ctx) {
         const c = readConf(), k = Object.assign({ input: '241', home: '', voice: '' }, c.keys || {});
         k[l.name] = l.code; c.keys = k; writeConf(c);   // 'learned' is set when the Input flow is finished (keys-done)
         inputhook.markSaved && inputhook.markSaved();
-        if (l.name === 'input') inputhook.ensure(options().inputKey, l.code); else if (l.name === 'voice') inputhook.ensure(options().inputKey, keys().input);
+        if (l.name === 'input') inputhook.ensure(options().inputKey, l.code); else if (l.name === 'voice' || l.name === 'guide') inputhook.ensure(options().inputKey, keys().input);
       }
       return json(l);
     }
@@ -254,9 +255,9 @@ function create(ctx) {
       return json(status());
     }
     if (act === 'notify-api') return json(notifyApi ? notifyApi.set(b) : { enabled: false });
-    if (act === 'learn-key') { inputhook.startLearn(['home', 'voice'].includes(b.name) ? b.name : 'input'); return json({ returnValue: true }); }
+    if (act === 'learn-key') { inputhook.startLearn(['home', 'voice', 'guide'].includes(b.name) ? b.name : 'input'); return json({ returnValue: true }); }
     if (act === 'clear-key') {   // forget a learned code: Input goes back to the default, Home to none
-      const name = ['home', 'voice'].includes(b.name) ? b.name : 'input', c = readConf(), k = Object.assign({ input: '', home: '', voice: '' }, c.keys || {});
+      const name = ['home', 'voice', 'guide'].includes(b.name) ? b.name : 'input', c = readConf(), k = Object.assign({ input: '', home: '', voice: '', guide: '' }, c.keys || {});
       k[name] = ''; if (name === 'input') k.learned = false; c.keys = k; writeConf(c);
       if (name !== 'home') inputhook.ensure(options().inputKey, keys().input);
       return json({ returnValue: true });

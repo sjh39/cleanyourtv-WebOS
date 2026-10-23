@@ -128,6 +128,14 @@ const fake = (url, method) => { const res = { code: 0, out: '', writeHead(c) { t
   r = await ask('channel', 'POST', { tag: '' }); ok(r.j.channel === '' && r.j.service.updateTo === '1.5.3', 'back on stable after a test build offers the stable release, even an older one');
   fs.unlinkSync(bf); start('1.5.3'); r = await ask('check', 'POST'); ok(r.j.service.updateTo === null, 'stable without a test build installed: no offer at the same version');
 
+  // 7. Live TV is optional: the option is stored and the key binds are refreshed
+  let store = {}, ensured = 0;
+  m = mgr.create({ luna: async () => ({}), readConf: () => JSON.parse(JSON.stringify(store)), writeConf: c => { store = JSON.parse(JSON.stringify(c)); }, inputhook: { status: () => ({}), ensure() { ensured++; } }, VERSION: '1.5.8', pickerShown: () => 0 });
+  r = await ask('status', 'GET'); ok(r.j.options.liveTv === true && r.j.keys.guide === '', 'Live TV is on by default and no Guide key is learned');
+  r = await ask('options', 'POST', { liveTv: false }); ok(r.j.options.liveTv === false && store.options.liveTv === false && ensured > 0, 'switching Live TV off is stored and refreshes the key binds');
+  r = await ask('options', 'POST', { liveTv: 'no' }); ok(r.j.options.liveTv === false, 'only a boolean changes the option');
+  r = await ask('options', 'POST', { liveTv: true }); ok(r.j.options.liveTv === true, 'switching Live TV on again');
+
   console.log(failed ? '\n' + failed + ' check(s) failed on Node ' + process.version : '\nall checks passed on Node ' + process.version);
   fs.rmSync ? fs.rmSync(tmp, { recursive: true, force: true }) : cp.spawnSync('rm', ['-rf', tmp]);
   process.exit(failed ? 1 : 0);

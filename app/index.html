@@ -159,7 +159,7 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:var(--night);col
 <div id="lv"><div id="lv-stage"></div><div id="lv-spin" class="layer"></div><div id="lv-osd" class="layer"><img class="logo" id="lv-ologo" alt=""><div class="num" id="lv-onum"></div><div class="info"><div class="name" id="lv-oname"></div><div class="now" id="lv-onow"></div><div class="next" id="lv-onext"></div><div class="facts" id="lv-ofacts"></div><div class="pbar"><i id="lv-obar"></i></div></div></div><div id="lv-numin" class="layer"></div><div id="lv-guide" class="layer"><div id="lv-glow"></div><div id="lv-gtop"><div id="lv-gtitle"></div><div id="lv-gtabs"></div><input id="lv-search" type="text" autocomplete="off"><div id="lv-gclock"></div></div><div id="lv-rows"></div><div id="lv-detail"></div></div><div id="lv-filter" class="layer"></div><div id="lv-menu" class="layer"></div><div id="lv-msg" class="layer"></div><div id="lv-tune" class="layer"></div><div id="lv-toast" class="layer"></div><div id="lv-stats" class="layer"></div></div>
 <div id="toast"></div>
 <script>
-var API='http://127.0.0.1:8765', CACHE_KEY='cytv.cache.v2', VERSION='1.4.7';
+var API='http://127.0.0.1:8765', CACHE_KEY='cytv.cache.v2', VERSION='1.4.8';
 var DEFAULTS={
   dock:['netflix','youtube.leanback.v4','amazon','com.disney.disneyplus-prod'],
   topbar:[{label:'Inputs',icon:'inputs',action:'inputs'},{label:'Live TV',icon:'tv',action:'live'},{label:'Settings',icon:'settings',app:'com.palm.app.settings'}]
@@ -292,6 +292,9 @@ function setDock(ids){cfg.dock=ids.slice(0,4);saveCfg()}
 function hideApp(id){cfg.hidden=(cfg.hidden||[]).concat(id);cfg.dock=dockIds().filter(function(i){return i!==id});saveCfg()}
 function unhideApp(id){cfg.hidden=(cfg.hidden||[]).filter(function(i){return i!==id});saveCfg()}
 function topbar(){return cfg.topbar?cfg.topbar:DEFAULTS.topbar}
+/* Live TV is optional (manager > Live TV): off hides every entry, the saved layout is kept for when it is switched on again */
+function liveOn(){return !(cfg.options&&cfg.options.liveTv===false)}
+function shownBar(){return liveOn()?topbar():topbar().filter(function(o){return o.action!=='live'})}
 function byOrder(a,b){
   if(cfg.sort!=='alpha'){var d=(usage[b.id]||0)-(usage[a.id]||0);if(Math.abs(d)>1e-9)return d>0?1:-1}
   return a.title.localeCompare(b.title)}
@@ -372,11 +375,11 @@ function customizeMenu(){
     {label:t('Clock'),sub:cfg.clock==='24'?t('24-hour'):cfg.clock==='12'?t('12-hour'):t('Automatic'),fn:function(){cfg.clock=cfg.clock==='24'?'12':cfg.clock==='12'?'auto':'24';saveCfg();tick()}},
     {label:t('Reset customisation'),fn:function(){cfg={};saveCfg()}}])}
 function topButtonsMenu(){
-  var items=topbar().map(function(o){return {label:barLabel(o),sub:t('OK to remove'),fn:function(){removeButton(o)}}});
+  var items=shownBar().map(function(o){return {label:barLabel(o),sub:t('OK to remove'),fn:function(){removeButton(o)}}});
   items.push({label:t('Add a button...'),stay:true,fn:addButtonMenu});
   openMenu(t('Top buttons'),items)}
 function addButtonMenu(){
-  var items=PRESETS.map(function(p){return {icon:p.icon,label:barLabel(p),fn:function(){cfg.topbar=topbar().concat([p]);saveCfg()}}});
+  var items=PRESETS.filter(function(p){return liveOn()||p.action!=='live'}).map(function(p){return {icon:p.icon,label:barLabel(p),fn:function(){cfg.topbar=topbar().concat([p]);saveCfg()}}});
   items.push({label:t('An app...'),stay:true,fn:function(){
     openMenu(t('Pick an app'),apps.slice().sort(function(a,b){return a.title.localeCompare(b.title)}).map(function(a){
       return {label:a.title,fn:function(){cfg.topbar=topbar().concat([{label:a.title,icon:'grid',app:a.id}]);saveCfg()}}}))}});
@@ -397,7 +400,7 @@ function rebuild(){
   dk.textContent='';gd.textContent='';bar.textContent='';
   var d=dock.map(function(a){var t=tile(a);dk.appendChild(t);return t});
   var g=rest.map(function(a){var t=tile(a);gd.appendChild(t);return t});
-  var tb=topbar().concat([{label:'Customise',icon:'edit',action:'customize',fixed:true}]).map(function(o){
+  var tb=shownBar().concat([{label:'Customise',icon:'edit',action:'customize',fixed:true}]).map(function(o){
     var p=document.createElement('div');p.className='pill';p._o=o;p.innerHTML=svg(o.icon)+'<span></span>';p.lastChild.textContent=barLabel(o);
     hit(p);bar.appendChild(p);return p});
   rows=[tb,d.length?d:tb];
@@ -412,7 +415,7 @@ function load(){api('/api/apps').then(function(x){
   var rank=Object.keys(usage).sort(function(a,b){return usage[b]-usage[a]});
   var sig=JSON.stringify([x.apps.map(function(a){return a.id}),x.config,rank]);
   if(sig===lastSig)return;lastSig=sig;
-  apps=x.apps.map(function(a){return {id:a.id,title:a.title}});apps.push({id:'__live',title:t('Live TV')});cfg=x.config||{};store();rebuild()
+  apps=x.apps.map(function(a){return {id:a.id,title:a.title}});cfg=x.config||{};if(liveOn())apps.push({id:'__live',title:t('Live TV')});store();rebuild()
 }).catch(function(){toast(t('Helper not reachable, retrying...'));setTimeout(load,3000)})}
 
 /* ---------- input: tap OK to open, hold OK for options ---------- */
@@ -463,8 +466,10 @@ document.addEventListener('keyup',function(e){
 /* launching Home with {inputs:true} opens the Inputs list */
 function wantInputs(){var p={};try{p=JSON.parse(webOSSystem.launchParams||'{}')}catch(e){}
   if(p&&p.inputs){closeMenus();inputsMenu()}
-  else if(p&&p.live){closeMenus();LIVE.enter()}}
-document.addEventListener('webOSRelaunch',function(){if(LIVE.on)LIVE.exit();load();wantInputs()});
+  else if(p&&p.live&&liveOn()){closeMenus();LIVE.enter(!!p.guide)}}
+document.addEventListener('webOSRelaunch',function(){var p={};try{p=JSON.parse(webOSSystem.launchParams||'{}')}catch(e){}
+  if(LIVE.on&&p&&p.guide&&liveOn()){LIVE.toggleGuide();return}   /* the Guide button while Live TV is open */
+  if(LIVE.on)LIVE.exit();load();wantInputs()});
 document.addEventListener('visibilitychange',function(){if(document.hidden){if(LIVE.on)LIVE.exit()}else load()});
 
 function tick(){var d=new Date();
@@ -716,11 +721,13 @@ var LIVE=(function(){
           byNum={};byKey={};chans.forEach(function(c){byNum[c.num]=c;if(c.key)byKey[c.key]=c});loaded=true;facets();
           var last=0;try{last=parseInt(localStorage.getItem('live.last'),10)}catch(e){}
           api('/api/live/state').then(function(st){S={fav:st.fav||[],recent:st.recent||[],failed:st.failed||{}}},function(){}).then(function(){
-            layer('lv-msg',false);play(byNum[last]?last:chans[0].num)})})
+            layer('lv-msg',false);play(byNum[last]?last:chans[0].num);if(guideNext){guideNext=false;openList()}})})
       })()
     }).catch(function(){msg('<div>'+t('The helper is not reachable.')+'</div>');setTimeout(function(){if(o.on)boot()},3000)})}
   function step(d){var i=chans.indexOf(byNum[cur]);i=(i+d+chans.length)%chans.length;play(chans[i].num,false,180)}
-  o.enter=function(){o.on=true;$('lv').classList.add('on');if(loaded&&byNum[cur])play(cur);else boot()};
+  var guideNext=false;
+  o.enter=function(guide){o.on=true;guideNext=!!guide;$('lv').classList.add('on');if(loaded&&byNum[cur]){play(cur);if(guideNext){guideNext=false;openList()}}else boot()};
+  o.toggleGuide=function(){if(!loaded)return;if(L.open)closeList();else{M.open=false;layer('lv-menu',false);openList()}};
   o.exit=function(){o.on=false;closeList();M.open=false;layer('lv-menu',false);setStats(false);full={};release();clearTimeout(osdT);clearTimeout(numT);clearTimeout(toastT);clearInterval(setupT);layer('lv-osd',false);layer('lv-numin',false);layer('lv-msg',false);layer('lv-spin',false);layer('lv-tune',false);layer('lv-toast',false);$('lv').classList.remove('on')};
   o.key=function(e){
     var k=e.keyCode;
@@ -741,6 +748,7 @@ var LIVE=(function(){
       else if(k===37){if(L.g>0){L.g--;L.list=listFor(L.g);L.ci=0}}
       else if(k===39){if(L.g<groups.length+2){L.g++;L.list=listFor(L.g);L.ci=0}}
       else if(k===13){if(L.list[L.ci]){var n=L.list[L.ci].num;closeList();play(n);return}}
+      else if(k===458){closeList();return}
       else if(k===404){toggleFav(L.list[L.ci]);return}
       else if(k===405){FP.open=true;FP.i=0;drawFilter();layer('lv-filter',true);return}
       else if(k===403){startSearch();return}
@@ -754,6 +762,7 @@ var LIVE=(function(){
     else if(k===406)setStats(!stats);
     else if(k===38||k===33||k===427)step(1);
     else if(k===40||k===34||k===428)step(-1);
+    else if(k===458)openList();
     else if(k===457||k===37||k===39)showOsd();
     else if(k>=48&&k<=57)digit(k-48);
     else if(k>=96&&k<=105)digit(k-96);

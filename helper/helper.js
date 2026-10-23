@@ -1,7 +1,7 @@
 // Root service of CleanYourTV: bridges the launcher web app to luna, serves app icons, runs Live TV and picture
 // notifications, keeps the Input-key picker alive and hosts the manager API. Listens on 127.0.0.1 only.
 const http = require('http'), fs = require('fs'), path = require('path'), cp = require('child_process');
-const VERSION = '1.5.6';
+const VERSION = '1.5.8';
 const PORT = 8765, DIR = '/media/developer/cleanyourtv', CONF = DIR + '/config.json', USAGE = DIR + '/usage.json';
 const ENV = Object.assign({}, process.env, { PATH: '/usr/bin:/usr/sbin:/bin:/sbin:' + (process.env.PATH || '') });
 
@@ -71,13 +71,15 @@ let live = null;
 try { live = require('./live'); } catch (e) { console.error('live module failed:', e.message); }
 let inputhook = { ensure() {}, status() { return {}; } };
 try { inputhook = require('./inputhook'); } catch (e) { console.error('inputhook module failed:', e.message); }
-const options = () => Object.assign({ debloat: true, inputKey: true }, readConf().options || {});
+const options = () => Object.assign({ debloat: true, inputKey: true, liveTv: true }, readConf().options || {});
 const keyCode = () => String(((readConf().keys || {}).input) || '241');
 const voiceKey = () => { const v = readConf().voice || {}; return v.enabled && voice && voice.installed() ? String((readConf().keys || {}).voice || '') : ''; };
+const guideKey = () => options().liveTv !== false ? String((readConf().keys || {}).guide || '') : '';   // the Guide button belongs to LG unless Live TV is on and a button was learned
 let pickerShownAt = 0;
 let voice = null;
 try { if (notify) voice = require('./voice').create({ notify, readConf, writeConf }); } catch (e) { console.error('voice module failed:', e.message); }
 inputhook.setVoiceKey(voiceKey);
+inputhook.setGuideKey && inputhook.setGuideKey(guideKey);
 let notifyApi = null;
 try { if (notify) notifyApi = require('./notifyapi').create({ notify, readConf, writeConf }); } catch (e) { console.error('notification api module failed:', e.message); }
 let manager = null;
