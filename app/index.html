@@ -140,7 +140,7 @@ body{background-image:var(--wall);background-size:1920px 1080px}
 .bd{font-size:19px;font-weight:600;padding:3px 10px;border-radius:12px;background:rgba(255,255,255,.14);white-space:nowrap}
 .bd.w{background:rgba(255,200,80,.22);color:#ffd27a}
 .crow.f .bd{background:rgba(11,12,16,.14);color:#0b0c10}.crow.f .bd.w{background:rgba(160,100,0,.2);color:#6a4200}
-.st{width:26px;height:26px;fill:#ffcc4d;flex:none}.crow.f .st{fill:#c98a00}
+svg.st{width:26px;height:26px;fill:#ffcc4d;flex:none}.crow.f svg.st{fill:#c98a00}   /* the favourite star; a plain .st is the menu's right-hand text */
 .empty{padding:40px 30px;font-size:30px;color:var(--ink2);max-width:860px;line-height:1.35}
 .ctab.f{background:none;box-shadow:none;color:var(--ink2);font-size:23px}
 #lv-search{display:none;flex:none;width:420px;height:56px;border-radius:28px;border:0;outline:0;padding:0 24px;font:inherit;font-size:26px;background:var(--ink);color:#0b0c10}
@@ -191,7 +191,7 @@ body{background-image:var(--wall);background-size:1920px 1080px}
 <div id="lv"><div id="lv-stage"></div><div id="lv-spin" class="layer"></div><div id="lv-osd" class="layer"><img class="logo" id="lv-ologo" alt=""><div class="num" id="lv-onum"></div><div class="info"><div class="name" id="lv-oname"></div><div class="now" id="lv-onow"></div><div class="next" id="lv-onext"></div><div class="facts" id="lv-ofacts"></div><div class="pbar"><i id="lv-obar"></i></div></div></div><div id="lv-numin" class="layer"></div><div id="lv-guide" class="layer"><div id="lv-glow"></div><div id="lv-gtop"><div id="lv-gtitle"></div><div id="lv-gtabs"></div><input id="lv-search" type="text" autocomplete="off"><div id="lv-gclock"></div></div><div id="lv-rows"></div><div id="lv-detail"></div></div><div id="lv-filter" class="layer"></div><div id="lv-menu" class="layer"></div><div id="lv-msg" class="layer"></div><div id="lv-tune" class="layer"></div><div id="lv-toast" class="layer"></div><div id="lv-stats" class="layer"></div></div>
 <div id="toast"></div>
 <script>
-var API='http://127.0.0.1:8765', CACHE_KEY='cytv.cache.v4', VERSION='1.4.14';
+var API='http://127.0.0.1:8765', CACHE_KEY='cytv.cache.v4', VERSION='1.4.15';
 var DEFAULTS={
   dock:['netflix','youtube.leanback.v4','amazon','com.disney.disneyplus-prod'],
   topbar:[{label:'Inputs',icon:'inputs',action:'inputs'},{label:'Live TV',icon:'tv',action:'live'},{label:'Settings',icon:'settings',app:'com.palm.app.settings'}]

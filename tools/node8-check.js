@@ -329,6 +329,9 @@ const fake = (url, method) => { const res = { code: 0, out: '', writeHead(c) { t
   let lerr = ''; for (let i = 0; i < 40 && !lerr; i++) { await new Promise(r => setTimeout(r, 150)); f = fake('/api/live/status'); await live.handle(f.req, f.res, '/api/live/status', async () => ({})); const js = JSON.parse(f.res.out); if (js.state === 'idle' && js.error) lerr = js.error; }
   ok(/lost|closed|reset|socket/i.test(lerr), 'a playlist read on a connection that drops mid-answer ends with an error' + (lerr ? '' : ' (it hung)'));
   f = fake('/api/live/reset', 'POST'); await live.handle(f.req, f.res, '/api/live/reset', async () => ({})); drop.close();
+  // 14. The favourite star and the menus' right-hand text both had the class st: the star's 26 px width squeezed the menu text into a column
+  const launcherHtml = fs.readFileSync(path.join(root, 'app', 'index.html'), 'utf8');
+  ok(!/(^|\n)\.st\{/.test(launcherHtml) && /svg\.st\{width:26px/.test(launcherHtml), 'the favourite star is styled as svg.st, so the menu\'s .st text keeps its natural width');
 
   console.log(failed ? '\n' + failed + ' check(s) failed on Node ' + process.version : '\nall checks passed on Node ' + process.version);
   fs.rmSync ? fs.rmSync(tmp, { recursive: true, force: true }) : cp.spawnSync('rm', ['-rf', tmp]);
