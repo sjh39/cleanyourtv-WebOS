@@ -23,7 +23,7 @@ curl -X POST localhost:8765/api/live/settings -d '{"playlistUrl":"http://...","e
 
 ## Turning it off
 
-Live TV is optional. In the manager app, **Live TV** switches it on and off. Off hides it everywhere: the Live TV button and tile in
+Live TV is optional. In the manager app, **Live TV** > **Show Live TV** switches it on and off. Off hides it everywhere: the Live TV button and tile in
 the launcher, **Live TV** in the Inputs list, and the Guide key takeover (below). LG's own player and guide are used as before.
 The playlist and your favourites are kept, so switching it on again brings them back.
 
@@ -48,7 +48,7 @@ quality; search matches names across all channels.
 
 ### The Guide button
 
-By default the remote's Guide button belongs to LG. In the manager app, **Input key** > **Learn the Guide key** records the
+By default the remote's Guide button belongs to LG. In the manager app, **Live TV** > **Learn the Guide key** records the
 button's code; afterwards it opens the Live TV channel guide over whatever is running, and closes it again when Live TV is open.
 **Clear** gives LG's guide back. The button is only taken over while Live TV is on and a code is learned. It uses the same hook as
 the [Input key](input-key.md).

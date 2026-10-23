@@ -7,16 +7,16 @@
 | Row | Function |
 |---|---|
 | Launcher, Service | Installed version; offers an update when the latest release is newer. |
-| Theme | Choose a theme and an accent colour for the home screen. See [Themes](themes.md). |
 | Check for updates | Asks GitHub for the latest release. |
 | Update channel | Follow the stable releases or a [test build](managing.md#test-builds). |
 | Go back to launcher | Appears after a launcher update. |
 | CleanYourTV as Home | Choose LG's Home or ours. The TV restarts. |
-| Debloat | Turns the [debloat](debloat.md) on or off. |
-| Network notifications | Switch, address, token and an example for sending [picture notifications](notifications.md) from other devices. |
-| Live TV | Switch on or off. Off hides Live TV in the launcher and Inputs list and leaves the Guide button to LG. See [Live TV](live-tv.md#turning-it-off). |
+| Theme | Choose a theme and an accent colour for the home screen. See [Themes](themes.md). |
+| Live TV | **Show Live TV** (off hides it in the launcher and Inputs list and leaves the Guide button to LG), the **Playlist** (set up from your phone with a QR code and a 6-digit code), **Refresh playlist and guide**, **Learn the Guide key**, **Clear recent channels** and **Remove the playlist**. See [Live TV](live-tv.md). |
+| Input key | The takeover switch, **Learn the Input key** and the optional **Learn the Home key**. See [The Input key](input-key.md). |
 | Voice | Optional. Installs the speech recogniser (about 80 MB), learns the voice button, tries it, sets where the text goes. See [Voice](voice.md). |
-| Input key | The takeover switch, **Learn the Input key**, **Learn the Guide key** (for [Live TV](live-tv.md#the-guide-button)) and the optional **Learn the Home key**. See [The Input key](input-key.md). |
+| Network notifications | Switch, address, token and an example for sending [picture notifications](notifications.md) from other devices. |
+| Debloat | Turns the [debloat](debloat.md) on or off. |
 | Share log | A QR code that opens a masked diagnostic report on a phone, with a **Copy** button. |
 | Uninstall | Removes everything and restarts the TV. |
 

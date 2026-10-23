@@ -37,7 +37,7 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:var(--night);col
   <div id="qrbox"><canvas id="qr"></canvas></div></div>
 <script>
 var kFlow='input', kText='', kRows=[], kTimer=0, upd=null, checkedOffline=false, forceOffer=false, API='http://127.0.0.1:8765', SVC='/media/developer/apps/usr/palm/services/com.cleanyourtv.manager.service';
-var napi=null, th=null, vo=null, mdl=[], agl=[], tst=null, shareMode='log', pairBase=0,  idxStack=[], setupIdx=0, updIdx=0, st=null, rows=[], idx=0, view='main', pending=null, pollT=0, setup={debloat:true,inputKey:true}, offline=false, busyMsg='';
+var napi=null, lv=null, th=null, vo=null, mdl=[], agl=[], tst=null, shareMode='log', pairBase=0,  idxStack=[], setupIdx=0, updIdx=0, st=null, rows=[], idx=0, view='main', pending=null, pollT=0, setup={debloat:true,inputKey:true}, offline=false, busyMsg='';
 function $(i){return document.getElementById(i)}
 function api(p,body){return new Promise(function(res,rej){var x=new XMLHttpRequest();x.open(body?'POST':'GET',API+p);x.timeout=30000;
   x.onload=function(){try{res(JSON.parse(x.responseText))}catch(e){rej(e)}};x.onerror=x.ontimeout=function(){rej(new Error('no answer'))};x.send(body?JSON.stringify(body):null)})}
@@ -141,11 +141,23 @@ function build(){
       api(un?'/api/manager/uninstall':'/api/manager/home',un?{}:{enabled:on}).catch(function(){});
       banner(un?'Removing CleanYourTV… the TV restarts in a moment and LG’s Home comes back.':(on?'Switching to CleanYourTV… the TV restarts in a moment.':'Switching to LG’s Home… the TV restarts in a moment.'),'work')}});
     return}
+  if(view==='livetv'){
+    var lo=st.options.liveTv!==false,l2=lv||{},gk=(st.keys&&st.keys.guide)||'';
+    rows.push({label:'Show Live TV',sub:onoff(lo),fn:function(){opt({liveTv:!lo})}});
+    rows.push({label:'Playlist',sub:l2.configured?(l2.channels+' channels'+(l2.epg?' \u00B7 guide for '+l2.epg+' programmes':'')+(l2.state&&l2.state!=='idle'?' \u00B7 '+l2.state:'')):'not set \u00B7 set up from your phone',fn:openLivePair});
+    rows.push({label:'Refresh playlist and guide',sub:l2.error?String(l2.error).slice(0,70):'',dim:!l2.configured,fn:function(){if(!l2.configured)return;banner('Refreshing\u2026','work');api('/api/live/refresh',{}).then(function(){banner('Refreshing in the background','ok');setTimeout(liveRefresh,3000)},function(){banner('The service did not answer','err')})}});
+    rows.push({label:'Learn the Guide key',sub:lo?(gk?'now: '+gk:'not learned \u00B7 LG\u2019s guide stays'):'Live TV is off',dim:!lo,fn:function(){if(lo)openKeys('guide')}});
+    rows.push({sep:true});
+    rows.push({label:'Clear recent channels',fn:function(){api('/api/live/state',{op:'clear'}).then(function(){banner('Recent channels cleared','ok')},function(){banner('The service did not answer','err')})}});
+    rows.push({label:'Remove the playlist',sub:l2.configured?'':'nothing to remove',dim:!l2.configured,fn:function(){if(l2.configured)push('confirm-live-reset')}});
+    rows.push({sep:true});rows.push({label:'Back',fn:pop});return}
+  if(view==='confirm-live-reset'){
+    rows.push({label:'Yes, remove the playlist',sub:'the address, the channel list, the guide and your favourites are deleted',fn:function(){api('/api/live/reset',{}).then(function(){banner('Playlist removed','ok');pop();liveRefresh()},function(){banner('The service did not answer','err')})}});
+    rows.push({label:'No, keep it',fn:pop});return}
   if(view==='inputkey'){
     var hk=st.inputhook||{},na=hk.hook&&!hk.hook.attached;
     rows.push({label:'Input key opens our Inputs list',sub:na?'not available on this firmware':onoff(st.options.inputKey),fn:function(){opt({inputKey:!st.options.inputKey})}});
     rows.push({label:'Learn the Input key',sub:(st.keys&&st.keys.inputIsDefault)?'default ('+st.keys.input+')':'learned: '+(st.keys&&st.keys.input),fn:function(){openKeys('input')}});
-    rows.push({label:'Learn the Guide key',sub:st.options.liveTv===false?'Live TV is off':(st.keys&&st.keys.guide?'now: '+st.keys.guide:'not learned \u00B7 LG\u2019s guide stays'),dim:st.options.liveTv===false,fn:function(){if(st.options.liveTv!==false)openKeys('guide')}});
     rows.push({label:'Learn the Home key',sub:'optional · '+(st.keys&&st.keys.home?'now: '+st.keys.home:'not learned'),fn:function(){openKeys('home')}});
     rows.push({sep:true});
     rows.push({label:'Back',fn:pop});
@@ -161,6 +173,7 @@ function build(){
   rows.push({sep:true});
   rows.push({label:'CleanYourTV as Home',sub:onoff(st.home&&st.home.enabled),fn:function(){push('confirm-home')}});
   rows.push({label:'Theme',sub:th&&th.current?th.current.id:'',fn:openTheme});
+  rows.push({label:'Live TV',sub:onoff(st.options.liveTv!==false),fn:openLiveTv});
   rows.push({label:'Input key',sub:(st.inputhook&&st.inputhook.hook&&!st.inputhook.hook.attached)?'not available':onoff(st.options.inputKey),fn:function(){push('inputkey')}});
   rows.push({sep:true});
   rows.push({label:'Voice',sub:st.voice?(st.voice.installed?onoff(st.voice.enabled):'not installed'):'',fn:function(){api('/api/voice/status').then(function(v){vo=v;push('voice');if(v.job&&v.job.state==='working'||v.listening)voiceRefresh()},function(){banner('The service did not answer','err')})}});
@@ -207,7 +220,13 @@ var INFO={
  'Uninstall':'Removes the apps, the boot scripts and your settings, then restarts the TV so LG\u2019s Home comes back.',
  'Input key opens our Inputs list':'On: pressing Input shows our Inputs list. Off: LG\u2019s picker comes back at once.',
  'Learn the Input key':'Reads the code of your remote\u2019s Input button from the hook, then tests that our list opens. The default is 241. Clear goes back to it.',
- 'Live TV':'On: the launcher has a Live TV button and tile, the Inputs list has Live TV, and the Guide key can open the channel guide. Off: all of that is hidden and LG\u2019s own player and guide are used. Your playlist is kept.',
+ 'Live TV':'Settings for Live TV: switch it on or off, set up or remove your playlist, refresh the guide and learn the Guide key.',
+ 'Show Live TV':'On: the launcher has a Live TV button and tile, the Inputs list has Live TV, and the Guide key can open the channel guide. Off: all of that is hidden and LG\u2019s own player and guide are used. Your playlist is kept.',
+ 'Playlist':'Your M3U playlist and its XMLTV guide. Choose it to set up: a QR code opens a page on your phone where you enter the playlist address and the 6-digit code shown here.',
+ 'Refresh playlist and guide':'Downloads the playlist and the programme guide again now. It also happens twice a day.',
+ 'Clear recent channels':'Empties the Recent tab and the list of channels that failed. Favourites stay.',
+ 'Remove the playlist':'Deletes the playlist address, the channel list, the guide and your favourites from the TV.',
+ 'Yes, remove the playlist':'Deletes the playlist and everything stored for it on the TV. You can set it up again.',
  'Learn the Guide key':'Records the Guide button\u2019s code. Afterwards it opens the Live TV channel guide over whatever is running (only while Live TV is on). Clear it to get LG\u2019s guide back.',
  'Learn the Home key':'Optional. Records the Home button\u2019s code. The Home key keeps working exactly as before.',
  'Back':'Back to the main list.',
@@ -231,6 +250,8 @@ function draw(){
   if(view==='models'){$('sub').textContent='Choose the model that answers';return}
   if(view==='agents'){$('sub').textContent='Choose the Home Assistant agent';return}
   if(view==='channel'){$('sub').textContent='Where updates come from';return}
+  if(view==='livetv'){$('sub').textContent='Live TV: your own playlist';return}
+  if(view==='confirm-live-reset'){$('sub').textContent='Remove the playlist?';return}
   if(view==='theme'){$('sub').textContent='Choose how Home looks. The change shows the next time you open Home.';return}
   if(view==='accent'){$('sub').textContent='The colour of the focus ring and highlights';return}
   if(view==='voice'){var vv=vo||{},ls=vv.last?(vv.last.text?'Last heard: \u201C'+vv.last.text+'\u201D'+(vv.last.ms?' ('+(vv.last.ms/1000).toFixed(1)+' s)':'')+(vv.last.error?'\nNot sent: '+vv.last.error:''):'Last try: '+vv.last.state+(vv.last.error?'\n'+vv.last.error:'')):'';
@@ -248,6 +269,19 @@ function next(dir){var n=rows.length,i=idx;do{i=(i+dir+n)%n}while(rows[i].sep);i
 function act(){var r=rows[idx];if(r&&r.fn&&!(st&&st.job&&st.job.state==='working'&&r.dim))r.fn()}
 
 function aiHelp(){return 'Chat with a language model through OpenRouter. Run these on the TV (ssh):\n\ncurl -X POST localhost:8765/api/voice/set -d \'{"llm":{"key":"sk-or-...","model":"openrouter/auto"}}\'\ncurl -X POST localhost:8765/api/voice/set -d \'{"llm":{"enabled":true}}\'\n\nOptional: "system" sets the instructions. Ask by text from anywhere on the TV:\ncurl -X POST localhost:8765/api/voice/ask -d \'{"text":"What is the capital of Peru?"}\'\n\nSpoken and typed questions go to OpenRouter and the model you chose; no audio does. The key stays on the TV.\n\nHome Assistant (Assist), with a long-lived access token:\ncurl -X POST localhost:8765/api/voice/set -d \'{"ha":{"url":"http://homeassistant.local:8123","token":"..."}}\'\nOptional: "route" is ha-first, ha-only or ai-only; "selfSigned":true accepts a self-signed certificate; "agent" is a conversation entity.'}
+function liveRefresh(){api('/api/live/status').then(function(r){lv=r;if(view==='livetv'){build();if(idx>=rows.length)idx=0;draw()}},function(){})}
+function openLiveTv(){api('/api/live/status').then(function(r){lv=r;push('livetv')},function(){lv=null;push('livetv')})}
+function openLivePair(){
+  shareMode='live';
+  push('share');$('share').style.display='block';$('shareurl').textContent='';$('qrbox').style.visibility='hidden';
+  $('share').querySelector('h2').textContent='Set up Live TV';
+  $('share').querySelector('ol').innerHTML='<li>Phone on the <b>same Wi-Fi</b> as the TV.</li><li>Scan the code with the camera.</li><li>Enter the <b>code</b> below and your playlist address.</li>';
+  $('sharemsg').textContent='Preparing\u2026';
+  api('/api/live/pair',{}).then(function(r){
+    if(view!=='share')return;
+    drawQr(r.url);$('qrbox').style.visibility='visible';$('shareurl').textContent=r.url+'   code '+r.code;
+    $('sharemsg').textContent='The page stays open for ten minutes. It is not encrypted: the playlist address, which may hold an access key, travels over your Wi-Fi.';
+    (function poll(n){if(view!=='share'||shareMode!=='live')return;api('/api/live/status').then(function(s2){if(s2.configured&&(!lv||!lv.configured||s2.channels!==lv.channels)){lv=s2;closeShare();banner('Playlist saved','ok');return}if(n<300)setTimeout(function(){poll(n+1)},2000)},function(){setTimeout(function(){poll(n+1)},3000)})})(0)},function(){$('sharemsg').textContent='The service did not answer.'})}
 function openTheme(){
   banner('Loading themes\u2026','work');
   api('/api/theme/list').then(function(r){if(r.error){banner(r.error,'err');return}banner('');th=r;push('theme');for(var k=0;k<rows.length;k++)if(rows[k].sub&&/^selected/.test(rows[k].sub)){idx=k;draw();break}},function(){banner('The service did not answer','err')})}
@@ -394,7 +428,7 @@ function pollShare(n){
     if(st&&st.url){drawQr(st.url);$('qrbox').style.visibility='visible';$('shareurl').textContent=st.url;$('sharemsg').textContent='The page is open for ten minutes. It lists versions, the setup log and the service log; addresses and URL paths are masked.';return}
     if(n>45){$('sharemsg').textContent='Could not prepare the report (is the Homebrew Channel installed?).';return}
     setTimeout(function(){pollShare(n+1)},1000)})}
-function closeShare(){$('share').style.display='none';if(shareMode==='pair'){api('/api/voice/pair-stop',{}).catch(function(){});pop();voiceRefresh();return}rootExec('pkill -f "[s]harelog.js"; rm -f /tmp/cytv-sharelog.json');pop()}
+function closeShare(){$('share').style.display='none';if(shareMode==='live'){pop();liveRefresh();return}if(shareMode==='pair'){api('/api/voice/pair-stop',{}).catch(function(){});pop();voiceRefresh();return}rootExec('pkill -f "[s]harelog.js"; rm -f /tmp/cytv-sharelog.json');pop()}
 function doSetup(force){forceOffer=false;
   banner('Setting up\u2026 the screen blinks once while LG\u2019s system restarts','work');
   var flags=(setup.debloat?'--debloat':'--no-debloat')+' '+(setup.inputKey?'--input-key':'--no-input-key')+(force?' --force':'');

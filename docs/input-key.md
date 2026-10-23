@@ -29,8 +29,7 @@ the picker opens. **Clear** restores the default.
 
 The switch in the same menu removes the bind and gives the button back to LG's own picker. **Learn the Home key** is optional.
 
-**Learn the Guide key** binds the Guide button to the [Live TV](live-tv.md#the-guide-button) channel guide. It is off until you learn a code and
-while Live TV is switched off.
+The Guide button can be bound the same way; that is part of [Live TV](live-tv.md#the-guide-button) (manager app > **Live TV** > **Learn the Guide key**).
 
 !!! note "When the hook is not attached"
     On some firmware the hook cannot attach. The manager then shows the Input key as not available and LG's picker is used.
