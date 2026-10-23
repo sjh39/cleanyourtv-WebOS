@@ -10,7 +10,12 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:var(--night);col
 #head p{margin-top:18px;font-size:28px;color:var(--ink2);line-height:1.4}
 #info{margin-top:64px;font-size:30px;line-height:1.5;color:var(--ink2)}
 #info b{display:block;margin-bottom:12px;font-size:38px;font-weight:600;line-height:1.2;color:var(--ink)}
-#panel{position:absolute;left:820px;top:60px;width:1000px;display:flex;flex-direction:column;gap:12px}
+#panel{position:absolute;left:820px;top:60px;width:1000px;height:960px;display:flex;flex-direction:column;gap:12px}
+#listwrap{position:relative;flex:1;min-height:0;overflow:hidden}
+#list{position:absolute;left:0;right:0;top:0;transition:transform .15s ease-out}
+#listwrap.mu::before,#listwrap.md::after{content:'';position:absolute;left:0;right:0;height:70px;z-index:2;pointer-events:none}
+#listwrap.mu::before{top:0;background:linear-gradient(var(--night),rgba(7,8,11,0))}
+#listwrap.md::after{bottom:0;background:linear-gradient(rgba(7,8,11,0),var(--night))}
 #banner{min-height:64px;padding:16px 34px;border-radius:30px;font-size:28px;line-height:1.3;background:#1c1e24;color:var(--ink2);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
 #banner.work{color:var(--ink)}#banner.err{color:#ff9a8a}#banner.ok{color:#9be3b0}
 .row{display:flex;align-items:center;gap:22px;height:84px;padding:0 34px;border-radius:30px;font-size:30px;font-weight:500;background:#1a1c22;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
@@ -30,7 +35,7 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:var(--night);col
 #shareclose{position:absolute;left:96px;top:880px;padding:0 44px;height:84px;border-radius:30px;font-size:30px;font-weight:500;display:flex;align-items:center;background:var(--ink);color:#0b0c10}
 </style><script src="qrcode.js"></script></head><body>
 <div id="head"><h1>CleanYourTV</h1><p id="sub"></p><div id="info"></div></div>
-<div id="panel"><div id="banner"></div><div id="list"></div></div>
+<div id="panel"><div id="banner"></div><div id="listwrap"><div id="list"></div></div></div>
 <div id="share"><h2>Share the log</h2>
   <ol><li>Phone on the <b>same Wi-Fi</b> as the TV.</li><li>Scan the code with the camera.</li><li>Tap <b>Copy</b> on the page and paste it into your message.</li></ol>
   <div id="sharemsg"></div><div id="shareurl"></div><div id="shareclose">Close</div>
@@ -158,6 +163,8 @@ function build(){
     var hk=st.inputhook||{},na=hk.hook&&!hk.hook.attached;
     rows.push({label:'Input key opens our Inputs list',sub:na?'not available on this firmware':onoff(st.options.inputKey),fn:function(){opt({inputKey:!st.options.inputKey})}});
     rows.push({label:'Learn the Input key',sub:(st.keys&&st.keys.inputIsDefault)?'default ('+st.keys.input+')':'learned: '+(st.keys&&st.keys.input),fn:function(){openKeys('input')}});
+    var pk=st.picker||{},pkOff=pk.prewarm===false;
+    rows.push({label:'Keep the Inputs list ready',sub:pkOff?'off'+(pk.reason?' \u00B7 '+pk.reason:'')+' \u00B7 the first press takes a few seconds':'on \u00B7 opens at once',fn:function(){opt({pickerPrewarm:pkOff})}});
     rows.push({label:'Learn the Home key',sub:'optional · '+(st.keys&&st.keys.home?'now: '+st.keys.home:'not learned'),fn:function(){openKeys('home')}});
     rows.push({sep:true});
     rows.push({label:'Back',fn:pop});
@@ -228,6 +235,7 @@ var INFO={
  'Remove the playlist':'Deletes the playlist address, the channel list, the guide and your favourites from the TV.',
  'Yes, remove the playlist':'Deletes the playlist and everything stored for it on the TV. You can set it up again.',
  'Learn the Guide key':'Records the Guide button\u2019s code. Afterwards it opens the Live TV channel guide over whatever is running (only while Live TV is on). Clear it to get LG\u2019s guide back.',
+ 'Keep the Inputs list ready':'On: the Inputs list is started in the background so the Input key opens it at once. Some TVs close it again and show a loading circle every half minute; then this switches itself off and the first press of the Input key takes a few seconds instead. You can switch it on or off here.',
  'Learn the Home key':'Optional. Records the Home button\u2019s code. The Home key keeps working exactly as before.',
  'Back':'Back to the main list.',
  'Cancel':'Nothing changes.',
@@ -240,9 +248,19 @@ var INFO={
  'Set up anyway':'Your firmware is not in the compatibility list and LG\u2019s Home looks different. This tries it anyway; a failed start restarts the TV with LG\u2019s Home.'
 };
 function infoFor(r){if(!r||r.sep)return null;var k=r.label.replace(/ [0-9][0-9.]*$/,'');if(k==='Check for updates'&&offline)return 'Works without the service: looks for a newer package and installs it through the root service.';if(k==='CleanYourTV as Home'&&st.home&&st.home.fullhome)return {t:k,d:INFO[k]+' This TV also has LG\u2019s full-screen Home: if the Home button opens that instead of this launcher, set TV Settings > General > Home Settings > Home Style to Basic.'};return INFO[k]?{t:k,d:INFO[k]}:null}
+var scrollY=0;
+/* the list can be taller than the screen: keep the focused row in view and show a fade where more rows are hidden */
+function scrollList(){
+  var wrap=$('listwrap'),list=$('list'),el=list.children[idx],wh=wrap.clientHeight,lh=list.scrollHeight;
+  if(el&&wh){var top=el.offsetTop,bot=top+el.offsetHeight;
+    if(top-50<scrollY)scrollY=Math.max(0,top-50);else if(bot+50>scrollY+wh)scrollY=bot+50-wh;
+    scrollY=Math.max(0,Math.min(scrollY,Math.max(0,lh-wh)))}
+  else scrollY=0;
+  list.style.transform=scrollY?'translateY('+(-scrollY)+'px)':'';
+  wrap.classList.toggle('mu',scrollY>0);wrap.classList.toggle('md',scrollY+wh<lh-2)}
 function draw(){
   var h='';rows.forEach(function(r,i){h+=r.sep?'<div class="sep"></div>':'<div class="row'+(i===idx?' f':'')+(r.dim?' dim':'')+'" data-i="'+i+'"><span class="lb"></span>'+(r.sub?'<span class="st"></span>':'')+'</div>'});
-  $('list').innerHTML=h;var el=$('list').children;rows.forEach(function(r,i){if(r.sep)return;el[i].querySelector('.lb').textContent=r.label;if(r.sub)el[i].querySelector('.st').textContent=r.sub});
+  $('list').innerHTML=h;scrollList();var el=$('list').children;rows.forEach(function(r,i){if(r.sep)return;el[i].querySelector('.lb').textContent=r.label;if(r.sub)el[i].querySelector('.st').textContent=r.sub});
   var inf=infoFor(rows[idx]),ie=$('info');ie.textContent='';
   $('sub').style.wordBreak='';
   if(view==='notifyhow'||view==='voicehow'){$('sub').textContent=kText;$('sub').style.whiteSpace='pre-line';$('sub').style.wordBreak='break-all';return}
@@ -450,6 +468,7 @@ document.addEventListener('keydown',function(e){var k=e.keyCode;
   e.preventDefault()});
 document.addEventListener('click',function(e){if(e.target.closest&&e.target.closest('#shareclose')){closeShare();return}var r=e.target.closest&&e.target.closest('.row');if(r){idx=+r.getAttribute('data-i');draw();act()}});
 document.addEventListener('mousemove',function(e){var r=e.target.closest&&e.target.closest('.row');if(r&&+r.getAttribute('data-i')!==idx){idx=+r.getAttribute('data-i');draw()}});
-document.addEventListener('webOSRelaunch',function(){view='main';idx=0;idxStack=[];load()});
+document.addEventListener('wheel',function(e){if(e.deltaY>0)next(1);else if(e.deltaY<0)next(-1)});   /* the Magic Remote wheel */
+document.addEventListener('webOSRelaunch',function(){view='main';idx=0;idxStack=[];scrollY=0;load()});
 banner('Reading status…','work');load();
 </script></body></html>

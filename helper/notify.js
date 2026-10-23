@@ -27,7 +27,7 @@ function fetchImage(url, depth = 0) {
 function luna(uri, payload) {
   return new Promise(res => {
     const sh = 'luna-send -n 1 -w 5000 -f "$1" "$2" </dev/null';
-    cp.execFile('/bin/sh', ['-c', sh, 'sh', uri, JSON.stringify(payload)], { env: ENV, timeout: 8000 },
+    require('./diag').execFile('/bin/sh', ['-c', sh, 'sh', uri, JSON.stringify(payload)], { env: ENV, timeout: 8000 },
       (e, out) => { try { res(JSON.parse(out)); } catch (_) { res({ returnValue: false, errorText: String(e || 'bad json') }); } });
   });
 }

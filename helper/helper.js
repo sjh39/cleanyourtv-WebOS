@@ -1,14 +1,16 @@
 // Root service of CleanYourTV: bridges the launcher web app to luna, serves app icons, runs Live TV and picture
 // notifications, keeps the Input-key picker alive and hosts the manager API. Listens on 127.0.0.1 only.
 const http = require('http'), fs = require('fs'), path = require('path'), cp = require('child_process');
-const VERSION = '1.5.12';
+const VERSION = '1.5.13';
 const PORT = 8765, DIR = '/media/developer/cleanyourtv', CONF = DIR + '/config.json', USAGE = DIR + '/usage.json';
 const ENV = Object.assign({}, process.env, { PATH: '/usr/bin:/usr/sbin:/bin:/sbin:' + (process.env.PATH || '') });
 
+const diag = require('./diag');
+diag.start();
 function luna(uri, payload) {
   return new Promise(res => {
     const sh = 'luna-send -n 1 -w 5000 -f "$1" "$2" </dev/null';
-    cp.execFile('/bin/sh', ['-c', sh, 'sh', uri, JSON.stringify(payload || {})],
+    diag.execFile('/bin/sh', ['-c', sh, 'sh', uri, JSON.stringify(payload || {})],
       { env: ENV, timeout: 8000, maxBuffer: 8 << 20 }, (e, out) => {
         try { res(JSON.parse(out)); } catch (_) { res({ returnValue: false, errorText: String(e || 'bad json') }); }
       });
@@ -58,12 +60,8 @@ async function onForeground(id) {
 }
 // Poll the foreground app every few seconds (a subscription's output is block-buffered by luna-send, so it would arrive late).
 function pollForeground() {
-  const ch = cp.spawn('luna-send', ['-n', '1', '-w', '3000', '-f', 'luna://com.webos.applicationManager/getForegroundAppInfo', '{}'],
-    { env: ENV, stdio: ['ignore', 'pipe', 'ignore'] });
-  let out = '';
-  ch.stdout.on('data', d => out += d);
-  ch.on('error', () => {});
-  ch.on('close', () => { try { const o = JSON.parse(out); if (o.returnValue !== false) onForeground(o.appId || ''); } catch (_) {} });
+  diag.execFile('luna-send', ['-n', '1', '-w', '3000', '-f', 'luna://com.webos.applicationManager/getForegroundAppInfo', '{}'], { env: ENV, timeout: 6000 },
+    (e, out) => { try { const o = JSON.parse(out); if (o.returnValue !== false) onForeground(o.appId || ''); } catch (_) {} });
 }
 let notify = null;
 try { notify = require('./notify'); } catch (e) { console.error('notify module failed:', e.message); }
@@ -156,6 +154,6 @@ http.createServer(async (req, res) => {
   // Input key: bind it and keep the hook in LG's input processes (they restart now and then)
   setTimeout(() => inputhook.ensure(options().inputKey, keyCode()), 500);
   setInterval(() => inputhook.ensure(options().inputKey, keyCode()), 30000);
-  try { require('./picker').start(luna, () => options().inputKey); } catch (e) { console.error('picker module failed:', e.message); }
+  try { require('./picker').start(luna, () => options().inputKey, { get: () => readConf().picker || {}, set: v => { const c = readConf(); c.picker = v; writeConf(c); } }); } catch (e) { console.error('picker module failed:', e.message); }
   if (manager) setTimeout(() => manager.check(), 60000);
 });

@@ -16,6 +16,14 @@ active one) and, when [Live TV](live-tv.md) is on, **Live TV**.
 
 The pointer works too.
 
+## Keeping it ready
+
+The Inputs list is a small app. A cold start takes about eight seconds, so the service starts it hidden in the background after boot
+and the key only wakes it. Some TVs close a hidden app again straight away, which shows a loading circle each time. The service
+checks that the picker stays running; if the system closes it twice it stops starting it (saved in `config.json` as
+`picker.prewarm: false`) and the first press of the Input key takes a few seconds instead. **Input key** > **Keep the Inputs list
+ready** in the manager app shows the state and switches it on or off.
+
 ## How it works
 
 It uses the bundled [inputhook](credits.md#inputhook) library, which injects a small hook into LG's input process so that a remote
