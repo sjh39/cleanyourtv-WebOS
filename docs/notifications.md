@@ -6,7 +6,8 @@ devices send it with a POST request, for example Home Assistant showing a camera
 ## Enable it
 
 In the manager app: **Network notifications** > **Accept notifications from the network**. **How to send** then shows the address,
-the token and an example.
+the token and an example. **Show as QR code** shows the address and the token as a QR code: scan it with a phone and copy them from the
+text the camera shows (for Home Assistant, for example), instead of typing a 48-character token.
 
 !!! warning "The token is a secret"
     Anyone who has it and can reach the TV can show cards on its screen. **New token** replaces it.
