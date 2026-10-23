@@ -1,0 +1,10 @@
+{ "name": "Sunset", "author": "CleanYourTV", "description": "A wallpaper with the dock at the bottom in a glass panel, round buttons and a stacked clock. Down opens all apps.",
+  "colors": { "night": "#0e0b1c", "panel": "#2a2038", "ink": "#ffffff", "accent": "#ffffff" },
+  "surface": { "pillAlpha": 0.14, "pillRing": 0.22 },
+  "clock": { "layout": "stack", "scale": 1.45, "dateScale": 1 },
+  "bar": { "style": "round", "size": 58 },
+  "name": { "show": false },
+  "dock": { "anchor": "bottom", "align": "center", "count": 6, "w": 236, "h": 142, "gap": 28, "radius": 38, "panel": 0.14 },
+  "grid": { "mode": "overlay", "cols": 8, "tileH": 150, "gapX": 26 },
+  "tile": { "gloss": 0.6 },
+  "effects": { "glow": 0, "wallpaper": "sunset.jpg", "wallpaperDim": 0 } }
