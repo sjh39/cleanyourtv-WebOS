@@ -37,7 +37,7 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:var(--night);col
   <div id="qrbox"><canvas id="qr"></canvas></div></div>
 <script>
 var kFlow='input', kText='', kRows=[], kTimer=0, upd=null, checkedOffline=false, forceOffer=false, API='http://127.0.0.1:8765', SVC='/media/developer/apps/usr/palm/services/com.cleanyourtv.manager.service';
-var napi=null, vo=null, mdl=[], tst=null, shareMode='log', pairBase=0,  idxStack=[], setupIdx=0, updIdx=0, st=null, rows=[], idx=0, view='main', pending=null, pollT=0, setup={debloat:true,inputKey:true}, offline=false, busyMsg='';
+var napi=null, vo=null, mdl=[], agl=[], tst=null, shareMode='log', pairBase=0,  idxStack=[], setupIdx=0, updIdx=0, st=null, rows=[], idx=0, view='main', pending=null, pollT=0, setup={debloat:true,inputKey:true}, offline=false, busyMsg='';
 function $(i){return document.getElementById(i)}
 function api(p,body){return new Promise(function(res,rej){var x=new XMLHttpRequest();x.open(body?'POST':'GET',API+p);x.timeout=30000;
   x.onload=function(){try{res(JSON.parse(x.responseText))}catch(e){rej(e)}};x.onerror=x.ontimeout=function(){rej(new Error('no answer'))};x.send(body?JSON.stringify(body):null)})}
@@ -65,6 +65,11 @@ function build(){
     var cur=((vo||{}).llm||{}).model;
     mdl.forEach(function(x){rows.push({label:x.name,sub:x.id+(x.price!=null?' \u00B7 $'+x.price+' per million words in':'')+(x.id===cur?' \u00B7 selected':''),fn:function(){pickModel(x.id)}})});
     rows.push({sep:true});rows.push({label:'Back',fn:pop});return}
+  if(view==='agents'){
+    var ca=((vo||{}).ha||{}).agent||'';
+    rows.push({label:'Default agent',sub:'Home Assistant\u2019s own'+(ca?'':' \u00B7 selected'),fn:function(){pickAgent('')}});
+    agl.forEach(function(x){rows.push({label:x.name,sub:x.id+(x.id===ca?' \u00B7 selected':''),fn:function(){pickAgent(x.id)}})});
+    rows.push({sep:true});rows.push({label:'Back',fn:pop});return}
   if(view==='voice'){
     var v=vo||{},wk=v.job&&v.job.state==='working';
     if(!v.installed){
@@ -85,7 +90,11 @@ function build(){
     rows.push({label:'AI chat (OpenRouter)',sub:lm.hasKey?(onoff(lm.enabled)+' \u00B7 '+lm.model):'no key set',fn:function(){
       if(!lm.hasKey){openPair();return}
       api('/api/voice/set',{llm:{enabled:!lm.enabled}}).then(function(x){if(x.error){banner(x.error,'err');return}vo=x;build();draw()},function(){banner('The service did not answer','err')})}});
-    rows.push({label:'Set up from your phone',sub:'key, model, instructions, server',fn:openPair});
+    var ha=v.ha||{},haOk=!!ha.configured,HR={'ha-first':'Home Assistant first, then the AI','ha-only':'Home Assistant only','ai-only':'The AI only'};
+    rows.push({label:'Home Assistant (Assist)',sub:haOk?ha.url.replace(/^https?:\/\//,'').replace(/\/.*/,'')+' \u00B7 '+HR[ha.route]:'not set \u00B7 set up from your phone',fn:function(){if(!haOk){openPair();return}haTest()}});
+    rows.push({label:'Which answers first',sub:HR[ha.route||'ha-first'],fn:function(){var o=['ha-first','ha-only','ai-only'],n=o[(o.indexOf(ha.route||'ha-first')+1)%3];api('/api/voice/set',{ha:{route:n}}).then(function(x){if(x.error){banner(x.error,'err');return}vo=x;build();draw()},function(){banner('The service did not answer','err')})}});
+    rows.push({label:'Assist agent',sub:haOk?(ha.agent||'default'):'set up Home Assistant first',dim:!haOk,fn:function(){if(haOk)openAgents()}});
+    rows.push({label:'Set up from your phone',sub:'key, model, Home Assistant, server',fn:openPair});
     rows.push({label:'Model',sub:lm.model||'openrouter/auto',fn:openModels});
     rows.push({label:'Set up with commands',sub:'for scripts and ssh',fn:function(){kText=aiHelp();push('voicehow')}});
     rows.push({label:'Forget the conversation',fn:function(){api('/api/voice/forget',{}).then(function(){banner('Conversation cleared','ok')},function(){banner('The service did not answer','err')})}});
@@ -165,7 +174,10 @@ var INFO={
  'Set up from your phone':'Shows a QR code. Scan it with a phone on the same Wi-Fi to enter your OpenRouter key, choose a model, write instructions and set a server address. Nothing is typed on the TV.',
  'Model':'Choose the model that answers. The list is read from OpenRouter: the newest models of the main providers, with the price per million words in. The phone page lists every model.',
  'Set up with commands':'Shows the commands to set the key, model and instructions from a shell, and how to ask by text.',
- 'Forget the conversation':'The model remembers the last few turns for ten minutes. This clears them.',
+ 'Forget the conversation':'The AI and Home Assistant remember the last turns for ten minutes. This clears them.',
+ 'Home Assistant (Assist)':'Sends what you say as text to Home Assistant\u2019s Assist and shows its answer. Needs the address and a long-lived access token (Home Assistant profile page), entered on your phone. Choosing this row tests the connection.',
+ 'Which answers first':'Home Assistant first, then the AI: Assist gets the text; if it does not understand, the AI answers. Home Assistant only: never the AI. The AI only: Home Assistant is not asked. Choose to switch.',
+ 'Assist agent':'Which Home Assistant conversation agent answers. The default is the built-in one; others (for example a language-model agent) are listed from your Home Assistant.',
  'Switch off LG\u2019s voice assistant':'LG\u2019s own assistant reacts to the same button and sends the audio to LG. On: it is paused while voice is on. A reboot or switching this off undoes it.',
  'Learn the voice button':'Records the code of the remote button that starts listening. Try the microphone button first; any spare button works.',
  'Try it now':'Starts listening without the button: speak when the card appears.',
@@ -196,6 +208,7 @@ function draw(){
   if(view==='notifyhow'||view==='voicehow'){$('sub').textContent=kText;$('sub').style.whiteSpace='pre-line';$('sub').style.wordBreak='break-all';return}
   if(view==='notifyapi'){$('sub').textContent='Network notifications';return}
   if(view==='models'){$('sub').textContent='Choose the model that answers';return}
+  if(view==='agents'){$('sub').textContent='Choose the Home Assistant agent';return}
   if(view==='channel'){$('sub').textContent='Where updates come from';return}
   if(view==='voice'){var vv=vo||{},ls=vv.last?(vv.last.text?'Last heard: \u201C'+vv.last.text+'\u201D'+(vv.last.ms?' ('+(vv.last.ms/1000).toFixed(1)+' s)':'')+(vv.last.error?'\nNot sent: '+vv.last.error:''):'Last try: '+vv.last.state+(vv.last.error?'\n'+vv.last.error:'')):'';
     $('sub').textContent='Voice \u00B7 '+(vv.engine||'')+(ls?'\n'+ls:'');$('sub').style.whiteSpace='pre-line';if(inf){var b2=document.createElement('b');b2.textContent=inf.t;ie.appendChild(b2);ie.appendChild(document.createTextNode(inf.d))}return}
@@ -211,7 +224,7 @@ function draw(){
 function next(dir){var n=rows.length,i=idx;do{i=(i+dir+n)%n}while(rows[i].sep);idx=i;draw()}
 function act(){var r=rows[idx];if(r&&r.fn&&!(st&&st.job&&st.job.state==='working'&&r.dim))r.fn()}
 
-function aiHelp(){return 'Chat with a language model through OpenRouter. Run these on the TV (ssh):\n\ncurl -X POST localhost:8765/api/voice/set -d \'{"llm":{"key":"sk-or-...","model":"openrouter/auto"}}\'\ncurl -X POST localhost:8765/api/voice/set -d \'{"llm":{"enabled":true}}\'\n\nOptional: "system" sets the instructions. Ask by text from anywhere on the TV:\ncurl -X POST localhost:8765/api/voice/ask -d \'{"text":"What is the capital of Peru?"}\'\n\nSpoken and typed questions go to OpenRouter and the model you chose; no audio does. The key stays on the TV.'}
+function aiHelp(){return 'Chat with a language model through OpenRouter. Run these on the TV (ssh):\n\ncurl -X POST localhost:8765/api/voice/set -d \'{"llm":{"key":"sk-or-...","model":"openrouter/auto"}}\'\ncurl -X POST localhost:8765/api/voice/set -d \'{"llm":{"enabled":true}}\'\n\nOptional: "system" sets the instructions. Ask by text from anywhere on the TV:\ncurl -X POST localhost:8765/api/voice/ask -d \'{"text":"What is the capital of Peru?"}\'\n\nSpoken and typed questions go to OpenRouter and the model you chose; no audio does. The key stays on the TV.\n\nHome Assistant (Assist), with a long-lived access token:\ncurl -X POST localhost:8765/api/voice/set -d \'{"ha":{"url":"http://homeassistant.local:8123","token":"..."}}\'\nOptional: "route" is ha-first, ha-only or ai-only; "selfSigned":true accepts a self-signed certificate; "agent" is a conversation entity.'}
 function openChannel(){
   banner('Looking for test builds\u2026','work');
   api('/api/manager/tests').then(function(r){banner('');tst=r;push('channel');for(var k=0;k<rows.length;k++)if(rows[k].sub&&/^selected/.test(rows[k].sub)){idx=k;draw();break}},function(){banner('The service did not answer','err')})}
@@ -229,12 +242,23 @@ function openModels(){
     push('models');
     for(var k=0;k<rows.length;k++)if(rows[k].sub&&/selected$/.test(rows[k].sub)){idx=k;draw();break}
   },function(){banner('The service did not answer','err')})}
+function haTest(){
+  banner('Asking Home Assistant\u2026','work');
+  api('/api/voice/ha-test',{}).then(function(r){if(r.error){banner(r.error,'err');return}banner('Connected to '+(r.name||'Home Assistant')+(r.version?' '+r.version:''),'ok')},function(){banner('The service did not answer','err')})}
+function openAgents(){
+  banner('Asking Home Assistant\u2026','work');
+  api('/api/voice/ha-agents').then(function(r){
+    if(r.error){banner(r.error,'err');return}
+    banner('');agl=r.agents||[];push('agents');
+    var cur=((vo||{}).ha||{}).agent;for(var k=0;k<rows.length;k++)if(rows[k].sub&&/selected$/.test(rows[k].sub)){idx=k;draw();break}
+  },function(){banner('The service did not answer','err')})}
+function pickAgent(id){api('/api/voice/set',{ha:{agent:id}}).then(function(x){if(x.error){banner(x.error,'err');return}vo=x;banner(id?'Agent: '+id:'Default agent','ok');pop()},function(){banner('The service did not answer','err')})}
 function pickModel(id){api('/api/voice/set',{llm:{model:id}}).then(function(x){if(x.error){banner(x.error,'err');return}vo=x;banner('Model: '+id,'ok');pop()},function(){banner('The service did not answer','err')})}
 function openPair(){
   shareMode='pair';pairBase=(vo&&vo.pairedAt)||0;
   push('share');$('share').style.display='block';$('shareurl').textContent='';$('qrbox').style.visibility='hidden';
   $('share').querySelector('h2').textContent='Set up from your phone';
-  $('share').querySelector('ol').innerHTML='<li>Phone on the <b>same Wi-Fi</b> as the TV.</li><li>Scan the code with the camera.</li><li>Enter your <b>OpenRouter key</b>, choose a model and tap <b>Save</b>.</li>';
+  $('share').querySelector('ol').innerHTML='<li>Phone on the <b>same Wi-Fi</b> as the TV.</li><li>Scan the code with the camera.</li><li>Enter your <b>OpenRouter key</b> and model, or your <b>Home Assistant</b> address and access token, and tap <b>Save</b>.</li>';
   $('sharemsg').textContent='Preparing\u2026';
   api('/api/voice/pair',{}).then(function(r){
     if(view!=='share')return;

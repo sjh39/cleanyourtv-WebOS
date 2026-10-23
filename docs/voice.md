@@ -88,7 +88,41 @@ loader and libraries that the download places in the same folder. Nothing in the
 Only text goes further: to your server, to OpenRouter, or nowhere. LG's own assistant is a separate path with its own cloud
 recognition; **Switch off LG's voice assistant** pauses it while voice is on.
 
-## Planned: Home Assistant
+## Home Assistant (Assist)
 
-Sending recognised text to Home Assistant's conversation (Assist) API and showing its answer. Until then, the server address and
-`/api/voice/ask` can forward text to a Home Assistant webhook or any other service.
+The recognised text can go to [Home Assistant's Assist](https://www.home-assistant.io/voice_control/) (`POST /api/conversation/process`),
+which turns on lights, answers questions about your home and so on. Its answer is shown as text on the card. Answers are not spoken.
+
+In **Voice**, **Set up from your phone** also asks for:
+
+- the **address** of Home Assistant, for example `http://homeassistant.local:8123`,
+- a **long-lived access token** (your Home Assistant profile page, under Security),
+- whether to accept a **self-signed certificate** (only matters for `https://` addresses),
+- **which answers first**.
+
+Choosing **Home Assistant (Assist)** in the menu tests the connection and shows the name and version of your Home Assistant.
+
+| Setting | Behaviour |
+|---|---|
+| Home Assistant first, then the AI (default) | The text goes to Assist. If Assist understood it, its answer is shown. If it did not (`no_intent_match`), or Home Assistant cannot be reached, the same text goes to the AI chat, when that is switched on. Without the AI, Assist's own message is shown. |
+| Home Assistant only | The AI is never asked. |
+| The AI only | Home Assistant is not asked. |
+
+**Assist agent** lists the conversation agents of your Home Assistant (its `conversation.*` entities) and lets you choose one;
+the default is the built-in agent. A conversation id is passed on, so follow-up questions keep their context; a new
+conversation starts after ten quiet minutes or after **Forget the conversation**.
+
+The same from a shell:
+
+```sh
+curl -X POST localhost:8765/api/voice/set -d '{"ha":{"url":"http://homeassistant.local:8123","token":"eyJ..."}}'
+curl -X POST localhost:8765/api/voice/set -d '{"ha":{"route":"ha-only","agent":"conversation.home_assistant","selfSigned":false}}'
+curl -X POST localhost:8765/api/voice/ha-test
+curl -X POST localhost:8765/api/voice/ask -d '{"text":"turn on the living room light"}'
+```
+
+`route` is `ha-first`, `ha-only` or `ai-only`; `{"ha":{"clear":true}}` removes the address and the token. `/api/voice/ask` answers
+`{"text","answer","via","error"}`, where `via` is `ha` or `ai`.
+
+The token is stored in `config.json` on the TV only and is never returned by the service. Only the recognised text goes to your
+Home Assistant. With a plain `http://` address the token is visible on your network.

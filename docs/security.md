@@ -34,7 +34,9 @@ program started by the root service with its own copy of the C library; it reads
   OpenRouter and that model's provider see the text.
 - The phone setup page is a short-lived page on the local network (port 8769, a random 128-bit address, ten minutes, closed after
   saving, plain HTTP: the key is visible on the network while it is typed).
-- The key is kept in `config.json` (readable by root only) and is never returned by the service.
+- With Home Assistant set up, the recognised text goes to the address you set, with your long-lived access token (plain `http://` is
+  possible: the token is then visible on your network; a self-signed certificate is accepted only when you switch that on).
+- The keys and the token are kept in `config.json` (readable by root only) and are never returned by the service.
 - Pausing LG's voice assistant sends it SIGSTOP; nothing of LG's is modified.
 
 ## Trust
