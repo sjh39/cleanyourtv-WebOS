@@ -2,7 +2,7 @@
 
 **CleanYourTV** in LG's app list sets up, updates and removes everything. The left side of the screen explains the focused row.
 
-![Manager app](screenshots/manager.jpg){ width="900" }
+![Manager app](screenshots/manager.jpg)
 
 | Row | Function |
 |---|---|

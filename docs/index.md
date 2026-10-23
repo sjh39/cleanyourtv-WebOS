@@ -4,7 +4,7 @@ A fast home screen for rooted LG webOS TVs. It replaces LG's Home with a dock of
 and adds Live TV from your own playlist, an Inputs list on the Input key, picture notifications from your network, optional
 on-device voice recognition, and an optional debloat of LG's ads and telemetry.
 
-![Home screen](screenshots/home.jpg){ width="900" }
+![Home screen](screenshots/home.jpg)
 
 ## What it does
 
@@ -38,17 +38,12 @@ scripts brings LG's Home back. See [What it changes on the TV](tv-changes.md).
 
 ## Screenshots
 
-<div class="grid" markdown>
-
-![App grid](screenshots/grid.jpg){ width="440" }
-![App options](screenshots/options.jpg){ width="440" }
-![Customise menu](screenshots/customise.jpg){ width="440" }
-![Inputs menu](screenshots/inputs.jpg){ width="440" }
-![Live TV guide](screenshots/live.jpg){ width="440" }
-![Inputs picker on the Input key](screenshots/picker.jpg){ width="440" }
-![Manager app](screenshots/manager.jpg){ width="440" }
-
-</div>
+| | |
+|---|---|
+| ![App grid](screenshots/grid.jpg) | ![App options](screenshots/options.jpg) |
+| ![Customise menu](screenshots/customise.jpg) | ![Inputs menu](screenshots/inputs.jpg) |
+| ![Live TV guide](screenshots/live.jpg) | ![Inputs picker on the Input key](screenshots/picker.jpg) |
+| ![Manager app](screenshots/manager.jpg) | |
 
 ## Where to start
 

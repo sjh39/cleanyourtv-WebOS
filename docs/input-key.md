@@ -2,7 +2,7 @@
 
 The remote's **Input** button opens an Inputs picker over the running app.
 
-![Inputs picker on the Input key](screenshots/picker.jpg){ width="900" }
+![Inputs picker on the Input key](screenshots/picker.jpg)
 
 The picker shows the dock apps in a row, the inputs below (each with its port and what is connected, and a green dot on the
 active one) and **Live TV**.

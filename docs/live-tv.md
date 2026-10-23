@@ -3,7 +3,7 @@
 Plays an IPTV playlist (M3U) from your own provider or server. It does not use LG's tuner, and the project provides no channels
 and no playlist.
 
-![Live TV guide](screenshots/live.jpg){ width="900" }
+![Live TV guide](screenshots/live.jpg)
 
 ## Setting it up
 

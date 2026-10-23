@@ -3,7 +3,7 @@
 The launcher replaces LG's Home. It is a web page of the project that the TV's browser runs, so it starts fast and works the
 same on every supported webOS version.
 
-![Home screen](screenshots/home.jpg){ width="900" }
+![Home screen](screenshots/home.jpg)
 
 ## The screen
 
@@ -25,11 +25,11 @@ same on every supported webOS version.
 
 The Magic Remote pointer works too: pointing and clicking, and holding the button on an app for its options.
 
-![App options](screenshots/options.jpg){ width="440" }
+![App options](screenshots/options.jpg)
 
 ## Customise
 
-![Customise menu](screenshots/customise.jpg){ width="440" align=right }
+![Customise menu](screenshots/customise.jpg)
 
 **Customise** holds:
 
@@ -46,7 +46,7 @@ The dock holds up to four apps. Hold OK on an app and choose **Add to dock**, **
 The **Inputs** button lists HDMI inputs by the names LG shows, with what is connected and a marker on the active one. OK
 switches to the input.
 
-![Inputs menu](screenshots/inputs.jpg){ width="440" }
+![Inputs menu](screenshots/inputs.jpg)
 
 ## Icons
 
