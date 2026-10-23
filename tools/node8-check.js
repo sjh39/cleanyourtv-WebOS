@@ -332,6 +332,23 @@ const fake = (url, method) => { const res = { code: 0, out: '', writeHead(c) { t
   // 14. The favourite star and the menus' right-hand text both had the class st: the star's 26 px width squeezed the menu text into a column
   const launcherHtml = fs.readFileSync(path.join(root, 'app', 'index.html'), 'utf8');
   ok(!/(^|\n)\.st\{/.test(launcherHtml) && /svg\.st\{width:26px/.test(launcherHtml), 'the favourite star is styled as svg.st, so the menu\'s .st text keeps its natural width');
+  // 15. The QR code in the manager opens a short-lived page on the TV that shows the notification address and token
+  const freePort = await new Promise(res => { const x = http.createServer(); x.listen(0, '127.0.0.1', () => { const pp = x.address().port; x.close(() => res(pp)); }); });
+  let nconf = { notifyApi: { enabled: false, port: freePort, token: '', allow: [] } };
+  const napiMod = require(path.join(helper, 'notifyapi')).create({ notify: { handle: async () => {} }, readConf: () => JSON.parse(JSON.stringify(nconf)), writeConf: c => { nconf = JSON.parse(JSON.stringify(c)); } });
+  let ninfo = napiMod.set({ page: true }); ok(!ninfo.pageUrl, 'no token page while notifications are off');
+  ninfo = napiMod.set({ enabled: true }); ok(ninfo.enabled && ninfo.token.length >= 32 && ninfo.listening, 'notifications on: a token is made and the listener runs');
+  const getPage = (p2) => new Promise(res => { const rq = nc.get(http, 'http://127.0.0.1:' + freePort + p2, { timeout: 4000 }, rs => { let b = ''; rs.on('data', c => b += c); rs.on('end', () => res({ code: rs.statusCode, body: b, type: rs.headers['content-type'] })); }); rq.on('error', e => res({ code: 0, body: String(e) })); });
+  process.env.CYTV_NOTIFY_PAGE_MS = '1500';
+  ninfo = napiMod.set({ page: true }); const pagePath = ninfo.pageUrl.replace(/^http:\/\/[^/]+/, '');
+  ok(/^http:\/\/.*:\d+\/t\/[0-9a-f]{24}$/.test(ninfo.pageUrl) && ninfo.pageSeconds === 2 || ninfo.pageSeconds === 1, 'the QR code points at a page with a random address');
+  let pg = await getPage(pagePath); ok(pg.code === 200 && /text\/html/.test(pg.type) && pg.body.indexOf(ninfo.token) >= 0 && /Authorization: Bearer /.test(pg.body), 'the page shows the address and the token');
+  ok(!/<script src|http:\/\/[^"' ]+\.js/.test(pg.body) && pg.body.indexOf('<') >= 0, 'the page is self-contained');
+  pg = await getPage('/t/' + '0'.repeat(24)); ok(pg.code === 401, 'a wrong page address is treated like a wrong token');
+  pg = await getPage('/notify'); ok(pg.code === 401, 'the notification address itself still needs the token');
+  await new Promise(r => setTimeout(r, 1700)); pg = await getPage(pagePath); ok(pg.code === 401, 'the page stops working after its time');
+  ninfo = napiMod.set({ page: true }); nconf.notifyApi.allow = ['10.0.0.0/24']; pg = await getPage('/t/' + ninfo.pageUrl.split('/t/')[1]); ok(pg.code === 403, 'the allow list applies to the page too');
+  delete process.env.CYTV_NOTIFY_PAGE_MS; napiMod.set({ enabled: false });
 
   console.log(failed ? '\n' + failed + ' check(s) failed on Node ' + process.version : '\nall checks passed on Node ' + process.version);
   fs.rmSync ? fs.rmSync(tmp, { recursive: true, force: true }) : cp.spawnSync('rm', ['-rf', tmp]);

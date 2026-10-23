@@ -22,6 +22,11 @@ Off until switched on in the manager app. It then listens on port 8767 for `POST
 an address out for ten minutes, requests are limited to 20 a minute and 32 KB, and an optional `allow` list restricts addresses.
 It is plain HTTP: the token can be read by anyone who can watch the traffic on your network.
 
+**Show as QR code** in the manager makes the same port serve one more page, `GET /t/<24 random characters>`, for ten minutes: it shows the address and the
+token so a phone can copy them. The address is created when the code is shown (96 bits of randomness), follows the same allow list, and stops
+working after ten minutes, when notifications are switched off or the service restarts. Anyone who sees the code on the screen, or can read
+the traffic, can read the token while it is open; **New token** replaces it.
+
 ## Themes
 
 The manager downloads the theme list, screenshots, theme files and wallpapers from `raw.githubusercontent.com` (the `main` branch of this

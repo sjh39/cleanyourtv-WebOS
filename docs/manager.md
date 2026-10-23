@@ -15,7 +15,7 @@
 | Live TV | **Show Live TV** (off hides it in the launcher and Inputs list and leaves the Guide button to LG), the **Playlist** (set up from your phone with a QR code and a 6-digit code), **Refresh playlist and guide**, **Learn the Guide key**, **Clear recent channels** and **Remove the playlist**. See [Live TV](live-tv.md). |
 | Input key | The takeover switch, **Learn the Input key**, **Input key shows** (the Inputs list over the running app, ready in the background or started when pressed, or the launcher's own list) and the optional **Learn the Home key**. See [The Input key](input-key.md). |
 | Voice | Optional. Installs the speech recogniser (about 80 MB), learns the voice button, tries it, sets where the text goes. See [Voice](voice.md). |
-| Network notifications | Switch, address, token and an example for sending [picture notifications](notifications.md) from other devices. |
+| Network notifications | Switch, address, token (also as a QR code for a phone) and an example for sending [picture notifications](notifications.md) from other devices. |
 | Debloat | Turns the [debloat](debloat.md) on or off. |
 | Share log | A QR code that opens a masked diagnostic report on a phone, with a **Copy** button. |
 | Uninstall | Removes everything and restarts the TV. |

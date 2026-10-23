@@ -128,6 +128,7 @@ function build(){
     if(napi&&napi.enabled){
       rows.push({label:'How to send',sub:'address, token, example',fn:function(){
         kText='Send a POST request:\nhttp://'+napi.ip+':'+napi.port+'/notify\n\nHeader:\nAuthorization: Bearer '+napi.token+'\n\nBody (JSON):\n{"title":"Front door","text":"Someone is at the door","image":"http://…/snapshot.jpg","seconds":15}';push('notifyhow')}});
+      rows.push({label:'Show as QR code',sub:'scan with a phone to copy the address and token',fn:openNotifyQr});
       rows.push({label:'New token',sub:'the old one stops working',fn:function(){api('/api/manager/notify-api',{regenerate:true}).then(function(n){napi=n;banner('New token created. Open \u201CHow to send\u201D to see it.','ok');build();draw()})}});
     }
     rows.push({sep:true});rows.push({label:'Back',fn:pop});return}
@@ -211,6 +212,7 @@ var INFO={
  'Network notifications':'Lets other devices on your network send picture notifications to this TV with a POST request and a secret token. Off by default.',
  'Accept notifications from the network':'On: the TV listens on port 8767 for POST /notify with the token. Anyone who has the token and network access can show cards on this screen.',
  'How to send':'Shows the address, the token and an example request.',
+ 'Show as QR code':'Shows a QR code. A phone that scans it opens a page, served by the TV for ten minutes, that shows the notification address and the token with Copy buttons (for Home Assistant, for example). The token is a secret.',
  'New token':'Creates a new secret token. Devices using the old one stop working.',
  'Voice':'Optional. Speak into the remote and the TV turns it into text on the TV itself (Moonshine, English). The text can be sent to a server you run. Audio never leaves the TV. Needs a download of about 80 MB.',
  'Install voice':'Downloads the speech engine, a 64-bit C library and the model (checksums are verified), then tests them. About a minute. Nothing is installed in the system folders.',
@@ -296,6 +298,18 @@ function act(){var r=rows[idx];if(r&&r.fn&&!(st&&st.job&&st.job.state==='working
 
 function aiHelp(){return 'Chat with a language model through OpenRouter. Run these on the TV (ssh):\n\ncurl -X POST localhost:8765/api/voice/set -d \'{"llm":{"key":"sk-or-...","model":"openrouter/auto"}}\'\ncurl -X POST localhost:8765/api/voice/set -d \'{"llm":{"enabled":true}}\'\n\nOptional: "system" sets the instructions. Ask by text from anywhere on the TV:\ncurl -X POST localhost:8765/api/voice/ask -d \'{"text":"What is the capital of Peru?"}\'\n\nSpoken and typed questions go to OpenRouter and the model you chose; no audio does. The key stays on the TV.\n\nHome Assistant (Assist), with a long-lived access token:\ncurl -X POST localhost:8765/api/voice/set -d \'{"ha":{"url":"http://homeassistant.local:8123","token":"..."}}\'\nOptional: "route" is ha-first, ha-only or ai-only; "selfSigned":true accepts a self-signed certificate; "agent" is a conversation entity.'}
 function liveRefresh(){api('/api/live/status').then(function(r){lv=r;if(view==='livetv'){build();if(idx>=rows.length)idx=0;draw()}},function(){})}
+function openNotifyQr(){
+  if(!napi||!napi.enabled){banner('Switch notifications on first','err');return}
+  shareMode='notify';
+  push('share');$('share').style.display='block';$('shareurl').textContent='';$('qrbox').style.visibility='hidden';
+  $('share').querySelector('h2').textContent='Notification address and token';
+  $('share').querySelector('ol').innerHTML='<li>Phone on the <b>same Wi-Fi</b> as the TV.</li><li>Scan the code with the camera and open the page: it shows the address and the token with <b>Copy</b> buttons.</li><li>The token is a <b>secret</b>: anyone who sees this code while it is open can read it.</li>';
+  $('sharemsg').textContent='Preparing\u2026';
+  api('/api/manager/notify-api',{page:true}).then(function(r){
+    if(view!=='share')return;
+    if(!r.pageUrl){$('sharemsg').textContent='The notification listener is not running.';return}
+    drawQr(r.pageUrl);$('qrbox').style.visibility='visible';$('shareurl').textContent=r.pageUrl;
+    $('sharemsg').textContent='The page opens for ten minutes. It is not encrypted: the token travels over your Wi-Fi, so use a network you trust.'},function(){$('sharemsg').textContent='The service did not answer.'})}
 function openLiveTv(){api('/api/live/status').then(function(r){lv=r;push('livetv')},function(){lv=null;push('livetv')})}
 function openLivePair(){
   shareMode='live';
@@ -454,7 +468,7 @@ function pollShare(n){
     if(st&&st.url){drawQr(st.url);$('qrbox').style.visibility='visible';$('shareurl').textContent=st.url;$('sharemsg').textContent='The page is open for ten minutes. It lists versions, the setup log and the service log; addresses and URL paths are masked.';return}
     if(n>45){$('sharemsg').textContent='Could not prepare the report (is the Homebrew Channel installed?).';return}
     setTimeout(function(){pollShare(n+1)},1000)})}
-function closeShare(){$('share').style.display='none';if(shareMode==='live'){pop();liveRefresh();return}if(shareMode==='pair'){api('/api/voice/pair-stop',{}).catch(function(){});pop();voiceRefresh();return}rootExec('pkill -f "[s]harelog.js"; rm -f /tmp/cytv-sharelog.json');pop()}
+function closeShare(){$('share').style.display='none';if(shareMode==='notify'){pop();return}if(shareMode==='live'){pop();liveRefresh();return}if(shareMode==='pair'){api('/api/voice/pair-stop',{}).catch(function(){});pop();voiceRefresh();return}rootExec('pkill -f "[s]harelog.js"; rm -f /tmp/cytv-sharelog.json');pop()}
 function doSetup(force){forceOffer=false;
   banner('Setting up\u2026 the screen blinks once while LG\u2019s system restarts','work');
   var flags=(setup.debloat?'--debloat':'--no-debloat')+' '+(setup.inputKey?'--input-key':'--no-input-key')+(force?' --force':'');
