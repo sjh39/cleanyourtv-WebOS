@@ -19,10 +19,13 @@ In the manager app, **Theme** lists the themes. Choosing one applies it; the hom
 | Compact | Twelve columns of smaller tiles: more apps on screen. |
 | Large print | Eight columns of big tiles and larger text. |
 | Still | No animation and a quiet glow. |
+| Sunset | A wallpaper with the dock at the bottom in a glass panel, six dock apps, round buttons and a stacked clock. Down from the dock opens all apps over the wallpaper; Back closes them. |
 
 ![Classic, Compact, Large print and Midnight](screenshots/themes-1.jpg)
 
 ![OLED black, Still, Warm and Classic with an orange accent](screenshots/themes-2.jpg)
+
+![Sunset: the home screen and the app grid opened with Down](screenshots/themes-3.jpg)
 
 The pictures are the launcher page rendered in a browser with each theme.
 
@@ -51,7 +54,14 @@ a missing or invalid value falls back to the original look.
 | `layout.gapX`, `gapY` | 8 to 48 px: spacing in the grid | 24, 26 |
 | `layout.dockW`, `dockH`, `dockRadius`, `dockGap` | 240 to 500, 140 to 300, 0 to 80, 8 to 60 px: the dock tiles | 408, 230, 36, 32 |
 | `layout.fontScale` | 0.8 to 1.3: scale of the clock, app name, button and menu text | 1 |
-| `layout.clock` | `left`, `right` or `off` | `left` |
+| `layout.clock` | `left`, `right`, `stack` (time above the date) or `off` | `left` |
+| `layout.clockScale` | 0.8 to 2: extra scale of the time | 1 |
+| `layout.dock` | `top` (dock above the grid) or `bottom` (dock at the bottom of the screen; the grid opens as an overlay with Down and closes with Up or Back) | `top` |
+| `layout.dockCount` | 4 to 6: apps in the dock | 4 |
+| `layout.dockPanel` | 0 to 0.5: opacity of a translucent panel behind the dock tiles; 0 for none | 0 |
+| `layout.bar` | `pills` (icon and label) or `round` (icon only) top buttons | `pills` |
+| `layout.name` | `show` or `hide` the large name of the focused app | `show` |
+| `effects.gloss` | 0 to 1: a light highlight on the tiles | 0 |
 | `effects.glow` | 0 to 1: strength of the ambient glow | 1 |
 | `effects.glowColor` | `app` (taken from the focused icon) or `accent` | `app` |
 | `effects.speed` | 0 to 2: animation speed multiplier; 0 switches the animations off | 1 |

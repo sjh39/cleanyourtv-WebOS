@@ -26,8 +26,9 @@ function normalize(raw, id) {
     colors: { night: hex(c.night, '#07080b'), panel: hex(c.panel, '#14161b'), ink: hex(c.ink, '#f5f6f8'), accent: hex(c.accent, '#f5f6f8') },
     layout: { cols: int(l.cols, 6, 12, 10), tileH: int(l.tileH, 90, 200, 151), tileRadius: int(l.tileRadius, 0, 80, 34), gapX: int(l.gapX, 8, 48, 24), gapY: int(l.gapY, 8, 48, 26),
       dockW: int(l.dockW, 240, 500, 408), dockH: int(l.dockH, 140, 300, 230), dockRadius: int(l.dockRadius, 0, 80, 36), dockGap: int(l.dockGap, 8, 60, 32),
-      fontScale: num(l.fontScale, 0.8, 1.3, 1), clock: oneOf(l.clock, ['left', 'right', 'off'], 'left') },
-    effects: { glow: num(e.glow, 0, 1, 1), glowColor: oneOf(e.glowColor, ['app', 'accent'], 'app'), speed: num(e.speed, 0, 2, 1), wallpaper: '', wallpaperDim: num(e.wallpaperDim, 0, 0.9, 0.4) },
+      fontScale: num(l.fontScale, 0.8, 1.3, 1), clock: oneOf(l.clock, ['left', 'right', 'stack', 'off'], 'left'), clockScale: num(l.clockScale, 0.8, 2, 1),
+      dock: oneOf(l.dock, ['top', 'bottom'], 'top'), dockCount: int(l.dockCount, 4, 6, 4), dockPanel: num(l.dockPanel, 0, 0.5, 0), bar: oneOf(l.bar, ['pills', 'round'], 'pills'), name: oneOf(l.name, ['show', 'hide'], 'show') },
+    effects: { gloss: num(e.gloss, 0, 1, 0), glow: num(e.glow, 0, 1, 1), glowColor: oneOf(e.glowColor, ['app', 'accent'], 'app'), speed: num(e.speed, 0, 2, 1), wallpaper: '', wallpaperDim: num(e.wallpaperDim, 0, 0.9, 0.4) },
   };
   if (typeof e.wallpaper === 'string' && FILE.test(e.wallpaper)) {
     try {
@@ -61,10 +62,10 @@ function resolve(t, accent) {
     vars: {
       '--night': k.night, '--panel': k.panel, '--panel2': mix(k.panel, k.ink, 0.06), '--ink': k.ink, '--ink2': 'rgba(' + ink.join(',') + ',.62)',
       '--acc': a, '--acc-ink': lum(a) > 0.35 ? '#0b0c10' : '#ffffff', '--glow-op': String(e.glow), '--spd': String(e.speed), '--fs': String(l.fontScale),
-      '--cols': String(l.cols), '--tile-h': l.tileH + 'px', '--tile-r': l.tileRadius + 'px', '--gap-x': l.gapX + 'px', '--gap-y': l.gapY + 'px',
+      '--night-rgb': night.join(','), '--panel-a': String(l.dockPanel), '--gloss': String(e.gloss), '--clock-s': String(l.clockScale), '--cols': String(l.cols), '--tile-h': l.tileH + 'px', '--tile-r': l.tileRadius + 'px', '--gap-x': l.gapX + 'px', '--gap-y': l.gapY + 'px',
       '--dock-w': l.dockW + 'px', '--dock-h': l.dockH + 'px', '--dock-r': l.dockRadius + 'px', '--dock-gap': l.dockGap + 'px',
     },
-    cols: l.cols, tileH: l.tileH, gapY: l.gapY, dockH: l.dockH, clock: l.clock,
+    cols: l.cols, tileH: l.tileH, gapY: l.gapY, dockH: l.dockH, clock: l.clock, bottom: l.dock === 'bottom', dockN: l.dockCount, panel: l.dockPanel > 0, round: l.bar === 'round', hideName: l.name === 'hide',
     glowRgb: e.glowColor === 'accent' ? rgb(a).join(',') : '',
     nightRgb: night.join(','), wallpaper: e.wallpaper ? { file: e.wallpaper, dim: e.wallpaperDim } : null,
   };

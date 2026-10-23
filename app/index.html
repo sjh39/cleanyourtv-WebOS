@@ -14,6 +14,22 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:var(--night);col
 body{background-image:var(--wall);background-size:1920px 1080px}
 .clk-off #time,.clk-off #date{display:none}
 .clk-right #bar{order:1}.clk-right .sp{order:2}.clk-right #time{order:3}.clk-right #date{order:4}
+/* theme layouts: dock at the bottom in a panel with the full grid as an overlay, round icon-only buttons, stacked clock, gloss */
+:root{--panel-a:0;--gloss:0;--clock-s:1;--night-rgb:7,8,11}
+.tile::after{content:'';position:absolute;left:0;top:0;right:0;bottom:0;border-radius:inherit;pointer-events:none;opacity:var(--gloss);
+  background:linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,0) 46%,rgba(0,0,0,.24))}
+.clk-stack #top{display:grid;grid-template-columns:1fr auto;align-items:start;height:auto}
+.clk-stack #time{grid-column:1;grid-row:1}.clk-stack #date{grid-column:1;grid-row:2;margin:8px 0 0 6px;padding:0}.clk-stack .sp{display:none}.clk-stack #bar{grid-column:2;grid-row:1}
+.round .pill{width:58px;height:58px;padding:0;justify-content:center;border-radius:50%;background:rgba(255,255,255,.14);box-shadow:inset 0 0 0 1px rgba(255,255,255,.22)}
+.round .pill span{display:none}
+.noname #shelf{visibility:hidden}
+.dock-bottom #view{top:0;height:1080px}.dock-bottom #scroll{top:0;height:1080px}
+.dock-bottom #dock{top:auto;bottom:68px;left:50%;transform:translateX(-50%);z-index:4}
+.dock-panel #dock{padding:24px;border-radius:calc(var(--dock-r) + 24px);background:rgba(255,255,255,var(--panel-a));box-shadow:inset 0 0 0 1px rgba(255,255,255,.2)}
+.dock-bottom #grid{top:290px;z-index:3;opacity:0;pointer-events:none;transition:opacity calc(.22s*var(--spd)) linear}
+.dock-bottom.grid-open #grid{opacity:1;pointer-events:auto}
+.dock-bottom #scroll::before{content:'';position:absolute;left:0;top:0;width:1920px;height:1080px;z-index:2;opacity:0;pointer-events:none;background:rgba(var(--night-rgb),.95);transition:opacity calc(.22s*var(--spd)) linear}
+.dock-bottom.grid-open #scroll::before{opacity:1}
 ::selection{background:rgba(255,255,255,.25)}
 
 .glow{position:absolute;left:0;top:0;width:1920px;height:720px;opacity:0;transition:opacity calc(.35s*var(--spd)) linear;will-change:opacity;
@@ -21,7 +37,7 @@ body{background-image:var(--wall);background-size:1920px 1080px}
 .glow.on{opacity:var(--glow-op)}
 
 #top{position:absolute;left:96px;right:96px;top:54px;height:76px;display:flex;align-items:center;z-index:5}
-#time{font-size:calc(56px*var(--fs));font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
+#time{font-size:calc(56px*var(--fs)*var(--clock-s));font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
 #date{font-size:calc(28px*var(--fs));color:rgba(245,246,248,.88);margin-left:22px;padding-top:14px}
 #top .sp{flex:1}
 #bar{display:flex}
@@ -149,7 +165,7 @@ body{background-image:var(--wall);background-size:1920px 1080px}
 <div id="lv"><div id="lv-stage"></div><div id="lv-spin" class="layer"></div><div id="lv-osd" class="layer"><img class="logo" id="lv-ologo" alt=""><div class="num" id="lv-onum"></div><div class="info"><div class="name" id="lv-oname"></div><div class="now" id="lv-onow"></div><div class="next" id="lv-onext"></div><div class="pbar"><i id="lv-obar"></i></div></div></div><div id="lv-numin" class="layer"></div><div id="lv-guide" class="layer"><div id="lv-glow"></div><div id="lv-gtop"><div id="lv-gtitle"></div><div id="lv-gtabs"></div><div id="lv-gclock"></div></div><div id="lv-rows"></div><div id="lv-detail"></div></div><div id="lv-msg" class="layer"></div></div>
 <div id="toast"></div>
 <script>
-var API='http://127.0.0.1:8765', CACHE_KEY='cytv.cache.v4', VERSION='1.4.9';
+var API='http://127.0.0.1:8765', CACHE_KEY='cytv.cache.v4', VERSION='1.4.10';
 var DEFAULTS={
   dock:['netflix','youtube.leanback.v4','amazon','com.disney.disneyplus-prod'],
   topbar:[{label:'Inputs',icon:'inputs',action:'inputs'},{label:'Live TV',icon:'tv',action:'live'},{label:'Settings',icon:'settings',app:'com.palm.app.settings'}]
@@ -289,17 +305,18 @@ function glowNow(e){
 function glowSoon(e){clearTimeout(gT);gT=setTimeout(function(){glowNow(e)},110)}
 
 /* ---------- theme: the service resolves the chosen theme (manager > Theme) into CSS variables and a few numbers ---------- */
-var TH={cols:10,tileH:151,gapY:26,dockH:230,glow:''},themeKeys=[];
+var TH={cols:10,tileH:151,gapY:26,dockH:230,glow:'',dockN:4,bottom:false},themeKeys=[],themeClasses=['clk-off','clk-right','clk-stack','dock-bottom','dock-panel','round','noname','grid-open'];
 function applyTheme(t){
   var st=document.documentElement.style,b=document.body.classList,k;
   for(k=0;k<themeKeys.length;k++)st.removeProperty(themeKeys[k]);themeKeys=[];
-  b.remove('clk-off','clk-right');
-  if(!t||!t.vars){TH={cols:10,tileH:151,gapY:26,dockH:230,glow:''};return}
+  for(k=0;k<themeClasses.length;k++)b.remove(themeClasses[k]);
+  if(!t||!t.vars){TH={cols:10,tileH:151,gapY:26,dockH:230,glow:'',dockN:4,bottom:false};return}
   for(k in t.vars){st.setProperty(k,t.vars[k]);themeKeys.push(k)}
   var w=t.wallpaper;
   if(w){var d='rgba('+t.nightRgb+','+w.dim+')';st.setProperty('--wall','linear-gradient('+d+','+d+'),url("'+API+'/api/theme/wallpaper/'+w.file+'")');themeKeys.push('--wall')}
-  if(t.clock==='off')b.add('clk-off');else if(t.clock==='right')b.add('clk-right');
-  TH={cols:t.cols||10,tileH:t.tileH||151,gapY:t.gapY||26,dockH:t.dockH||230,glow:t.glowRgb||''}}
+  if(t.clock==='off')b.add('clk-off');else if(t.clock==='right')b.add('clk-right');else if(t.clock==='stack')b.add('clk-stack');
+  if(t.bottom)b.add('dock-bottom');if(t.panel)b.add('dock-panel');if(t.round)b.add('round');if(t.hideName)b.add('noname');
+  TH={cols:t.cols||10,tileH:t.tileH||151,gapY:t.gapY||26,dockH:t.dockH||230,glow:t.glowRgb||'',dockN:t.dockN||4,bottom:!!t.bottom}}
 
 function setFocus(nr,nc,first){
   var old=rows[r]&&rows[r][c];if(old)old.classList.remove('f');
@@ -308,6 +325,11 @@ function setFocus(nr,nc,first){
   if(n.textContent!==nm)n.textContent=nm;
   if(first)glowNow(e);else glowSoon(e);
   var sh=0;
+  if(TH.bottom){   /* the grid is an overlay above the dock: it opens when the focus goes down into it and scrolls on its own */
+    document.body.classList.toggle('grid-open',r>=2);
+    var gs=0;if(r>=2)gs=Math.min(0,510-((r-2)*(TH.tileH+TH.gapY)+TH.tileH+24));
+    $('grid').style.transform=gs?'translateY('+gs+'px)':'';$('scroll').style.transform='';return}
+  $('grid').style.transform='';
   if(r>=2){var gr=rows.length-2;var gt=TH.dockH+120;sh=Math.min(0,Math.max(50-(gt+(r-2)*(TH.tileH+TH.gapY)),726-(gt+gr*TH.tileH+(gr-1)*TH.gapY)))}   /* row height + gap from the theme: no layout reads */
   $('scroll').style.transform=sh?'translateY('+sh+'px)':''}
 function mapCol(from,to,col){return from>1?Math.round(col*(to-1)/(from-1)):0}
@@ -318,8 +340,8 @@ function saveCfg(){api('/api/config',cfg).catch(function(){toast(t('Could not sa
 function isHidden(id){return (cfg.hidden||[]).indexOf(id)>=0}
 function dockIds(){var by={};apps.forEach(function(a){by[a.id]=a});
   var ids=cfg.dock&&cfg.dock.length?cfg.dock:DEFAULTS.dock;
-  return ids.filter(function(i){return by[i]&&!isHidden(i)}).slice(0,4)}
-function setDock(ids){cfg.dock=ids.slice(0,4);saveCfg()}
+  return ids.filter(function(i){return by[i]&&!isHidden(i)}).slice(0,TH.dockN)}
+function setDock(ids){cfg.dock=ids.slice(0,TH.dockN);saveCfg()}
 function hideApp(id){cfg.hidden=(cfg.hidden||[]).concat(id);cfg.dock=dockIds().filter(function(i){return i!==id});saveCfg()}
 function unhideApp(id){cfg.hidden=(cfg.hidden||[]).filter(function(i){return i!==id});saveCfg()}
 function topbar(){return cfg.topbar?cfg.topbar:DEFAULTS.topbar}
@@ -385,7 +407,7 @@ function appMenu(a){
     if(pos>0)items.push({label:t('Move left in dock'),fn:function(){var d=di.slice();d.splice(pos,1);d.splice(pos-1,0,a.id);setDock(d)}});
     if(pos<di.length-1)items.push({label:t('Move right in dock'),fn:function(){var d=di.slice();d.splice(pos,1);d.splice(pos+1,0,a.id);setDock(d)}});
     items.push({label:t('Remove from dock'),fn:function(){setDock(di.filter(function(i){return i!==a.id}))}})}
-  else if(di.length<4)items.push({label:t('Add to dock'),fn:function(){setDock(di.concat(a.id))}});
+  else if(di.length<TH.dockN)items.push({label:t('Add to dock'),fn:function(){setDock(di.concat(a.id))}});
   else items.push({label:t('Add to dock...'),stay:true,fn:function(){
     openMenu(t('Replace which app?'),di.map(function(id,i){return {label:title(id),fn:function(){var d=di.slice();d[i]=a.id;setDock(d)}}}))}});
   items.push({label:t('Hide app'),fn:function(){hideApp(a.id)}});
@@ -472,6 +494,7 @@ document.addEventListener('keydown',function(e){
   if(stack.length){
     if(k===13){if(downEnter&&Date.now()-lastEnter<1500){lastEnter=Date.now();e.preventDefault();return}downEnter=true;lastEnter=Date.now();swallowUp=true}
     if(menuKey(k))e.preventDefault();return}
+  if(TH.bottom&&r>=2&&(k===461||k===27||k===8)){setFocus(1,Math.min(c,rows[1].length-1));e.preventDefault();return}   /* Back closes the grid overlay */
   var len=rows[r].length;
   if(k>=37&&k<=40){var tn=performance.now();if(e.repeat||tn-lastMove<90){document.body.classList.add('snap');clearTimeout(snapT);snapT=setTimeout(function(){document.body.classList.remove('snap')},180)}lastMove=tn}
   if(k===37&&c>0)setFocus(r,c-1);

@@ -144,6 +144,9 @@ const fake = (url, method) => { const res = { code: 0, out: '', writeHead(c) { t
   ok(bad.name.length === 40 && bad.colors.night === '#07080b' && bad.colors.ink === '#f5f6f8' && bad.colors.accent === '#f5f6f8', 'colours must be #rrggbb, anything else falls back');
   ok(bad.layout.cols === 12 && bad.layout.tileH === 90 && bad.layout.fontScale === 1 && bad.layout.clock === 'left' && bad.layout.tileRadius === 80, 'layout numbers are clamped and enums checked');
   ok(bad.effects.glow === 1 && bad.effects.speed === 1 && bad.effects.wallpaper === '' && bad.effects.wallpaperDim === 0.9 && !('css' in bad), 'effects are clamped, a wallpaper path is refused and unknown keys are dropped');
+  const lay = themeMod.normalize({ layout: { dock: 'bottom', dockCount: 9, dockPanel: 3, bar: 'round', clock: 'stack', clockScale: 5, name: 'hide' }, effects: { gloss: 2 } }, 'lay').layout;
+  ok(lay.dock === 'bottom' && lay.dockCount === 6 && lay.dockPanel === 0.5 && lay.bar === 'round' && lay.clock === 'stack' && lay.clockScale === 2 && lay.name === 'hide', 'the bottom dock, round buttons and stacked clock are accepted and clamped');
+  ok(themeMod.normalize({ layout: { dock: 'left', bar: 'big', name: 'x' } }, 'l2').layout.dock === 'top' && themeMod.normalize({ layout: { bar: 'big' } }, 'l3').layout.bar === 'pills', 'unknown layout choices fall back');
   ok(themeMod.normalize({}, '../x') === null, 'a bad theme id is refused');
   let tconf = {}; const th = themeMod.create({ readConf: () => JSON.parse(JSON.stringify(tconf)), writeConf: c => { tconf = JSON.parse(JSON.stringify(c)); } });
   const tcall = async (act, body, method) => { const x = fake('/api/theme/' + act, method || 'POST'); await th.handle(x.req, x.res, '/api/theme/' + act, async () => body || {}); return { code: x.res.code, j: x.res.out && x.res.out[0] === '{' ? JSON.parse(x.res.out) : x.res.out }; };
