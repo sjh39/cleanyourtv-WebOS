@@ -1,7 +1,11 @@
 # What it changes on the TV
 
-Everything is applied in RAM at boot or lives in the writable partitions. Nothing under `/usr`, `/etc` (apart from the marked
-debloat lines in `/etc/hosts`) or the firmware is modified, and a reboot without the boot scripts brings LG's Home back.
+Only the takeover of Home and the debloat's `/etc/hosts` lines are applied in RAM at boot, as mounts. Everything else is stored in
+the writable partitions listed below and stays after a reboot until you uninstall. Nothing under `/usr`, `/etc` or the firmware
+is modified on disk, and a reboot without the boot scripts brings LG's Home back.
+
+The optional voice download (about 80 MB) is stored in `/media/developer/cleanyourtv/voice` and stays until **Remove voice** or the
+uninstall. Optional features contact other services only when you switch them on; see [Security](security.md).
 
 ## Files
 

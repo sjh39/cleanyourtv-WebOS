@@ -6,8 +6,10 @@ A fast home screen for rooted LG webOS TVs, with Live TV from your own playlist,
 picture notifications, optional on-device voice recognition and an optional debloat of LG's ads and telemetry.
 
 > [!NOTE]
-> **Everything is applied in RAM at boot.** Nothing under `/usr`, `/etc` or the firmware is modified, and a reboot
-> without the boot scripts brings LG's Home back. It runs on the TV: no server, no cloud account, no data collection.
+> **LG's system files are not modified.** The launcher takes over Home with a mount that exists only in RAM, so a reboot without the
+> boot scripts brings LG's Home back. Everything we install is stored in `/media/developer/cleanyourtv` (plus two boot scripts and
+> the key binds), and the uninstall removes it. It runs on the TV: no server and no account of ours, and the project collects no
+> data. Optional features contact the services you choose; [Security](https://lasharor.github.io/cleanyourtv-WebOS/security/) lists them.
 
 **CleanYourTV** replaces LG's Home with a launcher: a dock of four apps, a top shelf, an app grid sorted by use, an Inputs
 picker, a Settings shortcut and a clock. A small service runs on the TV as root and adds the rest. A manager app on the TV

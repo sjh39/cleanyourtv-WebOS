@@ -20,8 +20,10 @@ on-device voice recognition, and an optional debloat of LG's ads and telemetry.
 - **Debloat.** Stops LG's ad and telemetry services and blocks a few ad servers. [More](debloat.md).
 - **Manager app.** Sets up, updates and removes everything from the TV. [More](manager.md).
 
-Everything is applied in RAM at boot. Nothing under `/usr`, `/etc` or the firmware is modified, and a reboot without the boot
-scripts brings LG's Home back. See [What it changes on the TV](tv-changes.md).
+LG's system files are not modified. The launcher takes over Home with a mount that exists only in RAM, so a reboot without the
+boot scripts brings LG's Home back. Everything we install is stored in `/media/developer/cleanyourtv` (plus two boot scripts and the
+key binds), and the uninstall removes it. The project has no server or account and collects no data; optional features contact the
+services you choose (update checks go to GitHub). See [What it changes on the TV](tv-changes.md) and [Security](security.md).
 
 ## Compatibility at a glance
 

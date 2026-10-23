@@ -16,7 +16,7 @@ Replace LG's slow, ad-heavy Home with a fast launcher that has a guaranteed way 
 
 ## Positioning
 
-A fast alternative to LG's cumbersome interface, made possible by root: it replaces Home itself (not a separate app), lives only in RAM, restores LG's Home from the grid, over SSH or on its own if it stops responding, and carries features LG's Home does not have (Live TV from any playlist, notifications with pictures, usage-sorted apps).
+A fast alternative to LG's cumbersome interface, made possible by root: it replaces Home itself (not a separate app), takes over Home with a RAM-only mount (its files are stored in the writable partition and removed by the uninstall), restores LG's Home from the grid, over SSH or on its own if it stops responding, and carries features LG's Home does not have (Live TV from any playlist, notifications with pictures, usage-sorted apps).
 
 ## Operating Context
 
