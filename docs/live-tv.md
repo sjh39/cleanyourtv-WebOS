@@ -21,17 +21,37 @@ From a shell on the TV instead:
 curl -X POST localhost:8765/api/live/settings -d '{"playlistUrl":"http://...","epgUrl":"http://..."}'
 ```
 
+## Turning it off
+
+Live TV is optional. In the manager app, **Live TV** switches it on and off. Off hides it everywhere: the Live TV button and tile in
+the launcher, **Live TV** in the Inputs list, and the Guide key takeover (below). LG's own player and guide are used as before.
+The playlist and your favourites are kept, so switching it on again brings them back.
+
 ## Keys
 
-| Key | Action |
-|---|---|
-| Up / Down, CH+ / CH- | Next / previous channel |
-| Digits | Jump to a channel number (playlist order) |
-| OK | Open the guide |
-| Info, Left / Right | Channel banner (now and next) |
-| Back, Home | Return to the launcher |
+| Key | Watching | In the guide (OK) |
+|---|---|---|
+| Up / Down, CH+ / CH- | Next / previous channel | Move; CH+ / CH- page |
+| Left / Right | Channel banner (now and next) | Previous / next tab |
+| Digits | Jump to a channel number (playlist order) | Same |
+| OK | Open the guide | Play the channel |
+| Guide | Open the guide | Close the guide |
+| Green | Add / remove favourite | Add / remove favourite |
+| Yellow | Player menu (favourite, stream, statistics) | Filters |
+| Blue | Statistics | |
+| Red | | Search (the TV's keyboard) |
+| Back | Return to the launcher | Clear filters and search, then close the guide |
 
-In the guide: Up/Down move through the channels, Left/Right change the group tab, CH+/CH- page, OK plays, Back closes it.
+The tabs are **All channels**, **Favourites**, **Recent** and one per category of your playlist. Channels show badges for country,
+language and quality when the playlist names them (for example `NL`, `EN`, `HD`). Filters narrow the list by country, language and
+quality; search matches names across all channels.
+
+### The Guide button
+
+By default the remote's Guide button belongs to LG. In the manager app, **Input key** > **Learn the Guide key** records the
+button's code; afterwards it opens the Live TV channel guide over whatever is running, and closes it again when Live TV is open.
+**Clear** gives LG's guide back. The button is only taken over while Live TV is on and a code is learned. It uses the same hook as
+the [Input key](input-key.md).
 
 ## How it plays
 
@@ -40,8 +60,13 @@ In the guide: Up/Down move through the channels, Left/Right change the group tab
   are never requested from your provider, which matters for accounts that allow one connection.
 - The player uses one video element for the whole session instead of creating one per channel.
 - The guide (XMLTV) is refreshed twice a day and keeps 36 hours.
+- When a playlist lists the same channel in several qualities (for example `HD` and `SD`), they are merged into one channel with
+  several streams. If one does not start, the next is tried; a stream that stalls is reloaded once.
+- When a channel does not play, the screen says why: the server refused it, the stream is gone, it needs DRM, it is not video, or
+  it is too slow.
+- **Statistics** (Blue) show the resolution, buffer, dropped frames and which stream is playing.
 
-There is no recording, pause or favourites.
+There is no recording and no pause.
 
 ## Where it is stored
 
@@ -52,6 +77,4 @@ The playlist address, which usually contains an access key, is stored only on th
 curl -X POST localhost:8765/api/live/reset
 ```
 
-!!! note "Test builds"
-    Favourites, recent channels, filters, search, several streams per channel, failure reasons and statistics are in a test
-    build (branch `live-tv-features`) and are not part of the stable release yet. See [Test builds](managing.md#test-builds).
+Favourites, recent channels and the failed-channel list are stored in `state.json` in the same folder.

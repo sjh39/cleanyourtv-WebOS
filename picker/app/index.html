@@ -95,13 +95,14 @@ function paint(){
   for(i=0;i<c.length;i++)c[i].className='chip'+(inputs[i].dim?' dim':'')+(inputs[i].active?' act':'')+(row===1&&col[1]===i?' f':'')}
 function choose(){log('choose row '+row+' col '+col[row]);var r=cur()[col[row]];if(!r)return;if(row===0)launch(r.id);else launch(r.id,r.params);setTimeout(hide,200)}
 
+var liveOn=true;   /* Live TV is optional: the manager switches it off */
 function buildInputs(devs){
   var r=(devs||[]).filter(function(v){return v.appId}).map(function(v){
     var port='HDMI '+v.port,named=v.label&&v.label!==port;
     // second line: what is connected (the device's own name), or that nothing is
     var what=!v.hdmiPlugIn?t('Nothing'):(named?v.label:t('Connected'));
     return {id:v.appId,icon:'hdmi',label:port,sub:what,dim:!v.hdmiPlugIn,active:!!v.activate}});
-  r.push({id:'com.webos.app.home',params:{live:true},icon:'tv',label:t('Live'),sub:t('LiveSub')});
+  if(liveOn)r.push({id:'com.webos.app.home',params:{live:true},icon:'tv',label:t('Live'),sub:t('LiveSub')});
   return r}
 function setData(d,fresh){
   apps=d.apps;inputs=d.inputs;
@@ -116,7 +117,7 @@ function get(path,cb,fail){var x=new XMLHttpRequest();x.open('GET',API+path);x.t
 function refresh(){
   var got={apps:null,inputs:null};
   function done(){if(!got.apps||!got.inputs)return;cache.apps=got.apps;cache.inputs=got.inputs;persist();$('msg').textContent='';setData(cache,false)}
-  get('/api/apps',function(x){var by={};(x.apps||[]).forEach(function(a){by[a.id]=a});
+  get('/api/apps',function(x){liveOn=!(x.config&&x.config.options&&x.config.options.liveTv===false);var by={};(x.apps||[]).forEach(function(a){by[a.id]=a});
     got.apps=((x.config&&x.config.dock)||[]).filter(function(id){return by[id]}).map(function(id){return {id:id,title:by[id].title}});done()},function(){});
   get('/api/inputs',function(x){got.inputs=buildInputs(x.devices);done()},function(){if(shown&&inputs.length<=1)$('msg').textContent=t('nohelper')})}
 function load(){   // the last known layout, ready before the first open
