@@ -1,7 +1,7 @@
 // Root service of CleanYourTV: bridges the launcher web app to luna, serves app icons, runs Live TV and picture
 // notifications, keeps the Input-key picker alive and hosts the manager API. Listens on 127.0.0.1 only.
 const http = require('http'), fs = require('fs'), path = require('path'), cp = require('child_process');
-const VERSION = '1.5.10';
+const VERSION = '1.5.11';
 const PORT = 8765, DIR = '/media/developer/cleanyourtv', CONF = DIR + '/config.json', USAGE = DIR + '/usage.json';
 const ENV = Object.assign({}, process.env, { PATH: '/usr/bin:/usr/sbin:/bin:/sbin:' + (process.env.PATH || '') });
 
