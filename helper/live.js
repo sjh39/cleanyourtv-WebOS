@@ -3,13 +3,34 @@
 const http = require('http'), https = require('https'), fs = require('fs'), os = require('os'), zlib = require('zlib'), crypto = require('crypto');
 const nc = require('./netcompat'), { URL, URLSearchParams } = nc;
 const DIR = process.env.CYTV_LIVE_DIR || '/media/developer/cleanyourtv/live';
-const SETTINGS = DIR + '/settings.json', PLAYLIST = DIR + '/playlist.json', EPG = DIR + '/epg.json';
+const SETTINGS = DIR + '/settings.json', PLAYLIST = DIR + '/playlist.json', EPG = DIR + '/epg.json', STATE = DIR + '/state.json';
 const PAIR_PORT = 8766, PAIR_MS = 10 * 60 * 1000, REFRESH_MS = 12 * 3600 * 1000;
 try { nc.mkdirp(DIR); } catch (_) {}
 
 const readJson = (f, d) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch (_) { return d; } };
 const writeJson = (f, o) => { fs.writeFileSync(f + '.tmp', JSON.stringify(o), { mode: 0o600 }); fs.renameSync(f + '.tmp', f); };   // the playlist address holds an access key: owner only
 let settings = readJson(SETTINGS, {}), playlist = readJson(PLAYLIST, null), epg = readJson(EPG, null);
+// What the viewer did, kept here so it survives launcher updates: favourites, the last channels watched and the channels that failed
+// (by channel key, see parseM3U). Capped, and written at most once a second.
+const FAIL_MS = 7 * 24 * 3600 * 1000;
+let state = (o => ({ fav: Array.isArray(o.fav) ? o.fav : [], recent: Array.isArray(o.recent) ? o.recent : [], failed: o.failed && typeof o.failed === 'object' ? o.failed : {} }))(readJson(STATE, {}));
+let stateT = 0;
+const saveState = () => { clearTimeout(stateT); stateT = setTimeout(() => { try { writeJson(STATE, state); } catch (_) {} }, 1000); };
+const validKey = k => typeof k === 'string' && /^[0-9a-f]{10}(-\d+)?$/.test(k);
+function pruneState() {
+  const now = Date.now(); for (const k of Object.keys(state.failed)) if (!(now - state.failed[k] < FAIL_MS)) delete state.failed[k];
+  state.fav = state.fav.filter(validKey).slice(0, 500); state.recent = state.recent.filter(validKey).slice(0, 30);
+}
+function changeState(b) {
+  if (!b || typeof b !== 'object') return false;
+  if (b.op === 'clear') { state.recent = []; state.failed = {}; saveState(); return true; }
+  if (!validKey(b.key)) return false;
+  if (b.op === 'fav') { state.fav = state.fav.filter(k => k !== b.key); if (b.on) state.fav.unshift(b.key); }
+  else if (b.op === 'recent') { state.recent = [b.key].concat(state.recent.filter(k => k !== b.key)).slice(0, 30); }
+  else if (b.op === 'failed') { if (b.on) state.failed[b.key] = Date.now(); else delete state.failed[b.key]; }
+  else return false;
+  pruneState(); saveState(); return true;
+}
 let status = { state: 'idle', error: '' };
 
 // ---- fetching (follows redirects, handles gzip) ----
@@ -33,29 +54,93 @@ function get(url, depth = 0) {
 const readAll = s => new Promise((res, rej) => { const b = []; s.on('data', c => b.push(c)); s.on('end', () => res(Buffer.concat(b).toString('utf8'))); s.on('error', rej); });
 
 // ---- M3U ----
+const QUALITY = [[/\b(?:4k|uhd|2160p)\b/i, '4K'], [/\b(?:fhd|1080[pi])\b/i, 'FHD'], [/\b(?:hd|720p)\b/i, 'HD'], [/\b(?:sd|480p|576p)\b/i, 'SD']];
+const qualityOf = s => { for (const [re, q] of QUALITY) if (re.test(s)) return q; return ''; };
+const firstOf = s => String(s || '').split(/[;,]/)[0].trim();
+// A short stable key per channel (favourites and recents refer to it): the guide id, else the name and group.
+const keyOf = (id, name, group) => crypto.createHash('md5').update(id || (name + '|' + group)).digest('hex').slice(0, 10);
+const FL_GEO = 1, FL_PART = 2, FL_HEADERS = 4;
+
 function parseM3U(text) {
-  const lines = text.split(/\r?\n/), out = [], groups = [];
-  let epgUrl = '', cur = null;
+  const lines = text.split(/\r?\n/), out = [], groups = [], byBase = {}, keys = {};
+  let epgUrl = '', cur = null, grp = '', headers = false;
+  const addGroup = g => { if (g && !groups.includes(g)) groups.push(g); };
   for (const raw of lines) {
     const l = raw.trim();
     if (!l) continue;
     if (l.startsWith('#EXTM3U')) { const m = l.match(/(?:x-tvg-url|url-tvg)="([^"]*)"/i); if (m) epgUrl = m[1].split(',')[0].trim(); continue; }
     if (l.startsWith('#EXTINF')) {
       const attrs = {}; l.replace(/([\w-]+)="([^"]*)"/g, (_, k, v) => { attrs[k.toLowerCase()] = v; return ''; });
-      cur = { id: attrs['tvg-id'] || '', name: (attrs['tvg-name'] || l.slice(l.lastIndexOf(',') + 1)).trim(), group: (attrs['group-title'] || '').trim(), logo: attrs['tvg-logo'] || '' };
+      cur = { id: attrs['tvg-id'] || '', name: (attrs['tvg-name'] || l.slice(l.lastIndexOf(',') + 1)).trim(), group: (attrs['group-title'] || grp || '').trim(), logo: attrs['tvg-logo'] || '',
+        country: firstOf(attrs['tvg-country']), lang: firstOf(attrs['tvg-language']) };
       const nm = l.slice(l.lastIndexOf(',') + 1).trim(); if (nm) cur.name = nm;
       continue;
     }
+    if (/^#EXTGRP:/i.test(l)) { grp = l.slice(8).trim(); continue; }
+    if (/^#EXTVLCOPT:\s*http-(?:user-agent|referrer)/i.test(l)) { headers = true; continue; }
     if (l[0] === '#') continue;
     if (cur) {
       if (!/^#+/.test(cur.name)) {   // "#### NL ALGEMEEN ####" lines are separators, not channels
-        cur.url = l; cur.num = out.length + 1; out.push(cur);
-        if (cur.group && !groups.includes(cur.group)) groups.push(cur.group);
+        const idq = (cur.id.match(/@([A-Za-z0-9]+)$/) || [])[1] || '', base = cur.id.replace(/@[A-Za-z0-9]+$/, '');
+        const q = qualityOf(idq) || qualityOf(cur.name);
+        if (cur.id.includes('@') && byBase[base]) {   // the same channel again (Name.cc@SD, Name.cc@HD): another stream of it
+          byBase[base].alt.push({ url: l, q });
+        } else {
+          const ch = { id: cur.id, name: cur.name, group: cur.group, logo: cur.logo, url: l, num: out.length + 1, q,
+            cats: cur.group ? cur.group.split(';').map(x => x.trim()).filter(Boolean) : [], alt: [],
+            fl: (/geo-?\s?blocked/i.test(cur.name) ? FL_GEO : 0) | (/not\s*24\s*\/\s*7/i.test(cur.name) ? FL_PART : 0) | (headers || /\|[\w-]+=/.test(l) ? FL_HEADERS : 0),
+            cc: cur.country.toUpperCase() || ((base.match(/\.([a-z]{2})$/i) || [])[1] || '').toUpperCase(), lang: cur.lang };
+          let k = keyOf(base || '', cur.name, cur.group); if (keys[k]) k += '-' + (++keys[k]); else keys[k] = 1;
+          ch.key = k; if (cur.id.includes('@')) byBase[base] = ch;
+          out.push(ch); ch.cats.forEach(addGroup);
+        }
       }
-      cur = null;
+      cur = null; headers = false;
     }
   }
-  return { epgUrl, groups, channels: out, fetchedAt: Date.now() };
+  return { v: 2, epgUrl, groups, channels: out, fetchedAt: Date.now() };
+}
+
+// ---- why a stream does not play: ask the stream address the way the player does and sort the answer ----
+// Only addresses of channels in the stored playlist are ever asked, never one given by the page.
+const probeCache = {};
+function probe(url) {
+  return new Promise(resolve => {
+    let u; try { u = new URL(url); } catch (_) { return resolve({ reason: 'unknown' }); }
+    const t0 = Date.now(); let done = false;
+    const fin = o => { if (!done) { done = true; o.ms = Date.now() - t0; resolve(o); } };
+    const lib = u.protocol === 'https:' ? https : http;
+    const go = (target, depth) => {
+      const req = nc.get(lib, target, { headers: { 'user-agent': 'cleanyourtv-live', range: 'bytes=0-8191', accept: '*/*' }, timeout: 8000, rejectUnauthorized: false }, res => {
+        const st = res.statusCode;
+        if (st >= 300 && st < 400 && res.headers.location && depth < 5) { res.resume(); return go(new URL(res.headers.location, target), depth + 1); }
+        const type = String(res.headers['content-type'] || '').toLowerCase().split(';')[0].trim();
+        const first = Date.now() - t0;
+        if (st >= 400 || st < 200) { res.resume(); return fin({ reason: st === 404 || st === 410 ? 'gone' : st >= 500 ? 'server' : 'refused', status: st, type }); }
+        const b = []; let n = 0;
+        res.on('data', c => { b.push(c); n += c.length; if (n > 8192) { res.destroy(); } });
+        const end = () => {
+          const head = Buffer.concat(b).toString('utf8', 0, 8192);
+          if (/^\s*#EXTM3U/.test(head)) {
+            if (/#EXT-X-(?:SESSION-)?KEY:[^\n]*(?:METHOD=SAMPLE-AES|KEYFORMAT="(?:com\.apple\.streamingkeydelivery|urn:uuid:[^"]*)")/i.test(head)) return fin({ reason: 'drm', status: st, type });
+            return fin({ reason: first > 5000 ? 'slow' : 'ok', status: st, type, hls: true });
+          }
+          if (/^(?:text\/|application\/(?:json|xml|xhtml))/.test(type) || /^\s*<(?:!doctype|html)/i.test(head)) return fin({ reason: 'notvideo', status: st, type });
+          fin({ reason: first > 5000 ? 'slow' : 'ok', status: st, type });
+        };
+        res.on('end', end); res.on('close', end); res.on('error', () => fin({ reason: 'unreachable' }));
+      });
+      req.on('timeout', () => { req.destroy(); fin({ reason: 'slow' }); });
+      req.on('error', () => fin({ reason: 'unreachable' }));
+    };
+    go(u, 0);
+  });
+}
+async function probeCached(url) {
+  const c = probeCache[url]; if (c && Date.now() - c.at < 60000) return c.r;
+  const r = await probe(url); probeCache[url] = { at: Date.now(), r };
+  const keys = Object.keys(probeCache); if (keys.length > 50) delete probeCache[keys[0]];
+  return r;
 }
 
 // ---- XMLTV (streamed: the guide can be tens of MB) ----
@@ -98,7 +183,7 @@ async function refresh(force) {
   if (refreshing || !settings.playlistUrl) return;
   refreshing = true; status = { state: 'loading playlist', error: '' };
   try {
-    if (force || !playlist || Date.now() - playlist.fetchedAt > REFRESH_MS) {
+    if (force || !playlist || playlist.v !== 2 || Date.now() - playlist.fetchedAt > REFRESH_MS) {
       playlist = parseM3U(await readAll(await get(settings.playlistUrl)));
       if (!playlist.channels.length) throw new Error('no channels found in that playlist');
       writeJson(PLAYLIST, playlist);
@@ -165,8 +250,9 @@ async function handle(req, res, u, body) {
   if (u === '/api/live/status') return json({ configured: !!settings.playlistUrl, channels: playlist ? playlist.channels.length : 0, epg: epg ? epg.count : 0,
     state: status.state, error: status.error, pairing: pair ? { url: pair.url, code: pair.code } : null });
   if (u === '/api/live/channels') {
-    if (settings.playlistUrl && !playlist) refresh(false);
-    return json(playlist ? { groups: playlist.groups, channels: playlist.channels.map(c => [c.num, c.id, c.name, c.group, c.logo, c.url]) } : { groups: [], channels: [] });
+    if (settings.playlistUrl && (!playlist || playlist.v !== 2)) refresh(false);
+    // [number, id, name, group, logo, url, key, country, language, quality, flags, categories, other streams as [url, quality]]
+    return json(playlist ? { groups: playlist.groups, channels: playlist.channels.map(c => [c.num, c.id, c.name, c.group, c.logo, c.url, c.key || '', c.cc || '', c.lang || '', c.q || '', c.fl || 0, c.cats || [], (c.alt || []).map(a => [a.url, a.q || ''])]) } : { groups: [], channels: [] });
   }
   if (u === '/api/live/epg') {
     const out = {}, now = Math.floor(Date.now() / 1000);
@@ -179,6 +265,14 @@ async function handle(req, res, u, body) {
     }
     return json(out);
   }
+  if (u === '/api/live/state' && req.method === 'GET') { pruneState(); return json(state); }
+  if (u === '/api/live/state' && req.method === 'POST') { const b = await body(req); return changeState(b) ? json({ returnValue: true }) : json({ error: 'bad request' }, 400); }
+  if (u === '/api/live/probe') {   // ?key=<channel key>&i=<stream number, 0 is the main one>
+    const ch = playlist && playlist.channels.find(c => c.key === q.get('key')), i = parseInt(q.get('i') || '0', 10) || 0;
+    const url = ch && (i === 0 ? ch.url : (ch.alt[i - 1] || {}).url);
+    if (!url) return json({ error: 'no such stream' }, 404);
+    return json(await probeCached(url));
+  }
   if (u === '/api/live/pair' && req.method === 'POST') return json(startPairing());
   if (u === '/api/live/refresh' && req.method === 'POST') { refresh(true); return json({ returnValue: true }); }
   if (u === '/api/live/settings' && req.method === 'POST') {
@@ -188,7 +282,7 @@ async function handle(req, res, u, body) {
     playlist = null; epg = null; refresh(true);
     return json({ returnValue: true });
   }
-  if (u === '/api/live/reset' && req.method === 'POST') { settings = {}; playlist = null; epg = null; for (const f of [SETTINGS, PLAYLIST, EPG]) try { fs.unlinkSync(f); } catch (_) {} return json({ returnValue: true }); }
+  if (u === '/api/live/reset' && req.method === 'POST') { settings = {}; playlist = null; epg = null; for (const f of [SETTINGS, PLAYLIST, EPG, STATE]) try { fs.unlinkSync(f); } catch (_) {} state = { fav: [], recent: [], failed: {} }; return json({ returnValue: true }); }
   res.writeHead(404); res.end();
 }
 
@@ -196,4 +290,4 @@ async function handle(req, res, u, body) {
 if (settings.playlistUrl) setTimeout(() => refresh(false), 20000);
 setInterval(() => refresh(false), 6 * 3600 * 1000).unref();
 
-module.exports = { handle };
+module.exports = { handle, parseM3U, probe };

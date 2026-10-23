@@ -51,6 +51,52 @@ const fake = (url, method) => { const res = { code: 0, out: '', writeHead(c) { t
   ok(saved.status === 200, 'the right code saves the playlist address');
   let n = 0; for (let i = 0; i < 40 && !n; i++) { await new Promise(r => setTimeout(r, 150)); f = fake('/api/live/channels'); await live.handle(f.req, f.res, '/api/live/channels', async () => ({})); n = (JSON.parse(f.res.out).channels || []).length; }
   ok(n === 1, 'the playlist is fetched and parsed');
+
+  // 4b. playlist details: quality, country, language, flags, categories, merged streams
+  const pl = live.parseM3U(['#EXTM3U',
+    '#EXTINF:-1 tvg-id="CNN.us@SD" tvg-country="US" tvg-language="English" group-title="News;World",CNN (480p)', 'http://h/a1.m3u8',
+    '#EXTINF:-1 tvg-id="CNN.us@HD" group-title="News;World",CNN HD', 'http://h/a2.m3u8',
+    '#EXTINF:-1 tvg-id="Foo.nl" group-title="Kids",Foo [Geo-blocked]', 'http://h/b.m3u8',
+    '#EXTGRP:Sport', '#EXTINF:-1,Bar 4K [Not 24/7]', '#EXTVLCOPT:http-user-agent=X', 'http://h/c.m3u8|User-Agent=Y',
+    '#EXTINF:-1,#### SEPARATOR ####', 'http://h/x',
+    '#EXTINF:-1 tvg-id="" group-title="",Same', 'http://h/d.m3u8', '#EXTINF:-1 tvg-id="" group-title="",Same', 'http://h/e.m3u8'].join('\n'));
+  const [cnn, foo, bar, same1, same2] = pl.channels;
+  ok(pl.v === 2 && pl.channels.length === 5 && pl.channels.map(c => c.num).join() === '1,2,3,4,5', 'playlist: five channels, separators skipped, numbers in order');
+  ok(cnn.alt.length === 1 && cnn.alt[0].url === 'http://h/a2.m3u8' && cnn.alt[0].q === 'HD' && cnn.q === 'SD', 'playlist: the same channel id with @SD/@HD is one channel with another stream');
+  ok(cnn.cc === 'US' && cnn.lang === 'English' && cnn.cats.join() === 'News,World' && pl.groups.join() === 'News,World,Kids,Sport', 'playlist: country, language and several categories');
+  ok(foo.fl === 1 && foo.cc === 'NL' && bar.fl === 6 && bar.q === '4K' && bar.group === 'Sport', 'playlist: geo-blocked, part-time and header markers, quality, #EXTGRP');
+  ok(new Set(pl.channels.map(c => c.key)).size === 5 && /^[0-9a-f]{10}$/.test(cnn.key), 'playlist: every channel has its own key');
+
+  // 4c. what the viewer did is kept in the service
+  const st = async (b) => { const x = fake('/api/live/state', 'POST'); await live.handle(x.req, x.res, '/api/live/state', async () => b); return x.res.code; };
+  const getSt = async () => { const x = fake('/api/live/state'); await live.handle(x.req, x.res, '/api/live/state', async () => ({})); return JSON.parse(x.res.out); };
+  const k1 = 'abcdef0123', k2 = 'abcdef0124';
+  await st({ op: 'fav', key: k1, on: true }); await st({ op: 'fav', key: k2, on: true }); await st({ op: 'fav', key: k1, on: false });
+  await st({ op: 'recent', key: k1 }); await st({ op: 'recent', key: k2 }); await st({ op: 'recent', key: k1 }); await st({ op: 'failed', key: k2, on: true });
+  let sv = await getSt(); ok(sv.fav.join() === k2 && sv.recent.join() === k1 + ',' + k2 && !!sv.failed[k2], 'state: favourites, recents (newest first) and failed channels');
+  ok(await st({ op: 'fav', key: '../x', on: true }) === 400 && await st({ op: 'nope', key: k1 }) === 400, 'state: bad keys and operations are refused');
+  for (let i = 0; i < 40; i++) await st({ op: 'recent', key: ('0000000000' + i.toString(16)).slice(-10) }); sv = await getSt(); ok(sv.recent.length === 30, 'state: recents are capped');
+  await new Promise(r => setTimeout(r, 1300)); ok(JSON.parse(fs.readFileSync(path.join(process.env.CYTV_LIVE_DIR, 'state.json'), 'utf8')).fav.join() === k2, 'state: written to the live folder');
+
+  // 4d. why a stream does not play
+  const big = Buffer.alloc(9000, 1);
+  const ps = http.createServer((q, r) => {
+    const t = (c, type, body) => { r.writeHead(c, type ? { 'content-type': type } : {}); r.end(body || ''); };
+    if (q.url === '/ok.ts') return t(200, 'video/mp2t', big);
+    if (q.url === '/hls.m3u8') return t(200, 'application/vnd.apple.mpegurl', '#EXTM3U\n#EXT-X-VERSION:3\n#EXTINF:10,\nseg.ts\n');
+    if (q.url === '/drm.m3u8') return t(200, 'application/x-mpegurl', '#EXTM3U\n#EXT-X-KEY:METHOD=SAMPLE-AES,URI="skd://x",KEYFORMAT="com.apple.streamingkeydelivery"\n#EXTINF:10,\nseg.ts\n');
+    if (q.url === '/page') return t(200, 'text/html', '<!doctype html><title>login</title>');
+    if (q.url === '/go') { r.writeHead(302, { location: '/ok.ts' }); return r.end(); }
+    if (q.url === '/forbidden') return t(403);
+    if (q.url === '/missing') return t(404);
+    if (q.url === '/boom') return t(502);
+    t(200, 'video/mp2t', big);
+  }).listen(0, '127.0.0.1'); await new Promise(r => ps.on('listening', r));
+  const pp = 'http://127.0.0.1:' + ps.address().port, why = async u => (await live.probe(u)).reason;
+  const got = [await why(pp + '/ok.ts'), await why(pp + '/hls.m3u8'), await why(pp + '/drm.m3u8'), await why(pp + '/page'), await why(pp + '/go'), await why(pp + '/forbidden'), await why(pp + '/missing'), await why(pp + '/boom'), await why('http://127.0.0.1:1/x')];
+  ok(got.join() === 'ok,ok,drm,notvideo,ok,refused,gone,server,unreachable', 'probe: ok, ok, drm, not a video, redirect followed, refused, gone, server error, unreachable (' + got.join() + ')');
+  f = fake('/api/live/probe?key=zzzzzzzzzz&i=0'); await live.handle(f.req, f.res, '/api/live/probe', async () => ({})); ok(f.res.code === 404, 'probe: only streams of the playlist are asked about');
+  ps.close();
   f = fake('/api/live/reset', 'POST'); await live.handle(f.req, f.res, '/api/live/reset', async () => ({}));
 
   // 5. version comparison used by the updater

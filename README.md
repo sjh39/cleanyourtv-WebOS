@@ -161,17 +161,41 @@ playlist address (and the XMLTV guide address if the playlist has none). From a 
 curl -X POST localhost:8765/api/live/settings -d '{"playlistUrl":"http://...","epgUrl":"http://..."}'
 ```
 
-| Key | Action |
-|---|---|
-| Up / Down, CH+ / CH- | Next / previous channel |
-| Digits | Jump to a channel number (playlist order) |
-| OK | Open the guide |
-| Info, Left / Right | Channel banner (now and next) |
-| Back, Home | Return to the launcher |
+| Key | Watching | In the guide (OK) |
+|---|---|---|
+| Up / Down, CH+ / CH- | Next / previous channel | Move; CH+ / CH- page |
+| Left / Right | Channel banner (now and next) | Previous / next tab |
+| Digits | Jump to a channel number (playlist order) | Same |
+| OK | Open the guide | Play the channel |
+| Green | Add / remove favourite | Add / remove favourite |
+| Yellow | Player menu (favourite, stream, statistics) | Filters |
+| Blue | Statistics | |
+| Red | | Search (the TV's keyboard) |
+| Back | Return to the launcher | Clear filters and search, then close the guide |
 
-Stepping through channels with Up / Down starts the new channel when the keys have paused for 180 ms, so channels you skip are never requested from the provider (some accounts allow only one connection). The player uses one video element for the whole session. The TV's player plays HLS (`.m3u8`). The guide (XMLTV) is refreshed twice a day and keeps 36 hours. There is no
-recording, pause or favourites. The playlist address is stored only on the TV, in `/media/developer/cleanyourtv/live/`;
-`curl -X POST localhost:8765/api/live/reset` clears it.
+Stepping through channels with Up / Down starts the new channel when the keys have paused for 180 ms, so channels you skip are never
+requested from the provider (some accounts allow only one connection). The player uses one video element for the whole session.
+The TV's player plays HLS (`.m3u8`). The guide (XMLTV) is refreshed twice a day and keeps 36 hours. There is no recording or pause.
+
+**The guide.** Tabs: all channels, **Favourites**, **Recent** (the last 30 you watched for three seconds or more), then one tab per
+category (a channel with `group-title="News;World"` is in both). Rows carry badges: ★ favourite, quality (SD, HD, FHD, 4K, from the
+guide id suffix or the name), **GEO** and **NOT 24/7** (from `[Geo-blocked]` and `[Not 24/7]` in the name), **HEADERS** (the playlist asks
+for a special user agent, which a TV video element cannot send), ×n (n streams) and ! (failed the last time). **Filters** (Yellow)
+narrow the list by country, language and quality, from `tvg-country`, `tvg-language` and the guide id (`Name.nl@HD`). **Search**
+(Red) looks at name, country, language and category across all channels.
+
+**Streams and failures.** Entries with the same guide id and an `@SD`, `@HD`… suffix become one channel with several streams. A
+channel that does not start within 15 seconds, or fails, moves on to its next stream; a live stream that stalls for 8 seconds is
+reloaded once first. The Yellow menu picks a stream by hand. When every stream fails, the service asks the stream address the
+way the player would and the screen says why: refused (blocked, geo-blocked or headers needed), not found (404), server error,
+a web page instead of a video, DRM, not reachable, too slow, or an answer that looks fine but a format the TV cannot decode.
+Statistics (Blue) show the picture size, the buffer, frames and dropped frames and the stream in use; the TV tells a web page
+nothing about codec or bitrate.
+
+What you did (favourites, recents, failed channels) is kept in `/media/developer/cleanyourtv/live/state.json`, with the playlist
+address, so it survives launcher updates. The playlist address is stored only on the TV, in `/media/developer/cleanyourtv/live/`;
+`curl -X POST localhost:8765/api/live/reset` clears everything, state included. Lists of a few thousand channels are what this is
+built for.
 
 ## Input key
 
@@ -337,8 +361,8 @@ The service runs as root on `127.0.0.1:8765` (JSON).
 | `GET /api/inputs` | HDMI inputs and their state |
 | `POST /api/notify` | Picture notification (on the network: `POST :8767/notify` with the token) |
 | `GET /api/voice/status`, `POST /api/voice/install`, `/uninstall`, `/set`, `/listen`, `/ask`, `/forget` | Optional voice function and AI chat |
-| `GET /api/live/status`, `/api/live/channels`, `/api/live/epg` | Live TV data |
-| `POST /api/live/settings`, `/api/live/refresh`, `/api/live/reset` | Live TV setup |
+| `GET /api/live/status`, `/api/live/channels`, `/api/live/epg`, `/api/live/state`, `/api/live/probe?key=&i=` | Live TV data, favourites and recents, why a stream does not play |
+| `POST /api/live/settings`, `/api/live/refresh`, `/api/live/reset`, `/api/live/state` | Live TV setup and state |
 | `GET /api/manager/status` | Versions, updates, options, hook state |
 
 ## Troubleshooting
@@ -363,6 +387,6 @@ restore scripts, `voice/` source of the speech program, `third-party/` bundled i
 
 ## Credits and licence
 
-The home-screen design follows [CleanYourTV](https://github.com/Gathin23/cleanyourtv) (Android TV, MIT). MIT licence,
+The home-screen design follows [CleanYourTV](https://github.com/Gathin23/cleanyourtv) (Android TV, MIT). The Live TV additions (favourites, recents, filters, search, several streams per channel, failure reasons, statistics) were inspired by the behaviour described in the README of [Prosper LG TV](https://github.com/pustal/ProsperLGTV) (GPL-3.0); no code was taken from it. MIT licence,
 see `LICENSE`; bundled components are listed in [`THIRD-PARTY.md`](THIRD-PARTY.md). This modifies a running TV with
 root access; read `install.sh` and `scripts/` before running them, and use it at your own risk.
