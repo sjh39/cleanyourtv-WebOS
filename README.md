@@ -13,7 +13,7 @@ picture notifications, optional on-device voice recognition and an optional debl
 picker, a Settings shortcut and a clock. A small service runs on the TV as root and adds the rest. A manager app on the TV
 sets up, updates and removes everything.
 
-<p align="center"><img src="docs/screenshots/home.jpg" alt="Home screen" width="900"></p>
+<p align="center"><img src="docs/screenshots/menu.gif" alt="The home screen, app options, Customise and Inputs menus" width="800"></p>
 
 ### Compatibility at a glance
 

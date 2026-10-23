@@ -43,5 +43,4 @@ it is used.
 
 ## This documentation
 
-Built with [Zensical](https://zensical.org). The structure follows the documentation of
-[Glasshouse](https://rorygallagher2024.github.io/glasshouse/) for a similar project.
+Built with [Zensical](https://zensical.org).
