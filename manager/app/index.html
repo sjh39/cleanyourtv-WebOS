@@ -187,7 +187,7 @@ var INFO={
  'Set up now':'Installs the launcher, replaces LG\u2019s Home at boot and starts the service. About a minute; the screen blinks once. If the new Home does not come up, the setup removes itself and restarts the TV.',
  'Set up anyway':'Your firmware is not in the compatibility list and LG\u2019s Home looks different. This tries it anyway; a failed start restarts the TV with LG\u2019s Home.'
 };
-function infoFor(r){if(!r||r.sep)return null;var k=r.label.replace(/ [0-9][0-9.]*$/,'');if(k==='Check for updates'&&offline)return 'Works without the service: looks for a newer package and installs it through the root service.';return INFO[k]?{t:k,d:INFO[k]}:null}
+function infoFor(r){if(!r||r.sep)return null;var k=r.label.replace(/ [0-9][0-9.]*$/,'');if(k==='Check for updates'&&offline)return 'Works without the service: looks for a newer package and installs it through the root service.';if(k==='CleanYourTV as Home'&&st.home&&st.home.fullhome)return {t:k,d:INFO[k]+' This TV also has LG\u2019s full-screen Home: if the Home button opens that instead of this launcher, set TV Settings > General > Home Settings > Home Style to Basic.'};return INFO[k]?{t:k,d:INFO[k]}:null}
 function draw(){
   var h='';rows.forEach(function(r,i){h+=r.sep?'<div class="sep"></div>':'<div class="row'+(i===idx?' f':'')+(r.dim?' dim':'')+'" data-i="'+i+'"><span class="lb"></span>'+(r.sub?'<span class="st"></span>':'')+'</div>'});
   $('list').innerHTML=h;var el=$('list').children;rows.forEach(function(r,i){if(r.sep)return;el[i].querySelector('.lb').textContent=r.label;if(r.sub)el[i].querySelector('.st').textContent=r.sub});

@@ -40,7 +40,11 @@ if (cmd === 'kind') {                       // kind <appinfo.json>  ->  "<id> <t
   delete h.splashBackground; delete h.noSplashOnLaunch;
   h.bgColor = '#000000'; h.transparent = false;
   fs.writeFileSync(a[2], JSON.stringify(h, null, 1));
+} else if (cmd === 'wintype') {              // wintype <appinfo.json> <type>  ->  set defaultWindowType; exit 0 when it changed, 1 when it already was that
+  var wo = rj(a[1], null);
+  if (!wo || wo.defaultWindowType === a[2]) process.exit(1);
+  wo.defaultWindowType = a[2]; wj(a[1], wo);
 } else if (cmd === 'rmbind') {              // rmbind  ->  drop our Input-key bind from the inputhook's keybinds.json
   var p = '/home/root/.config/lginputhook/keybinds.json', b = rj(p, null);
   if (b) { Object.keys(b).forEach(function (k) { if (b[k] && String(b[k].command || '').indexOf('cleanyourtv') >= 0) delete b[k]; }); fs.writeFileSync(p, JSON.stringify(b)); }
-} else { console.error('usage: jtool.js kind|compat|newer|options|opt|stage|rmbind'); process.exit(2); }
+} else { console.error('usage: jtool.js kind|compat|newer|options|opt|stage|wintype|rmbind'); process.exit(2); }
