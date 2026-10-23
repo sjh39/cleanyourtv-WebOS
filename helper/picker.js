@@ -4,6 +4,14 @@
 // grab the remote. So the starts are counted: when the picker had to be started three times in ten minutes, prewarming is switched off for
 // good (saved in config.json as picker.prewarm: false, with the reason) and the Input key starts the picker only when pressed.
 const PICKER = 'com.cleanyourtv.picker';
+// How the Input key shows the Inputs: 'overlay' = the picker app over the running app (tested on webOS 25), 'launcher' = the launcher's own
+// Inputs list (Home, nothing hidden is left running). On older webOS (6.5 reports) the hidden picker kept the remote and showed a loading
+// circle, so there the default is 'launcher'; a saved choice (manager) wins.
+function modeOf(conf, sdkMajor) {
+  const m = conf && conf.mode;
+  if (m === 'overlay' || m === 'launcher') return m;
+  return sdkMajor >= 10 ? 'overlay' : 'launcher';
+}
 const CHECK_MS = 20000, WINDOW_MS = 10 * 60 * 1000, MAX_LAUNCHES = 3;
 // store: { get() -> the saved {prewarm, reason, at}, set(obj) }
 function make(luna, enabled, store, now) {
@@ -25,8 +33,8 @@ function make(luna, enabled, store, now) {
       // listed as running for a moment after each start), and every start shows the loading circle: stop for good.
       while (launches.length && launches[0] < now() - WINDOW_MS) launches.shift();
       if (launches.length >= MAX_LAUNCHES) {
-        if (store) store.set({ prewarm: false, reason: 'the TV keeps closing the hidden picker', at: now() });
-        console.error('picker: the system closed the hidden picker ' + launches.length + ' times in ' + Math.round(WINDOW_MS / 60000) + ' minutes; keeping it ready is switched off (the Input key starts it when pressed)');
+        if (store) store.set({ prewarm: false, mode: 'launcher', reason: 'the TV keeps closing the hidden picker', at: now() });
+        console.error('picker: the system closed the hidden picker ' + launches.length + ' times in ' + Math.round(WINDOW_MS / 60000) + ' minutes; the Input key now opens the launcher\'s Inputs list instead');
         return true;
       }
       if (!(await luna('luna://com.webos.applicationManager/getAppInfo', { id: PICKER })).returnValue) return false;   // not installed (yet)
@@ -44,4 +52,4 @@ function start(luna, enabled, store) {
   const loop = async () => { const up = await tick(); if (up) fast = 0; setTimeout(loop, up || fast++ > 40 ? 30000 : 4000); };
   setTimeout(loop, 2000);
 }
-module.exports = { start, make };
+module.exports = { start, make, modeOf };

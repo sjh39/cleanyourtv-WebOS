@@ -74,6 +74,12 @@ const keyCode = () => String(((readConf().keys || {}).input) || '241');
 const voiceKey = () => { const v = readConf().voice || {}; return v.enabled && voice && voice.installed() ? String((readConf().keys || {}).voice || '') : ''; };
 const guideKey = () => options().liveTv !== false ? String((readConf().keys || {}).guide || '') : '';   // the Guide button belongs to LG unless Live TV is on and a button was learned
 let pickerShownAt = 0;
+// the Input key shows the Inputs over the running app (the picker app, tested on webOS 25) or opens the launcher's Inputs list; older webOS
+// defaults to the launcher (see picker.js). scripts/inputkey.sh reads the result from picker-mode.
+let sdkMajor = 0;
+const pickerMode = () => require('./picker').modeOf(readConf().picker || {}, sdkMajor);
+const syncPickerMode = () => { try { fs.writeFileSync(DIR + '/picker-mode', pickerMode() + '\n'); } catch (_) {} };
+luna('luna://com.webos.service.tv.systemproperty/getSystemInfo', { keys: ['sdkVersion'] }).then(r => { sdkMajor = parseInt(String(r.sdkVersion || '').split('.')[0], 10) || 0; syncPickerMode(); });
 let voice = null;
 try { if (notify) voice = require('./voice').create({ notify, readConf, writeConf }); } catch (e) { console.error('voice module failed:', e.message); }
 inputhook.setVoiceKey(voiceKey);
@@ -83,7 +89,7 @@ inputhook.setGuideKey && inputhook.setGuideKey(guideKey);
 let notifyApi = null;
 try { if (notify) notifyApi = require('./notifyapi').create({ notify, readConf, writeConf }); } catch (e) { console.error('notification api module failed:', e.message); }
 let manager = null;
-try { manager = require('./manager').create({ luna, readConf, writeConf, inputhook, VERSION, notifyApi, voice, pickerShown: () => pickerShownAt }); } catch (e) { console.error('manager module failed:', e.message); }
+try { manager = require('./manager').create({ luna, readConf, writeConf, inputhook, VERSION, notifyApi, voice, pickerShown: () => pickerShownAt, pickerMode, syncPickerMode }); } catch (e) { console.error('manager module failed:', e.message); }
 const body = req => new Promise(r => { let b = ''; req.on('data', c => b += c); req.on('end', () => { try { r(JSON.parse(b || '{}')); } catch (_) { r({}); } }); });
 
 http.createServer(async (req, res) => {
@@ -154,6 +160,6 @@ http.createServer(async (req, res) => {
   // Input key: bind it and keep the hook in LG's input processes (they restart now and then)
   setTimeout(() => inputhook.ensure(options().inputKey, keyCode()), 500);
   setInterval(() => inputhook.ensure(options().inputKey, keyCode()), 30000);
-  try { require('./picker').start(luna, () => options().inputKey, { get: () => readConf().picker || {}, set: v => { const c = readConf(); c.picker = v; writeConf(c); } }); } catch (e) { console.error('picker module failed:', e.message); }
+  try { require('./picker').start(luna, () => options().inputKey && pickerMode() === 'overlay', { get: () => readConf().picker || {}, set: v => { const c = readConf(); c.picker = v; writeConf(c); syncPickerMode(); } }); } catch (e) { console.error('picker module failed:', e.message); }
   if (manager) setTimeout(() => manager.check(), 60000);
 });

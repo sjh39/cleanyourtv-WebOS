@@ -16,13 +16,14 @@ active one) and, when [Live TV](live-tv.md) is on, **Live TV**.
 
 The pointer works too.
 
-## Keeping it ready
+## What the key shows
 
-The Inputs list is a small app. A cold start takes about eight seconds, so the service starts it hidden in the background after boot
-and the key only wakes it. Some TVs close a hidden app again straight away, which shows a loading circle each time. The service
-counts the starts; if it has to start the picker three times in ten minutes, the system keeps closing it, and the service stops starting it (saved in `config.json` as
-`picker.prewarm: false`) and the first press of the Input key takes a few seconds instead. **Input key** > **Keep the Inputs list
-ready** in the manager app shows the state and switches it on or off.
+The Input button can show the Inputs list in two ways. **Over the running app** (webOS 25 and newer): a small app, `com.cleanyourtv.picker`,
+is started hidden in the background after boot and the key only wakes it; a cold start takes about eight seconds. **The launcher's own
+list**: the TV goes to Home with the Inputs list open; nothing runs in the background. On older webOS (6.5 reports) the hidden app
+kept the remote and showed a loading circle, so webOS before 10 uses the launcher's list by default, and on any TV the service switches
+to it when it has to start the background app three times in ten minutes (`picker.mode: launcher` in `config.json`).
+**Input key** > **Input key shows** in the manager app chooses; **Keep the Inputs list ready** switches the background start on or off.
 
 ## How it works
 

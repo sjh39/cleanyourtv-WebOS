@@ -7,11 +7,12 @@
 - **An app is missing from the grid.** Check **Hidden apps** in Customise. Apps without a launch icon are not listed.
 - **After a firmware update removed root.** Re-root, then run the [install command](install.md#1-install-the-manager-app) and the setup again.
 - **The Input key opens LG's picker.** Check the Input key switch in the manager app and run **Learn the Input key**.
-- **A loading circle appears every half minute and the remote stops responding for a moment.** The Inputs list is started in the
-  background so that the Input key opens it at once, and some TVs (webOS 6.5 reports) close it again. From v1.5.13 the service
-  notices that it had to start the picker three times in ten minutes, stops doing it and writes that to `config.json` (`picker.prewarm: false`); the first press of
-  the Input key then takes a few seconds. **Input key** > **Keep the Inputs list ready** switches it on or off by hand; switching
-  the Input key off entirely stops it too.
+- **A loading circle appears every half minute and the remote stops responding until you hold Back.** The Input key can show the
+  Inputs list over the running app with a small app that the service starts in the background. On webOS 6.5 (reports) the TV closes that
+  app again and it keeps the remote. From v1.5.13 webOS before 10 uses the launcher's own Inputs list instead (the TV goes to Home
+  with the list open), and on any TV the service switches to that when it had to start the background app three times in ten minutes
+  (`picker.mode: launcher` in `config.json`). **Input key** > **Input key shows** chooses by hand; switching the Input key off entirely
+  gives the key back to LG.
 - **The manager list does not show Share log or Uninstall.** Before v1.5.13 the list could not scroll; update, then move down: the
   list scrolls and fades where more rows are hidden.
 - **The service restarts by itself.** On some TVs Node.js 8 stops with `uv_close: Assertion ... failed`. From v1.5.13 the service

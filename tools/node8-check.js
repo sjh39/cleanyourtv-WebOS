@@ -244,6 +244,16 @@ const fake = (url, method) => { const res = { code: 0, out: '', writeHead(c) { t
   ok(pkLaunches === 4 && pkSaved.prewarm === undefined, 'a start every quarter of an hour (standby, wake) is normal and stays on');
   pkTick = pkMake(); pkSaved = { prewarm: true }; await pkTick(); ok(pkLaunches === 1, 'switching it back on in the manager starts it again');
 
+  ok(pickerMod.modeOf({}, 10) === 'overlay' && pickerMod.modeOf({}, 25) === 'overlay' && pickerMod.modeOf({}, 6) === 'launcher' && pickerMod.modeOf({}, 0) === 'launcher', 'the Input key shows the picker over the app on webOS 10 and newer, the launcher\'s list before that');
+  ok(pickerMod.modeOf({ mode: 'overlay' }, 6) === 'overlay' && pickerMod.modeOf({ mode: 'launcher' }, 25) === 'launcher' && pickerMod.modeOf({ mode: 'x' }, 6) === 'launcher', 'a saved choice wins over the default');
+  pkTick = pkMake(); pkRunning = []; await pkTick(); pkClock += 40000; await pkTick(); pkClock += 40000; await pkTick(); pkClock += 40000; await pkTick();
+  ok(pkSaved.mode === 'launcher' && pkSaved.prewarm === false, 'when the system keeps closing the picker the Input key falls back to the launcher\'s list');
+
+  let psynced = 0, pconf = {};
+  m = mgr.create({ luna: async () => ({}), readConf: () => JSON.parse(JSON.stringify(pconf)), writeConf: c => { pconf = JSON.parse(JSON.stringify(c)); }, inputhook: { status: () => ({}), ensure() {} }, VERSION: '1.5.13', pickerShown: () => 0, pickerMode: () => (pconf.picker || {}).mode || 'launcher', syncPickerMode: () => { psynced++; } });
+  r = await ask('options', 'POST', { pickerMode: 'overlay' }); ok(r.j.picker.mode === 'overlay' && pconf.picker.prewarm === true && psynced > 0, 'choosing the overlay in the manager is saved and the Input key script is told');
+  r = await ask('options', 'POST', { pickerMode: 'launcher' }); ok(r.j.picker.mode === 'launcher', 'choosing the launcher\'s list');
+  r = await ask('options', 'POST', { pickerMode: 'sideways' }); ok(r.j.picker.mode === 'launcher', 'an unknown mode is ignored');
   // 11. Diagnostics: child processes with their own timeout; the last operations survive a process that died
   process.env.CYTV_RUNFILE = path.join(tmp, 'run.json');
   const diag = require(path.join(helper, 'diag'));
