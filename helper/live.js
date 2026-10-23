@@ -45,13 +45,15 @@ function get(url, depth = 0) {
         res.resume(); return resolve(get(new URL(res.headers.location, u).toString(), depth + 1));
       }
       if (res.statusCode !== 200) { res.resume(); return reject(new Error('server answered ' + res.statusCode)); }
-      resolve(res.headers['content-encoding'] === 'gzip' ? res.pipe(zlib.createGunzip()) : res);
+      // a connection that drops mid-body emits 'aborted' on the response; pass it on so readers do not wait forever
+      if (res.headers['content-encoding'] === 'gzip') { const gz = res.pipe(zlib.createGunzip()); res.on('aborted', () => gz.destroy(new Error('the connection was lost'))); return resolve(gz); }
+      resolve(res);
     });
     req.on('timeout', () => req.destroy(new Error('timed out')));
     req.on('error', reject);
   });
 }
-const readAll = s => new Promise((res, rej) => { const b = []; s.on('data', c => b.push(c)); s.on('end', () => res(Buffer.concat(b).toString('utf8'))); s.on('error', rej); });
+const readAll = s => new Promise((res, rej) => { const b = []; let ended = false; s.on('data', c => b.push(c)); s.on('end', () => { ended = true; res(Buffer.concat(b).toString('utf8')); }); s.on('error', rej); s.on('aborted', () => rej(new Error('the connection was lost'))); s.on('close', () => { if (!ended) rej(new Error('the connection was closed')); }); });
 
 // ---- M3U ----
 const QUALITY = [[/\b(?:4k|uhd|2160p)\b/i, '4K'], [/\b(?:fhd|1080[pi])\b/i, 'FHD'], [/\b(?:hd|720p)\b/i, 'HD'], [/\b(?:sd|480p|576p)\b/i, 'SD']];
@@ -172,7 +174,8 @@ async function loadEpg(url, wantedIds) {
       while ((i = buf.indexOf('\n')) >= 0) { handle(buf.slice(0, i)); buf = buf.slice(i + 1); }
       if (++n % 40 === 0) { stream.pause(); setImmediate(() => stream.resume()); }   // leave CPU for the UI
     });
-    stream.on('end', resolve); stream.on('error', reject);
+    let ended = false; stream.on('end', () => { ended = true; resolve(); }); stream.on('error', reject);
+    stream.on('aborted', () => reject(new Error('the connection was lost'))); stream.on('close', () => { if (!ended) reject(new Error('the connection was closed')); });
   });
   for (const id in byId) byId[id].sort((a, b) => a[0] - b[0]);
   return { v: 3, fetchedAt: Date.now(), count, byId };

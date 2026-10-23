@@ -185,7 +185,7 @@ body{background-image:var(--wall);background-size:1920px 1080px}
 <div id="lv"><div id="lv-stage"></div><div id="lv-spin" class="layer"></div><div id="lv-osd" class="layer"><img class="logo" id="lv-ologo" alt=""><div class="num" id="lv-onum"></div><div class="info"><div class="name" id="lv-oname"></div><div class="now" id="lv-onow"></div><div class="next" id="lv-onext"></div><div class="facts" id="lv-ofacts"></div><div class="pbar"><i id="lv-obar"></i></div></div></div><div id="lv-numin" class="layer"></div><div id="lv-guide" class="layer"><div id="lv-glow"></div><div id="lv-gtop"><div id="lv-gtitle"></div><div id="lv-gtabs"></div><input id="lv-search" type="text" autocomplete="off"><div id="lv-gclock"></div></div><div id="lv-rows"></div><div id="lv-detail"></div></div><div id="lv-filter" class="layer"></div><div id="lv-menu" class="layer"></div><div id="lv-msg" class="layer"></div><div id="lv-tune" class="layer"></div><div id="lv-toast" class="layer"></div><div id="lv-stats" class="layer"></div></div>
 <div id="toast"></div>
 <script>
-var API='http://127.0.0.1:8765', CACHE_KEY='cytv.cache.v4', VERSION='1.4.12';
+var API='http://127.0.0.1:8765', CACHE_KEY='cytv.cache.v4', VERSION='1.4.13';
 var DEFAULTS={
   dock:['netflix','youtube.leanback.v4','amazon','com.disney.disneyplus-prod'],
   topbar:[{label:'Inputs',icon:'inputs',action:'inputs'},{label:'Live TV',icon:'tv',action:'live'},{label:'Settings',icon:'settings',app:'com.palm.app.settings'}]
@@ -400,6 +400,12 @@ function act(e){
 
 /* ---------- menus ---------- */
 var stack=[], ovEl=null;
+/* webOS 5's Chromium (68) can leave the old text in the compositor tile when an element's content is replaced, so menu and list text shows
+   twice (issue 4). There the element is swapped for a fresh one instead of rewriting its content; newer engines just set innerHTML. */
+var OLDGPU=(function(){var m=/Chrome\/(\d+)/.exec(navigator.userAgent||'');return !!m&&+m[1]<79})();
+function setHtml(el,h){
+  if(!OLDGPU||!el.parentNode){el.innerHTML=h;return el}
+  var n=el.cloneNode(false);n.innerHTML=h;el.parentNode.replaceChild(n,el);return n}
 function openMenu(title,items){stack.push({title:title,items:items,idx:0});drawMenu()}
 function closeMenus(){stack=[];if(ovEl){ovEl.remove();ovEl=null}}
 function backMenu(){stack.pop();if(stack.length)drawMenu();else closeMenus()}
@@ -411,7 +417,7 @@ function drawMenu(){
     var it=m.items[i];
     h+='<div class="row'+(i===m.idx?' f':'')+(it.dim?' dim':'')+'" data-i="'+i+'">'+(it.icon?svg(it.icon):'')+'<span class="lb"></span>'+(it.sub?'<span class="st"></span>':'')+'</div>'}
   h+='<div class="more">'+(start+N<m.items.length?'▼':'')+'</div></div>';
-  ovEl.innerHTML=h;
+  ovEl=setHtml(ovEl,h);
   ovEl.querySelector('h2').textContent=m.title;
   [].forEach.call(ovEl.querySelectorAll('.row'),function(row){
     var it=m.items[+row.getAttribute('data-i')];
@@ -575,7 +581,7 @@ var LIVE=(function(){
   var START_MS=15000,STALL_MS=8000;
   function lesc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
   function layer(id,on){$(id).classList.toggle('on',!!on)}
-  function msg(h){$('lv-msg').innerHTML=h;layer('lv-msg',true)}
+  function msg(h){setHtml($('lv-msg'),h);layer('lv-msg',true)}
   function toastL(s){var e=$('lv-toast');e.textContent=s;layer('lv-toast',true);clearTimeout(toastT);toastT=setTimeout(function(){layer('lv-toast',false)},2200)}
   /* A plain .m3u8 address is set as the element's src (the type is not needed); anything else keeps its <source type> variants. */
   function variantsFor(url){var v=[];if(/\.m3u8(\?|$)/.test(url))return [{src:url,type:''}];if(/\/live\/.+\.ts(\?|$)/.test(url))v.push({src:url.replace(/\.ts(\?|$)/,'.m3u8$1'),type:'application/x-mpegURL'});v.push({src:url,type:'application/x-mpegURL'});v.push({src:url,type:''});return v}
@@ -709,7 +715,7 @@ var LIVE=(function(){
     tabs+='<div class="ctab on">'+lesc(names[L.g])+'</div>';
     if(L.g<names.length-1)tabs+='<div class="ctab">'+lesc(names[L.g+1])+'</div><div class="ctab m">›</div>';
     var ft=filterText();if(ft)tabs+='<div class="ctab f">'+lesc(t('Filters')+': '+ft)+'</div>';
-    $('lv-gtabs').innerHTML=tabs;
+    setHtml($('lv-gtabs'),tabs);
     $('lv-gclock').textContent=d.toLocaleTimeString(LOC,clockOpts());gcolor();
     var N=7,cs=Math.max(0,Math.min(L.ci-3,L.list.length-N)),h='';
     for(var j=cs;j<Math.min(L.list.length,cs+N);j++){
@@ -718,16 +724,16 @@ var LIVE=(function(){
         +'<div class="t"><div class="nm">'+lesc(c.name)+'</div><div class="nw">'+(pn?lesc(hm(pn[0])+'  '+pn[2]):(e?'':lesc(t('No guide data'))))+'</div>'
         +(pn?'<div class="pbar"><i style="width:'+pct(pn,now)+'%"></i></div>':'')+'</div>'+badges(c)+'</div>'}
     if(!L.list.length)h='<div class="empty">'+lesc(t(L.g===1&&!S.fav.length?'No favourites yet. Press the green button on a channel.':L.g===2&&!S.recent.length?'Nothing watched yet.':'No channels match.'))+'</div>';
-    $('lv-rows').innerHTML=h;drawDetail()}
+    setHtml($('lv-rows'),h);drawDetail()}
   function drawDetail(){
-    var c=L.list[L.ci];if(!c){$('lv-detail').innerHTML='';return}
+    var c=L.list[L.ci];if(!c){setHtml($('lv-detail'),'');return}
     var f=full[c.id],now=Math.floor(Date.now()/1000),h='<div class="dn">'+lesc(c.name)+'</div><div class="dg">'+lesc(c.cats.join(', '))+'</div><div class="dg">'+lesc(facts(c))+'</div>';
     if(f&&f.list&&f.list.length){
       var p=f.list[0],live=p[0]<=now;
       h+='<div class="card"><div class="dt">'+lesc(hm(p[0])+' – '+hm(p[1]))+'</div><div class="dp">'+lesc(p[2])+'</div>'+(p[3]?'<div class="dd">'+lesc(p[3])+'</div>':'')+(live?'<div class="pbar"><i style="width:'+pct(p,now)+'%"></i></div>':'')+'</div>';
       if(f.list.length>1){h+='<h3>'+t('Later')+'</h3>';for(var i=1;i<Math.min(5,f.list.length);i++)h+='<div class="up"><div class="tm">'+hm(f.list[i][0])+'</div><div class="tt">'+lesc(f.list[i][2])+'</div></div>'}}
     else h+='<div class="card"><div class="dt">'+lesc(f?t('No guide data'):'…')+'</div></div>';
-    $('lv-detail').innerHTML=h}
+    setHtml($('lv-detail'),h)}
   function fetchVisible(){
     clearTimeout(fetchT);fetchT=setTimeout(function(){
       var cs=Math.max(0,Math.min(L.ci-3,L.list.length-7)),ids=L.list.slice(cs,cs+7).map(function(c){return c.id}).filter(function(i){return i&&!epgNow[i]});
@@ -750,7 +756,7 @@ var LIVE=(function(){
   function drawFilter(){
     var r=filterRows(),h='<h3>'+lesc(t('Filters'))+'</h3>';
     for(var i=0;i<r.length;i++)h+='<div class="mrow'+(i===FP.i?' f':'')+'"><div class="ml">'+lesc(r[i].label)+'</div><div class="mv">'+(r[i].k==='clear'?'':'‹ ')+lesc(r[i].val)+(r[i].k==='clear'?'':' ›')+'</div></div>';
-    $('lv-filter').innerHTML=h}
+    setHtml($('lv-filter'),h)}
   function stepFilter(k,d){
     var v=fvals(k),i=v.indexOf(F[k]);i=(i+d+v.length)%v.length;F[k]=v[i];relist();drawFilter()}
   function filterKey(k){
@@ -772,7 +778,7 @@ var LIVE=(function(){
     M.items=menuItems();if(M.i>=M.items.length)M.i=M.items.length-1;
     var h='<h3>'+lesc(byNum[cur].name)+'</h3>';
     for(var i=0;i<M.items.length;i++)h+='<div class="mrow'+(i===M.i?' f':'')+'"><div class="ml">'+lesc(M.items[i].label)+'</div><div class="mv">'+lesc(M.items[i].sub)+'</div></div>';
-    $('lv-menu').innerHTML=h}
+    setHtml($('lv-menu'),h)}
   function openMenu(){M.open=true;M.i=0;drawMenu();layer('lv-menu',true)}
   function menuKey(k){
     if(k===38){if(M.i>0)M.i--}else if(k===40){if(M.i<M.items.length-1)M.i++}

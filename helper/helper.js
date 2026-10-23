@@ -1,14 +1,16 @@
 // Root service of CleanYourTV: bridges the launcher web app to luna, serves app icons, runs Live TV and picture
 // notifications, keeps the Input-key picker alive and hosts the manager API. Listens on 127.0.0.1 only.
 const http = require('http'), fs = require('fs'), path = require('path'), cp = require('child_process');
-const VERSION = '1.5.12';
+const VERSION = '1.5.13';
 const PORT = 8765, DIR = '/media/developer/cleanyourtv', CONF = DIR + '/config.json', USAGE = DIR + '/usage.json';
 const ENV = Object.assign({}, process.env, { PATH: '/usr/bin:/usr/sbin:/bin:/sbin:' + (process.env.PATH || '') });
 
+const diag = require('./diag');
+diag.start();
 function luna(uri, payload) {
   return new Promise(res => {
     const sh = 'luna-send -n 1 -w 5000 -f "$1" "$2" </dev/null';
-    cp.execFile('/bin/sh', ['-c', sh, 'sh', uri, JSON.stringify(payload || {})],
+    diag.execFile('/bin/sh', ['-c', sh, 'sh', uri, JSON.stringify(payload || {})],
       { env: ENV, timeout: 8000, maxBuffer: 8 << 20 }, (e, out) => {
         try { res(JSON.parse(out)); } catch (_) { res({ returnValue: false, errorText: String(e || 'bad json') }); }
       });
@@ -58,12 +60,8 @@ async function onForeground(id) {
 }
 // Poll the foreground app every few seconds (a subscription's output is block-buffered by luna-send, so it would arrive late).
 function pollForeground() {
-  const ch = cp.spawn('luna-send', ['-n', '1', '-w', '3000', '-f', 'luna://com.webos.applicationManager/getForegroundAppInfo', '{}'],
-    { env: ENV, stdio: ['ignore', 'pipe', 'ignore'] });
-  let out = '';
-  ch.stdout.on('data', d => out += d);
-  ch.on('error', () => {});
-  ch.on('close', () => { try { const o = JSON.parse(out); if (o.returnValue !== false) onForeground(o.appId || ''); } catch (_) {} });
+  diag.execFile('luna-send', ['-n', '1', '-w', '3000', '-f', 'luna://com.webos.applicationManager/getForegroundAppInfo', '{}'], { env: ENV, timeout: 6000 },
+    (e, out) => { try { const o = JSON.parse(out); if (o.returnValue !== false) onForeground(o.appId || ''); } catch (_) {} });
 }
 let notify = null;
 try { notify = require('./notify'); } catch (e) { console.error('notify module failed:', e.message); }
@@ -76,6 +74,22 @@ const keyCode = () => String(((readConf().keys || {}).input) || '241');
 const voiceKey = () => { const v = readConf().voice || {}; return v.enabled && voice && voice.installed() ? String((readConf().keys || {}).voice || '') : ''; };
 const guideKey = () => options().liveTv !== false ? String((readConf().keys || {}).guide || '') : '';   // the Guide button belongs to LG unless Live TV is on and a button was learned
 let pickerShownAt = 0;
+// The on-demand picker asks to be closed when it is dismissed. Closing from the page does nothing on some builds, so the app manager does
+// it: closeByAppId is the call that works on webOS 6, plain close the fallback.
+async function closePicker() {
+  const id = 'com.cleanyourtv.picker', a = await luna('luna://com.webos.applicationManager/closeByAppId', { id });
+  if (a.returnValue === true) return;
+  const b = await luna('luna://com.webos.applicationManager/close', { id });
+  if (b.returnValue !== true) console.error('picker: could not close it (' + (a.errorText || 'closeByAppId failed') + '; ' + (b.errorText || 'close failed') + ')');
+}
+// the Input key shows the Inputs over the running app (the picker app, tested on webOS 25) or opens the launcher's Inputs list; older webOS
+// defaults to the launcher (see picker.js). scripts/inputkey.sh reads the result from picker-mode.
+let sdkMajor = 0;
+const pickerMode = () => require('./picker').modeOf(readConf().picker || {}, sdkMajor);
+// With the launcher's list as the Input key's target, CleanYourTV has to be the Home: otherwise the key stays with LG
+const inputKeyOn = () => options().inputKey && !(pickerMode() === 'launcher' && fs.existsSync(DIR + '/DISABLE'));
+const syncPickerMode = () => { try { fs.writeFileSync(DIR + '/picker-mode', pickerMode() + '\n'); } catch (_) {} };
+luna('luna://com.webos.service.tv.systemproperty/getSystemInfo', { keys: ['sdkVersion'] }).then(r => { sdkMajor = parseInt(String(r.sdkVersion || '').split('.')[0], 10) || 0; syncPickerMode(); });
 let voice = null;
 try { if (notify) voice = require('./voice').create({ notify, readConf, writeConf }); } catch (e) { console.error('voice module failed:', e.message); }
 inputhook.setVoiceKey(voiceKey);
@@ -85,7 +99,7 @@ inputhook.setGuideKey && inputhook.setGuideKey(guideKey);
 let notifyApi = null;
 try { if (notify) notifyApi = require('./notifyapi').create({ notify, readConf, writeConf }); } catch (e) { console.error('notification api module failed:', e.message); }
 let manager = null;
-try { manager = require('./manager').create({ luna, readConf, writeConf, inputhook, VERSION, notifyApi, voice, pickerShown: () => pickerShownAt }); } catch (e) { console.error('manager module failed:', e.message); }
+try { manager = require('./manager').create({ luna, readConf, writeConf, inputhook, VERSION, notifyApi, voice, pickerShown: () => pickerShownAt, pickerMode, syncPickerMode, inputKeyOn }); } catch (e) { console.error('manager module failed:', e.message); }
 const body = req => new Promise(r => { let b = ''; req.on('data', c => b += c); req.on('end', () => { try { r(JSON.parse(b || '{}')); } catch (_) { r({}); } }); });
 
 http.createServer(async (req, res) => {
@@ -108,7 +122,7 @@ http.createServer(async (req, res) => {
     if (voice && u.startsWith('/api/voice/')) return voice.handle(req, res, u, body);
     if (live && u.startsWith('/api/live/')) return live.handle(req, res, u, body);
     if (theme && u.startsWith('/api/theme/')) return theme.handle(req, res, u, body);
-    if (u === '/api/log') { if (/picker show/.test(decodeURIComponent(req.url.split('m=')[1] || ''))) pickerShownAt = Date.now(); console.log(fs.readFileSync('/proc/uptime', 'utf8').split(' ')[0] + ' ' + decodeURIComponent((req.url.split('m=')[1] || '')).slice(0, 300)); return json({}); }   // small diagnostics from the overlay apps
+    if (u === '/api/log') { const lm = decodeURIComponent(req.url.split('m=')[1] || ''); if (/picker show/.test(lm)) pickerShownAt = Date.now(); if (/picker close/.test(lm)) setTimeout(closePicker, 400); console.log(fs.readFileSync('/proc/uptime', 'utf8').split(' ')[0] + ' ' + decodeURIComponent((req.url.split('m=')[1] || '')).slice(0, 300)); return json({}); }   // small diagnostics from the overlay apps
     if (manager && u.startsWith('/api/manager/')) return manager.handle(req, res, u, body);
     if (u === '/api/frontend-ok' && req.method === 'POST') { const b = await body(req); if (manager) manager.frontendLoaded(String(b.version || '')); return json({ returnValue: true }); }
     if (u === '/api/version') return json({ version: VERSION });
@@ -154,8 +168,8 @@ http.createServer(async (req, res) => {
   if (notifyApi) notifyApi.sync();
   setInterval(pollForeground, 4000);
   // Input key: bind it and keep the hook in LG's input processes (they restart now and then)
-  setTimeout(() => inputhook.ensure(options().inputKey, keyCode()), 500);
-  setInterval(() => inputhook.ensure(options().inputKey, keyCode()), 30000);
-  try { require('./picker').start(luna, () => options().inputKey); } catch (e) { console.error('picker module failed:', e.message); }
+  setTimeout(() => inputhook.ensure(inputKeyOn(), keyCode()), 500);
+  setInterval(() => inputhook.ensure(inputKeyOn(), keyCode()), 30000);
+  try { require('./picker').start(luna, () => options().inputKey && pickerMode() === 'overlay', { get: () => readConf().picker || {}, set: v => { const c = readConf(); c.picker = v; writeConf(c); syncPickerMode(); } }); } catch (e) { console.error('picker module failed:', e.message); }
   if (manager) setTimeout(() => manager.check(), 60000);
 });

@@ -11,7 +11,7 @@ const ENV = Object.assign({}, process.env, { PATH: '/usr/bin:/usr/sbin:/bin:/sbi
 const semver = v => String(v || '0').replace(/^v/, '').split('.').map(n => parseInt(n, 10) || 0);
 function cmp(a, b) { const x = semver(a), y = semver(b); for (let i = 0; i < 3; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0) ? 1 : -1; return 0; }
 const readJson = (f, d) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch (_) { return d; } };
-const sh = (cmd, ms) => new Promise(res => cp.execFile('/bin/sh', ['-c', cmd], { env: ENV, timeout: ms || 60000, maxBuffer: 8 << 20 }, (e, out, err) => res({ ok: !e, out: String(out || ''), err: String(err || '') })));
+const sh = (cmd, ms) => new Promise(res => require('./diag').execFile('/bin/sh', ['-c', cmd], { env: ENV, timeout: ms || 60000, maxBuffer: 8 << 20 }, (e, out, err) => res({ ok: !e, out: String(out || ''), err: String(err || '') })));
 
 // GET a URL (follows redirects). Returns a Buffer, or with `file` streams to disk and resolves {sha256}.
 const allowHttp = () => { if (process.env.CYTV_API) return true; try { return !!JSON.parse(fs.readFileSync(D + '/config.json', 'utf8')).releasesUrl; } catch (_) { return false; } };   // a custom release source, for testing
@@ -23,9 +23,11 @@ function fetch(url, file, hops) {
     const req = nc.get(mod, url, { headers: { 'User-Agent': 'cleanyourtv-manager', Accept: file ? 'application/octet-stream, */*' : 'application/vnd.github+json, application/json, */*' }, timeout: 20000 }, res => {
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) { res.resume(); return resolve(fetch(new URL(res.headers.location, url).toString(), file, (hops || 0) + 1)); }
       if (res.statusCode !== 200) { res.resume(); return reject(new Error('HTTP ' + res.statusCode)); }
-      if (!file) { const b = []; res.on('data', c => b.push(c)); res.on('end', () => resolve(Buffer.concat(b))); return; }
+      // a connection that drops after the headers emits 'aborted' on the response, not an error on the request: without these the promise never settles
+      let ended = false; res.on('aborted', () => reject(new Error('the connection was lost'))); res.on('error', reject); res.on('close', () => { if (!ended) reject(new Error('the connection was closed')); });
+      if (!file) { const b = []; res.on('data', c => b.push(c)); res.on('end', () => { ended = true; resolve(Buffer.concat(b)); }); return; }
       const h = crypto.createHash('sha256'), w = fs.createWriteStream(file);
-      res.on('data', c => h.update(c)); res.pipe(w);
+      res.on('data', c => h.update(c)); res.on('end', () => { ended = true; }); res.pipe(w);
       w.on('finish', () => resolve({ sha256: h.digest('hex') })); w.on('error', reject);
     });
     req.on('timeout', () => req.destroy(new Error('timeout'))); req.on('error', reject);
@@ -45,7 +47,8 @@ function setHome(enabled) {
 }
 
 function create(ctx) {
-  const { luna, readConf, writeConf, inputhook, VERSION, pickerShown, notifyApi, voice } = ctx;
+  const { luna, readConf, writeConf, inputhook, VERSION, pickerShown, notifyApi, voice } = ctx, pickerMode = ctx.pickerMode || (() => 'overlay'), syncPickerMode = ctx.syncPickerMode || (() => {});
+  const inputKeyOn = ctx.inputKeyOn || (() => options().inputKey);
   const keys = () => { const k = Object.assign({ input: '', home: '', voice: '', guide: '', learned: false }, readConf().keys || {}); return Object.assign(k, { inputIsDefault: !k.input, input: k.input || '241' }); };
   let job = { state: 'idle', message: '', at: 0 }, release = null, releaseAt = 0, releaseErr = '', frontendOk = null, checking = false;
   const setJob = (state, message) => { job = { state, message, at: Date.now() }; };
@@ -76,10 +79,12 @@ function create(ctx) {
     if (offeredBuild) return offeredBuild !== installedBuild;
     return !!installedBuild && offered !== installed;
   };
+  // a hard limit, so the "Checking..." state can never last: whatever the network does, the check ends
+  const within = (p, ms, msg) => new Promise((res, rej) => { const t = setTimeout(() => rej(new Error(msg)), ms); p.then(v => { clearTimeout(t); res(v); }, e => { clearTimeout(t); rej(e); }); });
   async function check() {
     checking = true;
     try {
-      const j = JSON.parse((await fetch(repoUrl())).toString());
+      const j = JSON.parse((await within(fetch(repoUrl()), 45000, 'no answer from GitHub in time')).toString());
       const ver = String(j.tag_name || '').replace(/^(v|test-)/, ''), assets = {};
       for (const a of j.assets || []) assets[a.name] = a.browser_download_url;
       let fv = null, sv = null;
@@ -105,7 +110,7 @@ function create(ctx) {
       frontend: { version: fe.version || '?', build: frontendBuild(), previous: prevInfo() && prevInfo().version || null,
         updateTo: lat && differs(lat.frontend, fe.version, lat.build, frontendBuild()) ? lat.frontend : null },
       channel: channel(), release: lat ? { version: lat.version, frontend: lat.frontend, service: lat.service, build: lat.build, test: lat.test, notes: lat.notes } : null, checkedAt: releaseAt, checking, checkError: releaseErr,
-      options: options(), voice: voice ? (v => ({ installed: v.installed, enabled: v.enabled }))(voice.status()) : null, notifyApi: notifyApi ? { enabled: notifyApi.info().enabled, port: notifyApi.info().port } : { enabled: false }, home: { enabled: !fs.existsSync(D + '/DISABLE'), fullhome: fs.existsSync('/usr/palm/applications/com.webos.app.fullhome'), ours: (() => { try { return fs.readFileSync('/proc/mounts', 'utf8').includes(' /usr/palm/applications/com.webos.app.home '); } catch (_) { return false; } })() },
+      options: options(), picker: Object.assign({}, readConf().picker || {}, { mode: pickerMode(), released: !!options().inputKey && !inputKeyOn() }), voice: voice ? (v => ({ installed: v.installed, enabled: v.enabled }))(voice.status()) : null, notifyApi: notifyApi ? { enabled: notifyApi.info().enabled, port: notifyApi.info().port } : { enabled: false }, home: { enabled: !fs.existsSync(D + '/DISABLE'), fullhome: fs.existsSync('/usr/palm/applications/com.webos.app.fullhome'), ours: (() => { try { return fs.readFileSync('/proc/mounts', 'utf8').includes(' /usr/palm/applications/com.webos.app.home '); } catch (_) { return false; } })() },
       inputhook: inputhook.status(keys().input), keys: keys(), job, repo: repoUrl().replace(/^https?:\/\/[^/]+\/repos\//, '').replace(/\/releases.*$/, ''),
     };
   }
@@ -208,12 +213,14 @@ function create(ctx) {
     if (typeof o.debloat === 'boolean') next.debloat = o.debloat;
     if (typeof o.inputKey === 'boolean') next.inputKey = o.inputKey;
     if (typeof o.liveTv === 'boolean') next.liveTv = o.liveTv;
-    c.options = next; writeConf(c);
+    if (typeof o.pickerPrewarm === 'boolean') c.picker = Object.assign({}, c.picker, o.pickerPrewarm ? { prewarm: true } : { prewarm: false, reason: 'switched off in the manager', at: Date.now() });
+    if (['overlay', 'ondemand', 'launcher'].indexOf(o.pickerMode) >= 0) c.picker = Object.assign({}, c.picker, { mode: o.pickerMode, prewarm: o.pickerMode === 'overlay' ? true : (c.picker || {}).prewarm, reason: 'chosen in the manager', at: Date.now() });
+    c.options = next; writeConf(c); syncPickerMode();
     if (next.debloat !== cur.debloat) {
       if (next.debloat) await sh('ln -sf ' + D + '/15-cleanyourtv-debloat /var/lib/webosbrew/init.d/15-cleanyourtv-debloat; sh ' + D + '/debloat-stop.sh', 60000);
       else await sh('rm -f /var/lib/webosbrew/init.d/15-cleanyourtv-debloat; sh ' + D + '/debloat-undo.sh', 60000);
     }
-    inputhook.ensure(next.inputKey, keys().input);
+    inputhook.ensure(inputKeyOn(), keys().input);
     return next;
   }
 
@@ -227,7 +234,7 @@ function create(ctx) {
         const c = readConf(), k = Object.assign({ input: '241', home: '', voice: '' }, c.keys || {});
         k[l.name] = l.code; c.keys = k; writeConf(c);   // 'learned' is set when the Input flow is finished (keys-done)
         inputhook.markSaved && inputhook.markSaved();
-        if (l.name === 'input') inputhook.ensure(options().inputKey, l.code); else if (l.name === 'voice' || l.name === 'guide') inputhook.ensure(options().inputKey, keys().input);
+        if (l.name === 'input') inputhook.ensure(inputKeyOn(), l.code); else if (l.name === 'voice' || l.name === 'guide') inputhook.ensure(inputKeyOn(), keys().input);
       }
       return json(l);
     }
@@ -259,7 +266,7 @@ function create(ctx) {
     if (act === 'clear-key') {   // forget a learned code: Input goes back to the default, Home to none
       const name = ['home', 'voice', 'guide'].includes(b.name) ? b.name : 'input', c = readConf(), k = Object.assign({ input: '', home: '', voice: '', guide: '' }, c.keys || {});
       k[name] = ''; if (name === 'input') k.learned = false; c.keys = k; writeConf(c);
-      if (name !== 'home') inputhook.ensure(options().inputKey, keys().input);
+      if (name !== 'home') inputhook.ensure(inputKeyOn(), keys().input);
       return json({ returnValue: true });
     }
     if (act === 'keys-done') { const c = readConf(); c.keys = Object.assign({ input: '241', home: '' }, c.keys || {}, { learned: true }); writeConf(c); return json({ returnValue: true }); }
