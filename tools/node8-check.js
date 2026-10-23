@@ -285,6 +285,11 @@ const fake = (url, method) => { const res = { code: 0, out: '', writeHead(c) { t
   let lerr = ''; for (let i = 0; i < 40 && !lerr; i++) { await new Promise(r => setTimeout(r, 150)); f = fake('/api/live/status'); await live.handle(f.req, f.res, '/api/live/status', async () => ({})); const js = JSON.parse(f.res.out); if (js.state === 'idle' && js.error) lerr = js.error; }
   ok(/lost|closed|reset|socket/i.test(lerr), 'a playlist read on a connection that drops mid-answer ends with an error' + (lerr ? '' : ' (it hung)'));
   f = fake('/api/live/reset', 'POST'); await live.handle(f.req, f.res, '/api/live/reset', async () => ({})); drop.close();
+  // 13. The setup and every update copy the bundled themes next to theme.js (v1.5.10 to v1.5.12 left them in the package: only Classic showed)
+  const boot = fs.readFileSync(path.join(root, 'scripts', 'bootstrap.sh'), 'utf8');
+  ok(/cp -R \$S\/helper\/themes\/\. \$D\/themes\//.test(boot), 'bootstrap.sh copies the themes folder of the package to $D/themes');
+  const build = fs.readFileSync(path.join(root, 'ipk', 'build.py'), 'utf8');
+  ok(/add_dir\(data, s \+ '\/helper\/themes', P\('themes'\)/.test(build), 'the package build adds the themes folder as helper/themes');
 
   console.log(failed ? '\n' + failed + ' check(s) failed on Node ' + process.version : '\nall checks passed on Node ' + process.version);
   fs.rmSync ? fs.rmSync(tmp, { recursive: true, force: true }) : cp.spawnSync('rm', ['-rf', tmp]);
