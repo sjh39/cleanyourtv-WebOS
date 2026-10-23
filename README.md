@@ -75,6 +75,22 @@ against its SHA-256 file. A launcher that does not start is replaced by the prev
 by the previous files, and **Go back to launcher** returns to the previous launcher. Before the setup the app offers a
 newer package by itself. Running the install command again also updates.
 
+### Test builds
+
+When a change needs to be tried on a TV the maintainer does not have, it is put on a branch. Every push to a branch other than
+`main` builds the package (`.github/workflows/test-build.yml`) and publishes it as a **pre-release** named `test-<branch>`;
+the stable updater never sees pre-releases.
+
+| | |
+|---|---|
+| Choose a test build | **Update channel** in the manager app lists the test builds (branch, versions, commit, date). Pick one, then install it with the **Launcher** and **Service** rows. |
+| Back to the stable releases | **Update channel** > **Stable releases**. The stable release is then offered again, also when it is older than the test build. |
+| Install it from scratch | `ssh root@<tv-ip> 'curl -fsSL https://raw.githubusercontent.com/lasharor/cleanyourtv-WebOS/<branch>/install.sh \| CYTV_BRANCH=<branch> sh'`; the manager then follows that branch. |
+| Same version number | A test build records its commit in a `BUILD` file, so a newer push of the same version is still offered. |
+
+A test build can be less finished than a release. It is checked against its SHA-256 file like any release, but nobody has
+signed it: see SECURITY.md.
+
 ## Uninstall
 
 **Uninstall** in the manager app, or `sh /media/developer/cleanyourtv/uninstall.sh` (`--keep-config` keeps settings
@@ -342,7 +358,7 @@ The service runs as root on `127.0.0.1:8765` (JSON).
 service version is `VERSION` in `helper/helper.js`; the launcher version is `app/version.json` and `VERSION` in
 `app/index.html`.
 
-Layout: `app/` launcher, `shared/` script added to every page by the build, `manager/`, `picker/`, `notify/` apps, `helper/` service, `scripts/` boot, setup and
+Layout: `tools/node8-check.sh` runs the service checks under Node 8.12.0 (what webOS 5 ships); `app/` launcher, `shared/` script added to every page by the build, `manager/`, `picker/`, `notify/` apps, `helper/` service, `scripts/` boot, setup and
 restore scripts, `voice/` source of the speech program, `third-party/` bundled inputhook and QR library, `compat.json`, `install.sh`, `uninstall.sh`.
 
 ## Credits and licence

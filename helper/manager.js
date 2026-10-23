@@ -2,8 +2,9 @@
 // options, and restoring LG's Home. Used by the CleanYourTV manager app on the TV.
 const fs = require('fs'), path = require('path'), cp = require('child_process'), crypto = require('crypto'), https = require('https'), http = require('http');
 const nc = require('./netcompat'), { URL, URLSearchParams } = nc;
-const D = '/media/developer/cleanyourtv';
-const SERVICE_DIR = '/media/developer/apps/usr/palm/services/com.cleanyourtv.manager.service';
+const D = process.env.CYTV_DIR || '/media/developer/cleanyourtv';   // the environment variables are for tools/node8-check.js
+const SERVICE_DIR = process.env.CYTV_SERVICE_DIR || '/media/developer/apps/usr/palm/services/com.cleanyourtv.manager.service';
+const apiBase = () => process.env.CYTV_API || 'https://api.github.com';
 const DEFAULT_REPO = 'lasharor/cleanyourtv-WebOS';
 const ENV = Object.assign({}, process.env, { PATH: '/usr/bin:/usr/sbin:/bin:/sbin:' + (process.env.PATH || '') });
 
@@ -13,7 +14,7 @@ const readJson = (f, d) => { try { return JSON.parse(fs.readFileSync(f, 'utf8'))
 const sh = (cmd, ms) => new Promise(res => cp.execFile('/bin/sh', ['-c', cmd], { env: ENV, timeout: ms || 60000, maxBuffer: 8 << 20 }, (e, out, err) => res({ ok: !e, out: String(out || ''), err: String(err || '') })));
 
 // GET a URL (follows redirects). Returns a Buffer, or with `file` streams to disk and resolves {sha256}.
-const allowHttp = () => { try { return !!JSON.parse(fs.readFileSync(D + '/config.json', 'utf8')).releasesUrl; } catch (_) { return false; } };   // a custom release source, for testing
+const allowHttp = () => { if (process.env.CYTV_API) return true; try { return !!JSON.parse(fs.readFileSync(D + '/config.json', 'utf8')).releasesUrl; } catch (_) { return false; } };   // a custom release source, for testing
 function fetch(url, file, hops) {
   return new Promise((resolve, reject) => {
     if ((hops || 0) > 6) return reject(new Error('too many redirects'));
@@ -50,24 +51,43 @@ function create(ctx) {
   const setJob = (state, message) => { job = { state, message, at: Date.now() }; };
   const busy = () => job.state === 'working';
 
+  // Update channel: stable (the latest release) or a test build, a pre-release tagged test-<branch> that the repository's workflow
+  // publishes for a branch. The choice is the file D/channel, so install.sh can set it too.
+  const TEST_TAG = /^test-[a-z0-9-]{1,60}$/;
+  const channel = () => { try { const t = fs.readFileSync(D + '/channel', 'utf8').trim(); return TEST_TAG.test(t) ? t : ''; } catch (_) { return ''; } };
+  const baseRepo = () => {
+    const src = (() => { try { return fs.readFileSync(D + '/source', 'utf8').trim().split(/\s+/)[0]; } catch (_) { return ''; } })();
+    return apiBase() + '/repos/' + (/^[\w.-]+\/[\w.-]+$/.test(src) ? src : DEFAULT_REPO);
+  };
   const repoUrl = () => {
     const c = readConf();
     if (c.releasesUrl) return c.releasesUrl;
-    const src = (() => { try { return fs.readFileSync(D + '/source', 'utf8').trim().split(/\s+/)[0]; } catch (_) { return ''; } })();
-    return 'https://api.github.com/repos/' + (/^[\w.-]+\/[\w.-]+$/.test(src) ? src : DEFAULT_REPO) + '/releases/latest';
+    return baseRepo() + (channel() ? '/releases/tags/' + channel() : '/releases/latest');
+  };
+  // the commit a build was made from (test builds only; a stable install has no BUILD file)
+  const buildOf = f => { try { const b = fs.readFileSync(f, 'utf8').trim(); return /^[0-9a-f]{7,40}$/.test(b) ? b : ''; } catch (_) { return ''; } };
+  const serviceBuild = () => buildOf(D + '/BUILD'), frontendBuild = () => buildOf(D + '/app/BUILD');
+  const buildInBody = body => { const m = /^build:\s*([0-9a-f]{7,40})\s*$/m.exec(String(body || '')); return m ? m[1] : ''; };
+  // is the offered file different from what is installed? A newer version always is; a test build also when it is another commit
+  // of the same version; and a test build installed with the channel back on stable offers the stable release, even an older one.
+  const differs = (offered, installed, offeredBuild, installedBuild) => {
+    if (!offered) return false;
+    if (cmp(offered, installed) > 0) return true;
+    if (offeredBuild) return offeredBuild !== installedBuild;
+    return !!installedBuild && offered !== installed;
   };
   async function check() {
     checking = true;
     try {
       const j = JSON.parse((await fetch(repoUrl())).toString());
-      const ver = String(j.tag_name || '').replace(/^v/, ''), assets = {};
+      const ver = String(j.tag_name || '').replace(/^(v|test-)/, ''), assets = {};
       for (const a of j.assets || []) assets[a.name] = a.browser_download_url;
       let fv = null, sv = null;
       for (const n of Object.keys(assets)) {   // the launcher and the package are versioned separately
         let m = /^frontend-(\d+\.\d+\.\d+)\.tgz$/.exec(n); if (m && assets[n + '.sha256']) fv = m[1];
         m = /^com\.cleanyourtv\.manager_(\d+\.\d+\.\d+)_all\.ipk$/.exec(n); if (m && assets[n + '.sha256']) sv = m[1];
       }
-      release = { version: ver, frontend: fv, service: sv, assets, notes: String(j.body || '').slice(0, 600) };
+      release = { version: ver, frontend: fv, service: sv, assets, build: buildInBody(j.body), test: !!channel(), notes: String(j.body || '').slice(0, 600) };
       releaseErr = '';
     } catch (e) { release = null; releaseErr = e.message === 'HTTP 404' ? 'no release published yet' : String(e.message || e); }
     releaseAt = Date.now(); checking = false;
@@ -81,12 +101,12 @@ function create(ctx) {
     const fe = frontendInfo(), c = readConf();
     const lat = release;
     return {
-      service: { version: VERSION, updateTo: lat && lat.service && cmp(lat.service, VERSION) > 0 ? lat.service : null },
-      frontend: { version: fe.version || '?', previous: prevInfo() && prevInfo().version || null,
-        updateTo: lat && lat.frontend && cmp(lat.frontend, fe.version) > 0 ? lat.frontend : null },
-      release: lat ? { version: lat.version, frontend: lat.frontend, service: lat.service, notes: lat.notes } : null, checkedAt: releaseAt, checking, checkError: releaseErr,
+      service: { version: VERSION, build: serviceBuild(), updateTo: lat && differs(lat.service, VERSION, lat.build, serviceBuild()) ? lat.service : null },
+      frontend: { version: fe.version || '?', build: frontendBuild(), previous: prevInfo() && prevInfo().version || null,
+        updateTo: lat && differs(lat.frontend, fe.version, lat.build, frontendBuild()) ? lat.frontend : null },
+      channel: channel(), release: lat ? { version: lat.version, frontend: lat.frontend, service: lat.service, build: lat.build, test: lat.test, notes: lat.notes } : null, checkedAt: releaseAt, checking, checkError: releaseErr,
       options: options(), voice: voice ? (v => ({ installed: v.installed, enabled: v.enabled }))(voice.status()) : null, notifyApi: notifyApi ? { enabled: notifyApi.info().enabled, port: notifyApi.info().port } : { enabled: false }, home: { enabled: !fs.existsSync(D + '/DISABLE'), ours: (() => { try { return fs.readFileSync('/proc/mounts', 'utf8').includes(' /usr/palm/applications/com.webos.app.home '); } catch (_) { return false; } })() },
-      inputhook: inputhook.status(keys().input), keys: keys(), job, repo: repoUrl().replace(/^https:\/\/api\.github\.com\/repos\//, '').replace(/\/releases.*$/, ''),
+      inputhook: inputhook.status(keys().input), keys: keys(), job, repo: repoUrl().replace(/^https?:\/\/[^/]+\/repos\//, '').replace(/\/releases.*$/, ''),
     };
   }
 
@@ -164,12 +184,18 @@ function create(ctx) {
       setJob('working', 'Installing service ' + ver);
       const r = await luna('luna://com.webos.appInstallService/dev/install', { id: 'com.cleanyourtv.manager', ipkUrl: f, subscribe: false });
       if (!r.returnValue) throw new Error('the system refused the install: ' + (r.errorText || ''));
-      const until = Date.now() + 90000;
-      let ok = false;
+      const until = Date.now() + 90000, before = buildOf(SERVICE_DIR + '/BUILD');
+      let ok = false, seen = 0;
       while (Date.now() < until) {
         await new Promise(r2 => setTimeout(r2, 3000));
         const ai = await luna('luna://com.webos.applicationManager/getAppInfo', { id: 'com.cleanyourtv.manager' });
-        if (ai.appInfo && ai.appInfo.version === ver) { ok = true; break; }
+        if (!(ai.appInfo && ai.appInfo.version === ver)) continue;
+        // the same version number can be a different build: wait until the package's BUILD file is the offered one
+        // (or gone, for stable after a test build); a package that does not touch it is accepted after 30 s
+        if (!seen) seen = Date.now();
+        const now = buildOf(SERVICE_DIR + '/BUILD');
+        if (release.build ? now === release.build : (!before || !now || Date.now() - seen > 30000)) { ok = true; break; }
+        if (Date.now() - seen > 30000) { ok = true; break; }
       }
       if (!ok) throw new Error('the install did not finish');
       setJob('working', 'Restarting the service');
@@ -206,9 +232,27 @@ function create(ctx) {
     }
     if (act === 'notify-api' && req.method === 'GET') return json(notifyApi ? notifyApi.info() : { enabled: false });
     if (act === 'test-key') return json({ pickerShownAt: pickerShown ? pickerShown() : 0, now: Date.now() });
+    if (act === 'tests') {   // the test builds on offer: one pre-release per branch
+      try {
+        const list = JSON.parse((await fetch(baseRepo() + '/releases?per_page=40')).toString()).filter(r => r.prerelease && TEST_TAG.test(r.tag_name || '')).slice(0, 20).map(r => {
+          let sv = null, fv = null;
+          for (const a of r.assets || []) { let m = /^com\.cleanyourtv\.manager_(\d+\.\d+\.\d+)_all\.ipk$/.exec(a.name); if (m) sv = m[1]; m = /^frontend-(\d+\.\d+\.\d+)\.tgz$/.exec(a.name); if (m) fv = m[1]; }
+          return { tag: r.tag_name, branch: String(r.name || r.tag_name).replace(/^Test build:\s*/, '').slice(0, 60), build: buildInBody(r.body), published: r.published_at, service: sv, frontend: fv };
+        });
+        return json({ channel: channel(), builds: list });
+      } catch (e) { return json({ channel: channel(), builds: [], error: String(e.message || e) }); }
+    }
     if (req.method !== 'POST') return json({ error: 'POST expected' }, 405);
     const b = await body(req);
     if (act === 'check') { await check(); return json(status()); }
+    if (act === 'channel') {   // { tag: "test-<branch>" } or { tag: "" } for the stable releases
+      const t = String(b.tag || '');
+      if (t && !TEST_TAG.test(t)) return json({ error: 'not a test build' }, 400);
+      if (busy()) return json({ error: 'an update is running' }, 409);
+      try { if (t) fs.writeFileSync(D + '/channel', t + '\n'); else fs.unlinkSync(D + '/channel'); } catch (_) {}
+      release = null; releaseAt = 0; await check();
+      return json(status());
+    }
     if (act === 'notify-api') return json(notifyApi ? notifyApi.set(b) : { enabled: false });
     if (act === 'learn-key') { inputhook.startLearn(['home', 'voice'].includes(b.name) ? b.name : 'input'); return json({ returnValue: true }); }
     if (act === 'clear-key') {   // forget a learned code: Input goes back to the default, Home to none

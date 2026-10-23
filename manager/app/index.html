@@ -37,7 +37,7 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:var(--night);col
   <div id="qrbox"><canvas id="qr"></canvas></div></div>
 <script>
 var kFlow='input', kText='', kRows=[], kTimer=0, upd=null, checkedOffline=false, forceOffer=false, API='http://127.0.0.1:8765', SVC='/media/developer/apps/usr/palm/services/com.cleanyourtv.manager.service';
-var napi=null, vo=null, mdl=[], shareMode='log', pairBase=0,  idxStack=[], setupIdx=0, updIdx=0, st=null, rows=[], idx=0, view='main', pending=null, pollT=0, setup={debloat:true,inputKey:true}, offline=false, busyMsg='';
+var napi=null, vo=null, mdl=[], tst=null, shareMode='log', pairBase=0,  idxStack=[], setupIdx=0, updIdx=0, st=null, rows=[], idx=0, view='main', pending=null, pollT=0, setup={debloat:true,inputKey:true}, offline=false, busyMsg='';
 function $(i){return document.getElementById(i)}
 function api(p,body){return new Promise(function(res,rej){var x=new XMLHttpRequest();x.open(body?'POST':'GET',API+p);x.timeout=30000;
   x.onload=function(){try{res(JSON.parse(x.responseText))}catch(e){rej(e)}};x.onerror=x.ontimeout=function(){rej(new Error('no answer'))};x.send(body?JSON.stringify(body):null)})}
@@ -54,6 +54,13 @@ function build(){
   if(view==='share'){rows.push({label:'Close',fn:closeShare});return}
   if(view==='keys'){rows=kRows;return}
   if(view==='notifyhow'||view==='voicehow'){rows.push({label:'Back',fn:pop});return}
+  if(view==='channel'){
+    var cc=(st&&st.channel)||'';
+    rows.push({label:'Stable releases',sub:(cc?'':'selected \u00B7 ')+'the latest published release',fn:function(){setChannel('')}});
+    ((tst&&tst.builds)||[]).forEach(function(b){
+      rows.push({label:'Test: '+b.branch,sub:(b.tag===cc?'selected \u00B7 ':'')+(b.build?'build '+b.build:'')+(b.published?(b.build?' \u00B7 ':'')+String(b.published).slice(0,10):''),fn:function(){setChannel(b.tag)}})});
+    if(!tst||!tst.builds||!tst.builds.length)rows.push({label:'No test builds right now',sub:(tst&&tst.error)?String(tst.error):'a test build appears when a branch is pushed',dim:true,fn:null});
+    rows.push({sep:true});rows.push({label:'Back',fn:pop});return}
   if(view==='models'){
     var cur=((vo||{}).llm||{}).model;
     mdl.forEach(function(x){rows.push({label:x.name,sub:x.id+(x.price!=null?' \u00B7 $'+x.price+' per million words in':'')+(x.id===cur?' \u00B7 selected':''),fn:function(){pickModel(x.id)}})});
@@ -120,11 +127,12 @@ function build(){
     rows.push({label:'Back',fn:pop});
     return}
   var fe=st.frontend,sv=st.service,busy=st.job&&st.job.state==='working';
-  var uptxt=function(u){return u?'Update to '+u:(st.checking?'Checking…':(st.checkError?(/no release/.test(st.checkError)?'No release yet':'Cannot check'):'Up to date'))};
+  var uptxt=function(u){return u?'Update to '+u+(st.channel?' (test build)':''):(st.checking?'Checking…':(st.checkError?(/no release/.test(st.checkError)?'No release yet':'Cannot check'):'Up to date'))};
   // updates, then the settings, then support; the destructive row last
   rows.push({label:'Launcher '+fe.version,sub:uptxt(fe.updateTo),dim:busy,fn:fe.updateTo?function(){run('/api/manager/update-frontend',{version:fe.updateTo})}:null});
   rows.push({label:'Service '+sv.version,sub:uptxt(sv.updateTo),dim:busy,fn:sv.updateTo?function(){run('/api/manager/update-service',{version:sv.updateTo})}:null});
   rows.push({label:'Check for updates',dim:busy,fn:function(){banner('Checking…','work');api('/api/manager/check',{}).then(refreshDone,refreshDone)}});
+  rows.push({label:'Update channel',sub:st.channel?'Test: '+st.channel.replace(/^test-/,''):'Stable releases',dim:busy,fn:openChannel});
   if(fe.previous)rows.push({label:'Go back to launcher '+fe.previous,dim:busy,fn:function(){run('/api/manager/rollback-frontend',{})}});
   rows.push({sep:true});
   rows.push({label:'CleanYourTV as Home',sub:onoff(st.home&&st.home.enabled),fn:function(){push('confirm-home')}});
@@ -141,6 +149,7 @@ var INFO={
  'Launcher':'The home screen you see. Updates come from GitHub releases and are checked against a SHA-256 file before they are installed. If a new launcher does not start, the previous one is put back.',
  'Service':'The background service behind the launcher: Live TV, picture notifications, the Input key, these updates. A failed update restores the previous files.',
  'Check for updates':'Looks for a newer release on GitHub. Nothing is installed until you choose an update.',
+ 'Update channel':'Stable releases are what most people want. A test build is a change someone asks you to try, built from a branch of the repository; it can be less finished. Choose a test build here, then use the Launcher and Service rows to install it. Going back to Stable offers the latest release again.',
  'Go back to launcher':'Swaps the previous launcher version back in. The newer one stays available as an update.',
  'CleanYourTV as Home':'On: the Home button opens this launcher. Off: LG\u2019s own Home. Switching restarts the TV (about a minute); the service keeps running either way.',
  'Debloat LG\u2019s ads and telemetry':'Stops LG\u2019s ad, recommendation and telemetry services and blocks a few ad servers. Nothing is uninstalled, and it only applies while this launcher is Home.',
@@ -187,6 +196,7 @@ function draw(){
   if(view==='notifyhow'||view==='voicehow'){$('sub').textContent=kText;$('sub').style.whiteSpace='pre-line';$('sub').style.wordBreak='break-all';return}
   if(view==='notifyapi'){$('sub').textContent='Network notifications';return}
   if(view==='models'){$('sub').textContent='Choose the model that answers';return}
+  if(view==='channel'){$('sub').textContent='Where updates come from';return}
   if(view==='voice'){var vv=vo||{},ls=vv.last?(vv.last.text?'Last heard: \u201C'+vv.last.text+'\u201D'+(vv.last.ms?' ('+(vv.last.ms/1000).toFixed(1)+' s)':'')+(vv.last.error?'\nNot sent: '+vv.last.error:''):'Last try: '+vv.last.state+(vv.last.error?'\n'+vv.last.error:'')):'';
     $('sub').textContent='Voice \u00B7 '+(vv.engine||'')+(ls?'\n'+ls:'');$('sub').style.whiteSpace='pre-line';if(inf){var b2=document.createElement('b');b2.textContent=inf.t;ie.appendChild(b2);ie.appendChild(document.createTextNode(inf.d))}return}
   if(view==='keys'){$('sub').textContent=kText;$('sub').style.whiteSpace='pre-line';return}
@@ -202,6 +212,14 @@ function next(dir){var n=rows.length,i=idx;do{i=(i+dir+n)%n}while(rows[i].sep);i
 function act(){var r=rows[idx];if(r&&r.fn&&!(st&&st.job&&st.job.state==='working'&&r.dim))r.fn()}
 
 function aiHelp(){return 'Chat with a language model through OpenRouter. Run these on the TV (ssh):\n\ncurl -X POST localhost:8765/api/voice/set -d \'{"llm":{"key":"sk-or-...","model":"openrouter/auto"}}\'\ncurl -X POST localhost:8765/api/voice/set -d \'{"llm":{"enabled":true}}\'\n\nOptional: "system" sets the instructions. Ask by text from anywhere on the TV:\ncurl -X POST localhost:8765/api/voice/ask -d \'{"text":"What is the capital of Peru?"}\'\n\nSpoken and typed questions go to OpenRouter and the model you chose; no audio does. The key stays on the TV.'}
+function openChannel(){
+  banner('Looking for test builds\u2026','work');
+  api('/api/manager/tests').then(function(r){banner('');tst=r;push('channel');for(var k=0;k<rows.length;k++)if(rows[k].sub&&/^selected/.test(rows[k].sub)){idx=k;draw();break}},function(){banner('The service did not answer','err')})}
+function setChannel(tag){
+  banner('Switching\u2026','work');
+  api('/api/manager/channel',{tag:tag}).then(function(s){
+    if(s.error){banner(s.error,'err');return}
+    st=s;pop();banner(tag?'Following '+tag.replace(/^test-/,'')+'. If the Launcher or Service row offers an update, that is the test build.':'Back on the stable releases','ok')},function(){banner('The service did not answer','err')})}
 function openModels(){
   banner('Loading the model list\u2026','work');
   api('/api/voice/models').then(function(r){

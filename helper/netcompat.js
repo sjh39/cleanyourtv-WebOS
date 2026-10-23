@@ -1,6 +1,6 @@
 // Small compatibility layer so the service also runs on the older Node.js of webOS 6 (Node 8): no global URL /
-// URLSearchParams, http(s).get(url, options, cb) and mkdirSync({recursive}) do not exist there. Works unchanged on newer Node.
-const url = require('url'), fs = require('fs'), path = require('path');
+// URLSearchParams, crypto.randomInt, http(s).get(url, options, cb) and mkdirSync({recursive}) do not exist there. Works unchanged on newer Node.
+const url = require('url'), fs = require('fs'), path = require('path'), crypto = require('crypto');
 const { URL, URLSearchParams } = url;
 
 // http(s) options from an address plus extra options (the address form with options came with Node 10.9)
@@ -21,4 +21,13 @@ const mkdirp = d => {
   }
 };
 
-module.exports = { URL, URLSearchParams, get, request, mkdirp };
+// crypto.randomInt (Node 14.10 / 12.19): an unbiased random integer in [min, max)
+const randomInt = (min, max) => {
+  if (crypto.randomInt) return crypto.randomInt(min, max);
+  const range = max - min, limit = Math.floor(0x100000000 / range) * range;
+  let x;
+  do { x = crypto.randomBytes(4).readUInt32BE(0); } while (x >= limit);   // reject the uneven top so every value is equally likely
+  return min + (x % range);
+};
+
+module.exports = { URL, URLSearchParams, get, request, mkdirp, randomInt };

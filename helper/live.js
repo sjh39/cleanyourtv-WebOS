@@ -131,7 +131,7 @@ const page = (msg, ok) => `<!doctype html><meta name=viewport content="width=dev
 <button>Save</button></form>`}`;
 function startPairing() {
   stopPairing();
-  const code = String(crypto.randomInt(100000, 1000000)); let bad = 0;
+  const code = String(nc.randomInt(100000, 1000000)); let bad = 0;
   const srv = http.createServer((req, res) => {
     const send = (c, html) => { res.writeHead(c, { 'content-type': 'text/html; charset=utf-8' }); res.end(html); };
     if (req.method === 'GET') return send(200, page('', false));

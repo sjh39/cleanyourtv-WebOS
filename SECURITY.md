@@ -31,6 +31,15 @@ service. Pausing LG's voice assistant sends it SIGSTOP; nothing of LG's is modif
 Everything it installs comes from this repository's GitHub releases and runs as root. Releases carry a SHA-256 file,
 which detects corruption but not a compromised repository. Download only from the release page of this repository.
 
+## Test builds
+
+The manager's **Update channel** can follow a test build: a pre-release named `test-<branch>` that GitHub Actions publishes for
+each branch push. It is opt-in and off by default; the stable updater only reads the latest non-pre-release. A test build
+is downloaded over HTTPS from the repository the TV already updates from and checked against the `.sha256` file in the same release,
+so the check protects against a damaged download, not against someone who can publish to the repository (the same is true of
+stable releases, which are not signed yet). The tag name is checked (`test-` and lower-case letters, digits and hyphens) and
+the files must be the package and launcher names the updater already expects.
+
 ## Limits to know about
 
 - Any app on the TV can already run root commands through the Homebrew Channel; apps are not a security boundary on a

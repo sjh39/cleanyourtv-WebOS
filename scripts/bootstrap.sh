@@ -100,6 +100,7 @@ fi
 
 # ---- copy the service files ----
 cp $S/helper/*.js $D/
+if [ -f $S/BUILD ]; then cp $S/BUILD $D/BUILD; else rm -f $D/BUILD; fi   # the commit of a test build
 cp $S/scripts/* $D/
 mkdir -p $D/inputhook && cp $S/inputhook/* $D/inputhook/ && chmod 755 $D/inputhook/ezinject
 [ -d $S/licenses ] && { mkdir -p $D/licenses; cp $S/licenses/* $D/licenses/; }
@@ -112,7 +113,7 @@ mkdir -p $D/live; chmod 700 $D/live 2>/dev/null; chmod 600 $D/config.json $D/usa
 
 # the launcher that ships with the package, unless a newer one is already installed
 newer() { $J newer "$1" "$2"; }
-if [ ! -f $D/app/index.html ] || newer $S/payload/app/version.json $D/app/version.json; then
+if [ ! -f $D/app/index.html ] || newer $S/payload/app/version.json $D/app/version.json || { [ -f $S/payload/app/BUILD ] && ! cmp -s $S/payload/app/BUILD $D/app/BUILD; }; then
   rm -rf $D/app.prev; [ -d $D/app ] && mv $D/app $D/app.prev
   mkdir -p $D/app && cp $S/payload/app/* $D/app/
   say "launcher $(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' $D/app/version.json) in place"

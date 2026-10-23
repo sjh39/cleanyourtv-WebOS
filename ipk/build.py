@@ -21,6 +21,12 @@ def page(body):   # every HTML page gets the flex-gap script for webOS 6 (see sh
     i = body.rindex(b'</body>')
     return body[:i] + b'<script>' + FLEXGAP + b'</script>\n' + body[i:]
 
+# A test build (made by .github/workflows/test-build.yml from a branch) carries the commit it was made from in a BUILD file, in the
+# package and in the launcher, so the manager can tell two builds with the same version number apart.
+BUILD = os.environ.get('CYTV_BUILD', '').strip()
+if BUILD and not re.fullmatch(r'[0-9a-f]{7,40}', BUILD):
+    sys.exit('CYTV_BUILD must be a commit hash')
+
 def add(files, arc, data, mode=0o644):
     files.append((arc, data, mode))
 
@@ -60,6 +66,7 @@ shutil.rmtree(DIST, ignore_errors=True); os.makedirs(DIST)
 # ---- the launcher alone ----
 fl = []
 add_dir(fl, 'app', P('app'))
+if BUILD: add(fl, 'app/BUILD', (BUILD + '\n').encode())
 write('frontend-%s.tgz' % fe, tgz(fl))
 
 # ---- the package ----
@@ -90,6 +97,9 @@ add(data, s + '/licenses/LICENSE', open(P('LICENSE'), 'rb').read())
 add(data, s + '/compat.json', open(P('compat.json'), 'rb').read())
 add(data, s + '/config.example.json', open(P('config.example.json'), 'rb').read())
 add_dir(data, s + '/payload/app', P('app'))
+if BUILD:
+    add(data, s + '/BUILD', (BUILD + '\n').encode())
+    add(data, s + '/payload/app/BUILD', (BUILD + '\n').encode())
 add(data, './usr/palm/packages/%s/packageinfo.json' % PKG, json.dumps({'id': PKG, 'version': version, 'app': PKG}).encode())
 
 size = sum(len(d) for _, d, _ in data) // 1024 + 1
