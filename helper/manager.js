@@ -105,7 +105,7 @@ function create(ctx) {
       frontend: { version: fe.version || '?', build: frontendBuild(), previous: prevInfo() && prevInfo().version || null,
         updateTo: lat && differs(lat.frontend, fe.version, lat.build, frontendBuild()) ? lat.frontend : null },
       channel: channel(), release: lat ? { version: lat.version, frontend: lat.frontend, service: lat.service, build: lat.build, test: lat.test, notes: lat.notes } : null, checkedAt: releaseAt, checking, checkError: releaseErr,
-      options: options(), voice: voice ? (v => ({ installed: v.installed, enabled: v.enabled }))(voice.status()) : null, notifyApi: notifyApi ? { enabled: notifyApi.info().enabled, port: notifyApi.info().port } : { enabled: false }, home: { enabled: !fs.existsSync(D + '/DISABLE'), ours: (() => { try { return fs.readFileSync('/proc/mounts', 'utf8').includes(' /usr/palm/applications/com.webos.app.home '); } catch (_) { return false; } })() },
+      options: options(), voice: voice ? (v => ({ installed: v.installed, enabled: v.enabled }))(voice.status()) : null, notifyApi: notifyApi ? { enabled: notifyApi.info().enabled, port: notifyApi.info().port } : { enabled: false }, home: { enabled: !fs.existsSync(D + '/DISABLE'), fullhome: fs.existsSync('/usr/palm/applications/com.webos.app.fullhome'), ours: (() => { try { return fs.readFileSync('/proc/mounts', 'utf8').includes(' /usr/palm/applications/com.webos.app.home '); } catch (_) { return false; } })() },
       inputhook: inputhook.status(keys().input), keys: keys(), job, repo: repoUrl().replace(/^https?:\/\/[^/]+\/repos\//, '').replace(/\/releases.*$/, ''),
     };
   }

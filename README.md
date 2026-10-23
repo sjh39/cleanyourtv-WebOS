@@ -123,12 +123,15 @@ falls back to the one in the package). A listed firmware is set up directly.
 | 33.23.05 (OLED65G26LA, webOS 25) | tested |
 | 23.25.55 | reported working on two models |
 
-**webOS 6 (Node.js 8, Chromium 79).** The service and the pages avoid what those versions lack: `netcompat.js` supplies
-`URL`, `URLSearchParams`, `mkdir -p` and the `http(s).get(url, options)` form; `shared/flexgap.js` (added to every page
+**webOS 5 and 6 (Node.js 8, Chromium 79 on webOS 6).** The service and the pages avoid what those versions lack: `netcompat.js` supplies
+`URL`, `URLSearchParams`, `crypto.randomInt`, `mkdir -p` and the `http(s).get(url, options)` form; `shared/flexgap.js` (added to every page
 when the package is built) applies flex `gap` as margins where the browser ignores it; the service accepts the
 `file://<appId>-webos` origin that webOS 6 apps send; and `scripts/reload-home.sh` restarts `webapp-mgr` there to reload
-Home. These changes follow a community fork for webOS 6 and have not been tried on a webOS 6 TV: the pieces were tested
-under Node 8.17 and in a current Chrome with the detection switched off.
+Home. The picture-notification app uses the `topui` window on webOS 25 and newer (SDK 10) and `overlay` before that (webOS 5 refuses
+`topui`); setup and every update set it, and the screen blinks once when it changes. Its input region and key mask are set as an
+array first and as a JSON string where that fails (webOS 5), and any key press closes the card. These changes follow a
+community fork for webOS 6 and a report from a webOS 5.6.2 TV (issue #4); they have not been tried on a webOS 5 or 6 TV: the
+service is tested under Node 8.12.0 with `tools/node8-check.sh`, and the pages in a current Chrome with the detection switched off.
 
 For an unlisted firmware the setup continues when LG's Home app is the flutter or web kind, and otherwise stops and
 offers **Set up anyway**. To add a firmware, open an issue with the output of **Share log**.
@@ -147,6 +150,12 @@ offers **Set up anyway**. To add a firmware, open an issue with the output of **
 **Customise** holds the top buttons, hidden apps, app order, clock format and a reset. The dock holds up to four
 apps. The grid sorts by how often you use each app (or A to Z). Menus follow the TV's language (English, Dutch,
 German, French, Spanish).
+
+Icons are fitted to their tiles from what the picture looks like: a picture that reaches the edges in one flat colour sits on a
+tile of that colour; an opaque picture with a transparent margin (many LG icons) is cropped to its visible part and fills a
+grid tile, or sits on a tile of its own colour in the wide dock; a gradient gives the dock tile the same gradient; a logo on
+transparency is centred on a tile coloured from the logo. The analysis uses the icon's alpha channel, so it needs the page to read the
+icon's pixels.
 
 Settings are in `/media/developer/cleanyourtv/config.json`: `dock`, `topbar`, `hidden`, `sort`. See
 `config.example.json`.
@@ -344,6 +353,9 @@ The service runs as root on `127.0.0.1:8765` (JSON).
 ## Troubleshooting
 
 - **Black screen after switching or rebooting:** wait a minute; if it stays black, restart the TV.
+- **The Home button opens LG's full-screen Home, not CleanYourTV (webOS 5 and others with a "Home Style" setting):** set
+  TV Settings > General > Home Settings > Home Style to Basic. LG routes the key to `com.webos.app.fullhome` otherwise, and
+  CleanYourTV replaces `com.webos.app.home`. Setup and the manager show this note when the TV has the full-screen Home.
 - **An app is missing from the grid:** check **Hidden apps** in Customise. Apps without a launch icon are not listed.
 - **After a firmware update removed root:** re-root, then run the install command and the setup again.
 - **The Input key opens LG's picker:** check the Input key switch in the manager app and run **Learn the Input key**.

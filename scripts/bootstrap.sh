@@ -37,6 +37,7 @@ ensure_apps() {
   for id in com.cleanyourtv.picker com.cleanyourtv.notify; do
     [ -d /media/developer/apps/usr/palm/applications/$id ] && ! luna com.webos.applicationManager/getAppInfo "{\"id\":\"$id\"}" | grep -q '"returnValue": true' && missing=1
   done
+  [ $NOTIFY_CHANGED = 1 ] && missing=1
   [ $missing = 0 ] && return 0
   say "registering the overlay apps (the screen blinks once)"
   (sleep 3; pkill -9 -f /usr/palm/applications/airplay/LunaExecutable) </dev/null >/dev/null 2>&1 &
@@ -61,11 +62,26 @@ node -e '(()=>1)()' >/dev/null 2>&1 || die "this TV's Node.js ($(node -v 2>&1 | 
 if grep -q " $HOME_DIR " /proc/mounts && [ ! -f $D/backup/home-appinfo.orig.json ]; then
   die "Home is already replaced but no backup exists; reboot the TV once, then run this again"
 fi
+info=$(luna com.webos.service.tv.systemproperty/getSystemInfo '{"keys":["modelName","firmwareVersion","sdkVersion"]}')
+model=$(echo "$info" | sed -n 's/.*"modelName": *"\([^"]*\)".*/\1/p')
+fw=$(echo "$info" | sed -n 's/.*"firmwareVersion": *"\([^"]*\)".*/\1/p')
+sdk=$(echo "$info" | sed -n 's/.*"sdkVersion": *"\([^"]*\)".*/\1/p')
+
+# The notification app's window type. "topui" is accepted from webOS 25 (SDK 10) on, as far as it has been tried; older TVs refuse to
+# launch the app with it ("Unsupported Application Type") and need "overlay", also when the SDK version cannot be read.
+# The package always ships "topui", so this runs on every install and update; a change needs the system app manager to
+# read the app again (ensure_apps restarts it, the screen blinks once).
+NOTIFY_CHANGED=0
+fix_notify_window() {
+  NA=/media/developer/apps/usr/palm/applications/com.cleanyourtv.notify/appinfo.json
+  [ -f $NA ] || return 0
+  major=${sdk%%.*}; case "$major" in ''|*[!0-9]*) major=0 ;; esac
+  want=overlay; [ "$major" -ge 10 ] && want=topui
+  if $J wintype "$NA" "$want"; then NOTIFY_CHANGED=1; say "picture notifications use the $want window on this TV (webOS SDK ${sdk:-unknown})"; fi
+}
+fix_notify_window
+
 if [ "$MODE" = install ]; then
-  info=$(luna com.webos.service.tv.systemproperty/getSystemInfo '{"keys":["modelName","firmwareVersion","sdkVersion"]}')
-  model=$(echo "$info" | sed -n 's/.*"modelName": *"\([^"]*\)".*/\1/p')
-  fw=$(echo "$info" | sed -n 's/.*"firmwareVersion": *"\([^"]*\)".*/\1/p')
-  sdk=$(echo "$info" | sed -n 's/.*"sdkVersion": *"\([^"]*\)".*/\1/p')
   say "TV: ${model:-unknown model}, firmware ${fw:-?}, webOS SDK ${sdk:-?}"
   # the compatibility list: firmware known to work is set up without --force (a newer copy is fetched from the repository when possible)
   mkdir -p $D
@@ -188,4 +204,5 @@ if [ $VERIFY = 1 ]; then
 fi
 ensure_apps
 say "done. Hold OK on an app to customise the dock, or use the Customise button at the top right."
+[ -d /usr/palm/applications/com.webos.app.fullhome ] && say "This TV also has LG's full-screen Home. If the Home button opens that instead of CleanYourTV: TV Settings > General > Home Settings > Home Style > Basic."
 say "Back to LG's Home any time: switch off 'CleanYourTV as Home' in the manager app, or run: sh $D/undo-home.sh"

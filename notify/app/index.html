@@ -25,7 +25,13 @@ html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:transpa
 <div id="card"><div id="bars"><i></i><i></i><i></i><i></i><i></i></div><div id="dots"><i></i><i></i><i></i></div><img id="img" alt=""><div id="title"></div><div id="q"></div><div id="text"></div></div>
 <script>
 var card=document.getElementById('card'),img=document.getElementById('img'),timer=0;
-try{webOSSystem.setInputRegion([{x:0,y:0,width:0,height:0}]);webOSSystem.setKeyMask([])}catch(e){}   // never take the remote or the pointer
+/* never take the remote or the pointer: an empty input region and key mask. Newer webOS wants an array; webOS 5 throws for that and
+   wants a JSON string. The array goes first, the string only when that fails, so a TV that takes the array never sees the string. */
+function setBoth(name,value){try{webOSSystem[name](value)}catch(e){try{webOSSystem[name](JSON.stringify(value))}catch(e2){}}}
+setBoth('setInputRegion',[{x:0,y:0,width:0,height:0}]);
+setBoth('setKeyMask',[]);
+/* safety net: if the region was not honoured and a key reaches this window anyway, close the card at once instead of holding the remote for the whole duration */
+document.addEventListener('keydown',function(){clearTimeout(timer);card.classList.remove('on');setTimeout(function(){try{window.close()}catch(e){}},300)},true);
 function place(pos,wide){
   var m=64,s=card.style,w=wide?900:640;s.left=s.right=s.top=s.bottom='auto';
   if(/left/.test(pos))s.left=m+'px';else if(/center/.test(pos))s.left=(1920-w)/2+'px';else s.right=m+'px';
