@@ -30,7 +30,7 @@ const SRC = {
 };
 const UBUNTU_LIBS = ['ld-linux-aarch64.so.1', 'libc.so.6', 'libm.so.6', 'libdl.so.2', 'libpthread.so.0', 'librt.so.1', 'libstdc++.so.6', 'libgcc_s.so.1'];
 
-const DEFAULTS = { enabled: false, url: '', token: '', suppressLg: false, llm: {} };
+const DEFAULTS = { enabled: false, url: '', token: '', suppressLg: false, llm: {}, ha: {} };
 let job = { state: 'idle', message: '', at: 0 }, listening = false, last = null;
 let ctx = null;
 const setJob = (state, message) => { job = { state, message, at: Date.now() }; };
@@ -157,18 +157,18 @@ function capture() {
 const show = o => ctx.notify && ctx.notify.show ? ctx.notify.show(o, true).catch(() => {}) : Promise.resolve();
 const readSeconds = t => Math.min(60, Math.max(8, 6 + String(t || '').length / 12));   // time to read an answer on screen
 // POST JSON; resolves {status, text}. Redirects are not followed.
-function request(url, headers, payload, ms) {
+function request(url, headers, payload, ms, extra) {
   return new Promise((resolve, reject) => {
     let u; try { u = new URL(url); } catch (_) { return reject(new Error('the address is not valid')); }
     if (u.protocol !== 'http:' && u.protocol !== 'https:') return reject(new Error('the address must start with http:// or https://'));
-    const data = Buffer.from(JSON.stringify(payload)), lib = u.protocol === 'https:' ? https : http;
-    const req = nc.request(lib, u, { method: 'POST', headers: Object.assign({ 'content-type': 'application/json', 'content-length': data.length }, headers), timeout: ms || 30000 }, res => {
+    const data = payload === undefined ? null : Buffer.from(JSON.stringify(payload)), lib = u.protocol === 'https:' ? https : http;   // no payload: a GET
+    const req = nc.request(lib, u, Object.assign({ method: data ? 'POST' : 'GET', headers: Object.assign(data ? { 'content-type': 'application/json', 'content-length': data.length } : {}, headers), timeout: ms || 30000 }, extra), res => {
       const b = []; let n = 0;
       res.on('data', c => { n += c.length; if (n > 1 << 20) req.destroy(new Error('the answer is too large')); else b.push(c); });
       res.on('end', () => resolve({ status: res.statusCode, text: Buffer.concat(b).toString('utf8') }));
     });
     req.on('timeout', () => req.destroy(new Error('no answer in time'))); req.on('error', reject);
-    req.end(data);
+    req.end(data || undefined);
   });
 }
 // a server of yours: POST {"text": ...}; the answer may be JSON ({"text", "title", "image", "seconds"}) or plain text
@@ -185,6 +185,7 @@ async function toServer(c, payload) {
 }
 
 // ---- chat with a language model through OpenRouter (text only; the key and the questions go to OpenRouter) ----
+const orApi = () => process.env.CYTV_OPENROUTER || 'https://openrouter.ai/api/v1';   // overridden only by the tests
 const LLM_DEFAULTS = { enabled: false, key: '', model: 'openrouter/auto', system: '' };
 const llmCfg = () => Object.assign({}, LLM_DEFAULTS, cfg().llm || {});
 const DEFAULT_SYSTEM = 'You are a voice assistant on a television. You have no tools and no internet access: answer from your own knowledge, and say when something may be out of date. The user speaks to you through the remote control and your answer appears as text on the screen, so keep it short: one to three plain sentences, no markdown, no lists, no emoji. If the speech looks like a recognition mistake, answer what was most likely meant.';
@@ -204,7 +205,7 @@ async function askLlm(text) {
   let answer = '', tool = false;
   for (let attempt = 0; attempt < 2 && !answer; attempt++) {
     const messages = [{ role: 'system', content: system + (attempt ? ' You have no tools and cannot search the internet: never call a tool. Answer in plain text from what you know, and say so if it may be out of date.' : '') }].concat(turns);
-    const r = await request('https://openrouter.ai/api/v1/chat/completions', { authorization: 'Bearer ' + l.key, 'HTTP-Referer': 'https://github.com/lasharor/cleanyourtv-WebOS', 'X-Title': 'CleanYourTV' },
+    const r = await request(orApi() + '/chat/completions', { authorization: 'Bearer ' + l.key, 'HTTP-Referer': 'https://github.com/lasharor/cleanyourtv-WebOS', 'X-Title': 'CleanYourTV' },
       { model: l.model, messages, max_tokens: 500, reasoning: { exclude: true } }, 60000);
     let o = {}; try { o = JSON.parse(r.text); } catch (_) {}
     if (r.status !== 200 || o.error) throw new Error('OpenRouter: ' + String((o.error && (o.error.message || o.error.code)) || 'HTTP ' + r.status).slice(0, 160));
@@ -218,15 +219,70 @@ async function askLlm(text) {
   return answer;
 }
 
+// ---- Home Assistant: the Assist (conversation) API with a long-lived access token ----
+const HA_DEFAULTS = { url: '', token: '', selfSigned: false, route: 'ha-first', agent: '' };
+const HA_ROUTES = ['ha-first', 'ha-only', 'ai-only'];
+const haCfg = () => Object.assign({}, HA_DEFAULTS, cfg().ha || {});
+const haReady = h => !!(h.url && h.token);
+let haConv = null;   // { id, at }: Assist keeps the context of a conversation; a new one starts after ten quiet minutes
+// the address without credentials, query or trailing slash; '' when it is not an http(s) address
+function haBase(t) {
+  let u; try { u = new URL(String(t).trim()); } catch (_) { return ''; }
+  return (u.protocol === 'http:' || u.protocol === 'https:') ? u.protocol + '//' + u.host + u.pathname.replace(/\/+$/, '') : '';
+}
+// Assist asks for the same text twice only if it did not understand: error code no_intent_match
+async function haCall(h, path, payload, ms) {
+  const r = await request(h.url + path, { authorization: 'Bearer ' + h.token }, payload, ms || 30000, h.selfSigned && /^https:/.test(h.url) ? { rejectUnauthorized: false } : {});
+  if (r.status === 401 || r.status === 403) throw new Error('Home Assistant refused the access token');
+  if (r.status === 404) throw new Error('that does not look like Home Assistant (' + path + ' was not found)');
+  if (r.status < 200 || r.status >= 300) throw new Error('Home Assistant answered ' + r.status);
+  try { return JSON.parse(r.text); } catch (_) { throw new Error('Home Assistant did not answer with JSON'); }
+}
+async function askHa(text) {
+  const h = haCfg();
+  if (!haReady(h)) throw new Error('Home Assistant is not set up');
+  if (haConv && Date.now() - haConv.at > 600000) haConv = null;
+  const body = { text, language: 'en' };
+  if (haConv) body.conversation_id = haConv.id;
+  if (h.agent) body.agent_id = h.agent;
+  const o = await haCall(h, '/api/conversation/process', body, 30000), res = o && o.response || {};
+  const type = String(res.response_type || ''), code = String(res.data && res.data.code || '');
+  const speech = String(res.speech && res.speech.plain && res.speech.plain.speech || '').trim();
+  if (o.conversation_id) haConv = { id: String(o.conversation_id), at: Date.now() };
+  return { text: speech || (type === 'action_done' ? 'Done' : ''), understood: !(type === 'error' && code === 'no_intent_match'), type, code };
+}
+async function haTest() {
+  const h = haCfg();
+  if (!haReady(h)) throw new Error('set the Home Assistant address and token first');
+  const c = await haCall(h, '/api/config', undefined, 10000);
+  return { name: String(c.location_name || ''), version: String(c.version || '') };
+}
+// conversation agents show up as conversation.* entities
+async function haAgents() {
+  const h = haCfg();
+  if (!haReady(h)) throw new Error('set the Home Assistant address and token first');
+  const all = await haCall(h, '/api/states', undefined, 20000);
+  return (Array.isArray(all) ? all : []).filter(e => e && /^conversation\.[\w]+$/.test(e.entity_id || '')).map(e => ({ id: e.entity_id, name: String(e.attributes && e.attributes.friendly_name || e.entity_id).slice(0, 80) }));
+}
+
 // What happens with recognised (or typed) text: ask the model if switched on, tell your server if set, show the result.
 async function respond(text, card) {
-  const c = cfg(), l = llmCfg(), out = { text };
+  const c = cfg(), l = llmCfg(), h = haCfg(), out = { text };
   const say = o => card ? show(o) : Promise.resolve();
-  if (!(l.enabled && l.key) && !c.url) { await say({ kind: 'answer', title: 'You said', text, seconds: readSeconds(text) }); return out; }
-  if (l.enabled && l.key) {
-    await say({ kind: 'thinking', title: 'Thinking', question: text, text: '', seconds: 90 });
-    try { out.answer = await askLlm(text); } catch (e) { out.error = e.message; }
+  const useHa = haReady(h) && h.route !== 'ai-only', useAi = l.enabled && l.key && !(useHa && h.route === 'ha-only');
+  if (!useHa && !useAi && !c.url) { await say({ kind: 'answer', title: 'You said', text, seconds: readSeconds(text) }); return out; }
+  if (useHa || useAi) await say({ kind: 'thinking', title: 'Thinking', question: text, text: '', seconds: 90 });
+  let haText = '';
+  if (useHa) {
+    try {
+      const r = await askHa(text); haText = r.text;
+      if (r.understood && r.text) { out.answer = r.text; out.via = 'ha'; }
+    } catch (e) { out.error = 'Home Assistant: ' + e.message; }
   }
+  if (!out.answer && useAi) {
+    try { out.answer = await askLlm(text); out.via = 'ai'; if (out.error) out.error = ''; } catch (e) { out.error = (out.error ? out.error + '; ' : '') + e.message; }
+  }
+  if (!out.answer && haText && !out.error) { out.answer = haText; out.via = 'ha'; }   // Assist did not understand and nothing else can answer: show what it said
   if (c.url) {
     try {
       const r = await toServer(c, { text, answer: out.answer, source: 'cleanyourtv', language: 'en', time: new Date().toISOString() });
@@ -234,7 +290,7 @@ async function respond(text, card) {
       if (r && !out.answer) { out.answer = r.text; out.card = r; }
     } catch (e) { out.error = (out.error ? out.error + '; ' : '') + e.message; }
   }
-  if (out.answer || (out.card && out.card.image)) await say(Object.assign({ kind: 'answer', title: 'Answer', question: text, text: out.answer || '', seconds: readSeconds(out.answer) }, out.card && out.card.image ? { image: out.card.image } : {}, out.card && out.card.seconds ? { seconds: out.card.seconds } : {}));
+  if (out.answer || (out.card && out.card.image)) await say(Object.assign({ kind: 'answer', title: out.via === 'ha' ? 'Home Assistant' : 'Answer', question: text, text: out.answer || '', seconds: readSeconds(out.answer) }, out.card && out.card.image ? { image: out.card.image } : {}, out.card && out.card.seconds ? { seconds: out.card.seconds } : {}));
   else if (out.error) await say({ kind: 'answer', title: 'Not answered', question: text, text: out.error, seconds: 10 });
   else await say({ kind: 'answer', title: 'You said', text, seconds: readSeconds(text) });
   return out;
@@ -293,6 +349,17 @@ function applySet(b) {
     if (l.enabled && !l.key) return 'set the OpenRouter key first';
     v.llm = l;
   }
+  if (b.ha && typeof b.ha === 'object') {
+    const h = Object.assign({}, HA_DEFAULTS, v.ha || {});
+    if (b.ha.clear) Object.assign(h, HA_DEFAULTS);
+    if (typeof b.ha.url === 'string') { const u = b.ha.url.trim(); if (u && !haBase(u)) return 'the Home Assistant address must start with http:// or https://'; h.url = u ? haBase(u) : ''; }
+    if (typeof b.ha.token === 'string' && b.ha.token.trim()) h.token = b.ha.token.trim().slice(0, 2000);
+    if (typeof b.ha.selfSigned === 'boolean') h.selfSigned = b.ha.selfSigned;
+    if (typeof b.ha.route === 'string') { if (!HA_ROUTES.includes(b.ha.route)) return 'the routing must be one of ' + HA_ROUTES.join(', '); h.route = b.ha.route; }
+    if (typeof b.ha.agent === 'string') { if (!/^[\w.\-]{0,100}$/.test(b.ha.agent.trim())) return 'that agent name is not valid'; h.agent = b.ha.agent.trim(); }
+    if (b.ha.url !== undefined || b.ha.agent !== undefined || b.ha.clear) haConv = null;
+    v.ha = h;
+  }
   const conf = ctx.readConf(); conf.voice = v; ctx.writeConf(conf); syncLg();
   return '';
 }
@@ -331,15 +398,19 @@ let pair = null, pairedAt = 0;
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 function lanIp() { for (const l of Object.values(require('os').networkInterfaces())) for (const i of l) if (i.family === 'IPv4' && !i.internal) return i.address; return ''; }
 function pairPage(msg, done, list, token) {
-  const l = llmCfg(), c = cfg();
+  const l = llmCfg(), c = cfg(), ha = haCfg();
   const opts = (list || []).map(m => `<option value="${esc(m.id)}">${esc(m.name)}${m.price != null ? ' · $' + m.price + '/M' : ''}</option>`).join('');
   return `<!doctype html><meta name=viewport content="width=device-width,initial-scale=1"><title>Voice setup</title>
-<style>body{font:18px system-ui,sans-serif;background:#111;color:#eee;max-width:560px;margin:32px auto;padding:0 18px}label{display:block;color:#aaa;font-size:15px;margin-top:14px}input,textarea,button{font:inherit;width:100%;box-sizing:border-box;padding:12px;margin:6px 0;border-radius:10px;border:1px solid #444;background:#1b1b1f;color:#eee}button{background:#f5f6f8;color:#111;font-weight:600;margin-top:20px}.m{padding:12px;border-radius:10px;background:#1f2a1f}small{color:#888}h2{margin:0 0 8px}.c{display:flex;gap:10px;align-items:center}.c input{width:auto;margin:0}</style>
+<style>body{font:18px system-ui,sans-serif;background:#111;color:#eee;max-width:560px;margin:32px auto;padding:0 18px}label{display:block;color:#aaa;font-size:15px;margin-top:14px}input,textarea,select,button{font:inherit;width:100%;box-sizing:border-box;padding:12px;margin:6px 0;border-radius:10px;border:1px solid #444;background:#1b1b1f;color:#eee}button{background:#f5f6f8;color:#111;font-weight:600;margin-top:20px}.m{padding:12px;border-radius:10px;background:#1f2a1f}small{color:#888}h2{margin:0 0 8px}.c{display:flex;gap:10px;align-items:center}.c input{width:auto;margin:0}</style>
 <h2>Voice setup</h2>${msg ? `<p class=m>${esc(msg)}</p>` : ''}${done ? '' : `<form method=post action="/${token}/save">
 <label>OpenRouter key ${l.key ? '(one is saved; leave empty to keep it)' : ''}</label><input name=key type=password autocomplete=off placeholder="sk-or-...">
 <label>Model <small>choose from the list or type any OpenRouter model name</small></label><input name=model list=ml value="${esc(l.model)}" autocomplete=off><datalist id=ml>${opts}</datalist>
 <label class=c><input type=checkbox name=enabled value=1 ${l.enabled ? 'checked' : ''}> Answer with the AI</label>
 <label>Instructions for the AI <small>(empty: short plain answers)</small></label><textarea name=system rows=3>${esc(l.system)}</textarea>
+<label>Home Assistant address <small>(optional, Assist)</small></label><input name=haurl type=url placeholder="http://homeassistant.local:8123" value="${esc(ha.url)}">
+<label>Home Assistant access token <small>(a long-lived token from your profile page${ha.token ? '; one is saved, leave empty to keep it' : ''})</small></label><input name=hatoken type=password autocomplete=off>
+<label class=c><input type=checkbox name=hass value=1 ${ha.selfSigned ? 'checked' : ''}> Accept a self-signed certificate</label>
+<label>Which answers first</label><select name=haroute>${[['ha-first', 'Home Assistant first, then the AI'], ['ha-only', 'Home Assistant only'], ['ai-only', 'The AI only']].map(x => `<option value="${x[0]}"${ha.route === x[0] ? ' selected' : ''}>${x[1]}</option>`).join('')}</select>
 <label>Send the text to your own server <small>(optional)</small></label><input name=url type=url placeholder="http://..." value="${esc(c.url)}">
 <label>Server token <small>(optional${c.token ? '; one is saved, leave empty to keep it' : ''})</small></label><input name=token type=password autocomplete=off>
 <button>Save</button></form>`}`;
@@ -356,6 +427,8 @@ function startPair() {
       let b = ''; req.on('data', c => { b += c; if (b.length > 16384) req.destroy(); });
       req.on('end', () => {
         const f = new URLSearchParams(b), set = { llm: { model: f.get('model') || '', system: f.get('system') || '', enabled: f.get('enabled') === '1' }, url: f.get('url') || '' };
+        set.ha = { url: f.get('haurl') || '', selfSigned: f.get('hass') === '1', route: f.get('haroute') || 'ha-first' };
+        if (f.get('hatoken')) set.ha.token = f.get('hatoken');
         if (f.get('key')) set.llm.key = f.get('key');
         if (f.get('token')) set.token = f.get('token');
         if (!set.url) set.url = '';
@@ -376,7 +449,7 @@ function startPair() {
 }
 function stopPair() { if (pair) { clearTimeout(pair.timer); try { pair.srv.close(); } catch (_) {} pair = null; } }
 
-const status = () => { const c = cfg(); return { installed: installed(), bytes: installed() || job.state === 'working' ? dirSize(V) : 0, enabled: !!c.enabled, url: c.url, hasToken: !!c.token, llm: (l => ({ enabled: !!l.enabled, hasKey: !!l.key, model: l.model }))(llmCfg()), suppressLg: !!c.suppressLg, lgPaused: lgPaused(),
+const status = () => { const c = cfg(); return { installed: installed(), bytes: installed() || job.state === 'working' ? dirSize(V) : 0, enabled: !!c.enabled, url: c.url, hasToken: !!c.token, llm: (l => ({ enabled: !!l.enabled, hasKey: !!l.key, model: l.model }))(llmCfg()), ha: (h => ({ configured: haReady(h), url: h.url, hasToken: !!h.token, selfSigned: h.selfSigned, route: h.route, agent: h.agent }))(haCfg()), suppressLg: !!c.suppressLg, lgPaused: lgPaused(),
   listening, job, last, pairing: !!pair, pairedAt, engine: 'Moonshine tiny (English)' }; };
 
 function create(c) { ctx = c; setInterval(syncLg, 20000); setTimeout(syncLg, 5000); return { handle, status, installed, listen, syncLg }; }
@@ -389,16 +462,18 @@ async function handle(req, res, u, body) {
   if (act === 'install') { install(); return json(status()); }
   if (act === 'uninstall') { uninstall(); return json(status()); }
   if (act === 'listen') return json(await listen());
-  if (act === 'forget') { history = []; return json({ returnValue: true }); }
+  if (act === 'ha-test') { try { return json(await haTest()); } catch (e) { return json({ error: e.message }, 502); } }
+  if (act === 'ha-agents') { try { return json({ agents: await haAgents() }); } catch (e) { return json({ error: e.message }, 502); } }
+  if (act === 'forget') { history = []; haConv = null; return json({ returnValue: true }); }
   if (act === 'pair') return json(startPair());
   if (act === 'pair-stop') { stopPair(); return json({ returnValue: true }); }
   if (act === 'ask') {   // text in, text out: the same path as speech, for a phone, a script or Home Assistant
     const b = await body(req), text = String(b.text || '').trim().slice(0, 1000);
     if (!text) return json({ error: 'send {"text": "..."}' }, 400);
     const l = llmCfg();
-    if (!(l.enabled && l.key) && !cfg().url) return json({ error: 'no destination: switch on the AI chat or set a server address' }, 400);
+    if (!(l.enabled && l.key) && !cfg().url && !haReady(haCfg())) return json({ error: 'no destination: set up Home Assistant, switch on the AI chat or set a server address' }, 400);
     const r = await respond(text, b.card !== false);
-    return json({ text: r.text, answer: r.answer || '', error: r.error || '' });
+    return json({ text: r.text, answer: r.answer || '', via: r.via || '', error: r.error || '' });
   }
   if (act === 'set') { const err = applySet(await body(req)); return err ? json({ error: err }, 400) : json(status()); }
   res.writeHead(404); res.end();
