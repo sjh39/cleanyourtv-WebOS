@@ -121,7 +121,7 @@ http.createServer(async (req, res) => {
     if (u === '/api/config' && req.method === 'POST') {
       const b = await body(req), strs = v => Array.isArray(v) ? v.filter(x => typeof x === 'string').slice(0, 200) : undefined;
       const out = {};
-      if (strs(b.dock)) out.dock = strs(b.dock).slice(0, 6);
+      if (strs(b.dock)) out.dock = strs(b.dock).slice(0, 8);
       if (strs(b.hidden)) out.hidden = strs(b.hidden);
       if (b.sort === 'usage' || b.sort === 'alpha') out.sort = b.sort;
       if (['auto', '24', '12'].includes(b.clock)) out.clock = b.clock;
