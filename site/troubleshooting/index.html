@@ -19,7 +19,7 @@
         <link rel="prev" href="../api/">
       
       
-        <link rel="next" href="../development/">
+        <link rel="next" href="../ai/">
       
       
         
@@ -370,6 +370,8 @@
       
         
       
+        
+      
     
     
     
@@ -429,6 +431,33 @@
     
   
   The launcher
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../themes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Themes
 
     
   </span>
@@ -621,6 +650,8 @@
   
     
     
+      
+        
       
         
       
@@ -835,6 +866,33 @@
   
 </nav>
       
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  With an AI assistant
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1109,6 +1167,8 @@
       
         
       
+        
+      
     
     
     
@@ -1154,6 +1214,19 @@
 <li><strong>An app is missing from the grid.</strong> Check <strong>Hidden apps</strong> in Customise. Apps without a launch icon are not listed.</li>
 <li><strong>After a firmware update removed root.</strong> Re-root, then run the <a href="../install/#1-install-the-manager-app">install command</a> and the setup again.</li>
 <li><strong>The Input key opens LG's picker.</strong> Check the Input key switch in the manager app and run <strong>Learn the Input key</strong>.</li>
+<li><strong>A loading circle appears every half minute and the remote stops responding until you hold Back.</strong> The Input key can show the
+  Inputs list over the running app with a small app that the service starts in the background. On webOS 6.5 (reports) the TV closes that
+  app again and it keeps the remote. From v1.5.13 webOS before 10 starts the app only when the key is pressed and closes it after use,
+  and on any TV the service switches to that when it had to start the background app three times in ten minutes
+  (<code>picker.mode: ondemand</code> in <code>config.json</code>). <strong>Input key</strong> &gt; <strong>Input key shows</strong> chooses by hand; switching the Input key off entirely
+  gives the key back to LG.</li>
+<li><strong>The manager list does not show Share log or Uninstall.</strong> Before v1.5.13 the list could not scroll; update, then move down: the
+  list scrolls and fades where more rows are hidden.</li>
+<li><strong>Text appears twice in menus or the Live TV list on webOS 5 (blurred, overlapping).</strong> webOS 5's browser (Chromium 68) can keep the old
+  text when a list is redrawn. From v1.5.13 the launcher swaps the list for a fresh element there instead of rewriting it.</li>
+<li><strong>The service restarts by itself.</strong> On some TVs Node.js 8 stops with <code>uv_close: Assertion ... failed</code>. From v1.5.13 the service
+  logs its last operations when it finds that the previous run ended without a clean exit; they appear in <strong>Share log</strong> under the
+  service log, so a report names the cause.</li>
 <li><strong><code>FAILED_IPKG_INSTALL</code>.</strong> Remove the <code>com.cleanyourtv.manager</code> entry marked <code>half-installed</code> from
   <code>/media/developer/apps/var/lib/opkg/status</code> and install again.</li>
 <li><strong>Live TV shows the setup code again.</strong> The playlist address was reset or never saved; run the pairing again, or send it with
@@ -1164,6 +1237,7 @@
   over SSH.</li>
 </ul>
 <h2 id="reporting-a-problem">Reporting a problem<a class="headerlink" href="#reporting-a-problem" title="Permanent link">&para;</a></h2>
+<p>An AI assistant can help you read the report and find the cause: see <a href="../ai/">Working on problems with an AI assistant</a>.</p>
 <p>Open an <a href="https://github.com/lasharor/cleanyourtv-WebOS/issues">issue</a> and attach the output of <strong>Share log</strong>
 (manager app, see <a href="../manager/#share-log">The manager app</a>). It is masked, so it does not contain your addresses or keys. Say which
 TV and firmware you have and what you expected.</p>
@@ -1223,13 +1297,13 @@ TV and firmware you have and what you expected.</p>
         
         
           
-          <a href="../development/" class="md-footer__link md-footer__link--next" aria-label="Next: Contributing">
+          <a href="../ai/" class="md-footer__link md-footer__link--next" aria-label="Next: With an AI assistant">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Contributing
+                With an AI assistant
               </div>
             </div>
             <div class="md-footer__button md-icon">

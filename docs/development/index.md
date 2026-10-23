@@ -31,6 +31,9 @@ writes the release files to `dist/`: `com.cleanyourtv.manager_<version>_all.ipk`
 each. Attach them to a GitHub release tagged `v<version>`. The **service** version is `VERSION` in `helper/helper.js`; the
 **launcher** version is `app/version.json` and `VERSION` in `app/index.html` (the build refuses to run when they differ).
 
+Using an AI assistant to find or fix a bug is welcome: see [Working on problems with an AI assistant](../ai.md) and `AGENTS.md` in the
+repository root.
+
 ## Rules of the road
 
 - **Support webOS 5.** The service must run on Node.js 8: no `crypto.randomInt`, no `fs.promises`, no `URL` as a global,

@@ -372,6 +372,8 @@
       
         
       
+        
+      
     
     
     
@@ -431,6 +433,33 @@
     
   
   The launcher
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../themes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Themes
 
     
   </span>
@@ -651,10 +680,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#planned-home-assistant" class="md-nav__link">
+  <a href="#home-assistant-assist" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Planned: Home Assistant
+        Home Assistant (Assist)
       </span>
     </span>
   </a>
@@ -740,6 +769,8 @@
   
     
     
+      
+        
       
         
       
@@ -889,6 +920,33 @@
     
   
   Troubleshooting
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  With an AI assistant
 
     
   </span>
@@ -1169,10 +1227,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#planned-home-assistant" class="md-nav__link">
+  <a href="#home-assistant-assist" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Planned: Home Assistant
+        Home Assistant (Assist)
       </span>
     </span>
   </a>
@@ -1222,6 +1280,8 @@
   
     
     
+      
+        
       
         
       
@@ -1406,9 +1466,52 @@ as well, the server also receives the text and the model's answer (<code>{"text"
 loader and libraries that the download places in the same folder. Nothing in the system folders is changed.</p>
 <p>Only text goes further: to your server, to OpenRouter, or nowhere. LG's own assistant is a separate path with its own cloud
 recognition; <strong>Switch off LG's voice assistant</strong> pauses it while voice is on.</p>
-<h2 id="planned-home-assistant">Planned: Home Assistant<a class="headerlink" href="#planned-home-assistant" title="Permanent link">&para;</a></h2>
-<p>Sending recognised text to Home Assistant's conversation (Assist) API and showing its answer. Until then, the server address and
-<code>/api/voice/ask</code> can forward text to a Home Assistant webhook or any other service.</p>
+<h2 id="home-assistant-assist">Home Assistant (Assist)<a class="headerlink" href="#home-assistant-assist" title="Permanent link">&para;</a></h2>
+<p>The recognised text can go to <a href="https://www.home-assistant.io/voice_control/">Home Assistant's Assist</a> (<code>POST /api/conversation/process</code>),
+which turns on lights, answers questions about your home and so on. Its answer is shown as text on the card. Answers are not spoken.</p>
+<p>In <strong>Voice</strong>, <strong>Set up from your phone</strong> also asks for:</p>
+<ul>
+<li>the <strong>address</strong> of Home Assistant, for example <code>http://homeassistant.local:8123</code>,</li>
+<li>a <strong>long-lived access token</strong> (your Home Assistant profile page, under Security),</li>
+<li>whether to accept a <strong>self-signed certificate</strong> (only matters for <code>https://</code> addresses),</li>
+<li><strong>which answers first</strong>.</li>
+</ul>
+<p>Choosing <strong>Home Assistant (Assist)</strong> in the menu tests the connection and shows the name and version of your Home Assistant.</p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Behaviour</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Home Assistant first, then the AI (default)</td>
+<td>The text goes to Assist. If Assist understood it, its answer is shown. If it did not (<code>no_intent_match</code>), or Home Assistant cannot be reached, the same text goes to the AI chat, when that is switched on. Without the AI, Assist's own message is shown.</td>
+</tr>
+<tr>
+<td>Home Assistant only</td>
+<td>The AI is never asked.</td>
+</tr>
+<tr>
+<td>The AI only</td>
+<td>Home Assistant is not asked.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Assist agent</strong> lists the conversation agents of your Home Assistant (its <code>conversation.*</code> entities) and lets you choose one;
+the default is the built-in agent. A conversation id is passed on, so follow-up questions keep their context; a new
+conversation starts after ten quiet minutes or after <strong>Forget the conversation</strong>.</p>
+<p>The same from a shell:</p>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>localhost:8765/api/voice/set<span class="w"> </span>-d<span class="w"> </span><span class="s1">'{"ha":{"url":"http://homeassistant.local:8123","token":"eyJ..."}}'</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>localhost:8765/api/voice/set<span class="w"> </span>-d<span class="w"> </span><span class="s1">'{"ha":{"route":"ha-only","agent":"conversation.home_assistant","selfSigned":false}}'</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>localhost:8765/api/voice/ha-test
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>localhost:8765/api/voice/ask<span class="w"> </span>-d<span class="w"> </span><span class="s1">'{"text":"turn on the living room light"}'</span>
+</span></code></pre></div>
+<p><code>route</code> is <code>ha-first</code>, <code>ha-only</code> or <code>ai-only</code>; <code>{"ha":{"clear":true}}</code> removes the address and the token. <code>/api/voice/ask</code> answers
+<code>{"text","answer","via","error"}</code>, where <code>via</code> is <code>ha</code> or <code>ai</code>.</p>
+<p>The token is stored in <code>config.json</code> on the TV only and is never returned by the service. Only the recognised text goes to your
+Home Assistant. With a plain <code>http://</code> address the token is visible on your network.</p>
 
 
 

@@ -370,6 +370,8 @@
       
         
       
+        
+      
     
     
     
@@ -429,6 +431,33 @@
     
   
   The launcher
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../themes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Themes
 
     
   </span>
@@ -630,6 +659,8 @@
       
         
       
+        
+      
     
     
     
@@ -755,6 +786,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         Network notifications
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#themes" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Themes
       </span>
     </span>
   </a>
@@ -894,6 +936,33 @@
     
   
   Troubleshooting
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  With an AI assistant
 
     
   </span>
@@ -1135,6 +1204,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#themes" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Themes
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#voice" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1241,6 +1321,8 @@
       
         
       
+        
+      
     
     
     
@@ -1323,6 +1405,12 @@ local network on request, and an optional notification endpoint is off by defaul
 (a random 192-bit token kept in <code>config.json</code>, readable by root only). It exposes only the notification call. Wrong tokens lock
 an address out for ten minutes, requests are limited to 20 a minute and 32 KB, and an optional <code>allow</code> list restricts addresses.
 It is plain HTTP: the token can be read by anyone who can watch the traffic on your network.</p>
+<h2 id="themes">Themes<a class="headerlink" href="#themes" title="Permanent link">&para;</a></h2>
+<p>The manager downloads the theme list, screenshots, theme files and wallpapers from <code>raw.githubusercontent.com</code> (the <code>main</code> branch of this
+repository) over HTTPS, when you open <strong>Theme</strong> or choose a theme. They are data only: the service checks every value against its list,
+limits the sizes (theme 32 KB, wallpaper 1.5 MB, screenshot 600 KB), checks that images are images and refuses anything else. There is
+no script or CSS in a theme. Anything merged into <code>main</code> becomes available to every TV, which is the same trust you place in the
+releases of this repository; there is no signature.</p>
 <h2 id="voice">Voice<a class="headerlink" href="#voice" title="Permanent link">&para;</a></h2>
 <p>Optional and off by default. Installing it downloads files over HTTPS from PyPI, Ubuntu's archive and Moonshine's model server;
 each file is checked against a SHA-256 value written in the code, and a mismatch stops the install. The recogniser is a 64-bit
@@ -1334,7 +1422,9 @@ program started by the root service with its own copy of the C library; it reads
   OpenRouter and that model's provider see the text.</li>
 <li>The phone setup page is a short-lived page on the local network (port 8769, a random 128-bit address, ten minutes, closed after
   saving, plain HTTP: the key is visible on the network while it is typed).</li>
-<li>The key is kept in <code>config.json</code> (readable by root only) and is never returned by the service.</li>
+<li>With Home Assistant set up, the recognised text goes to the address you set, with your long-lived access token (plain <code>http://</code> is
+  possible: the token is then visible on your network; a self-signed certificate is accepted only when you switch that on).</li>
+<li>The keys and the token are kept in <code>config.json</code> (readable by root only) and are never returned by the service.</li>
 <li>Pausing LG's voice assistant sends it SIGSTOP; nothing of LG's is modified.</li>
 </ul>
 <h2 id="trust">Trust<a class="headerlink" href="#trust" title="Permanent link">&para;</a></h2>

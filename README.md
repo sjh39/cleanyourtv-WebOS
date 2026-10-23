@@ -134,6 +134,10 @@ covers the ports, the token for notifications, voice and test builds. To report 
 
 ## Contributing
 
+Troubleshooting and fixing with an AI assistant (Claude, ChatGPT, a local model) is supported: [`AGENTS.md`](AGENTS.md) is the briefing,
+[`tools/diagnose.sh`](tools/diagnose.sh) collects a read-only report from the TV, and the
+[documentation](https://lasharor.github.io/cleanyourtv-WebOS/ai/) has the prompts and the rules.
+
 Reports from other TVs are the most useful contribution: open an [issue](https://github.com/lasharor/cleanyourtv-WebOS/issues)
 with the output of **Share log** in the manager app. For code, see [Contributing](https://lasharor.github.io/cleanyourtv-WebOS/development/):
 the service runs on Node.js 8 (webOS 5), `tools/node8-check.sh` checks that, and every branch push publishes a test build.
