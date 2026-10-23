@@ -27,7 +27,7 @@ that library only, not to the rest of this project.
 
 ## Voice (optional download)
 
-Nothing below is shipped in the package; the manager app downloads it on request (see README, Voice) and
+Nothing below is shipped in the package; the manager app downloads it on request (see the Voice page of the documentation) and
 `voice/cytv-asr` (MIT, source in `voice/asr.c`) is built against the Moonshine C header.
 
 | Component | License | Source |

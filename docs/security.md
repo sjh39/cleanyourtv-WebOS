@@ -1,0 +1,68 @@
+# Security
+
+## What this changes on a TV
+
+CleanYourTV runs a service **as root** on a rooted TV. It listens on `127.0.0.1:8765` only. A few short-lived pages open on the
+local network on request, and an optional notification endpoint is off by default.
+
+| Port | What | When it is open |
+|---|---|---|
+| 8765 (`127.0.0.1` only) | The service API | Always; see [Service API](api.md) |
+| 8766 | Live TV pairing page | While you set up Live TV: a 6-digit code shown on the TV, ten minutes |
+| 8767 | Network notifications | Only when you switch it on in the manager app; needs a token |
+| 8768 and up | Share-log page | Ten minutes, at a random address, with a masked report |
+| 8769 | Voice setup page | Ten minutes, at a random 128-bit address, closed after saving |
+
+What the setup changes on the TV is listed in [What it changes on the TV](tv-changes.md).
+
+## Network notifications
+
+Off until switched on in the manager app. It then listens on port 8767 for `POST /notify` with `Authorization: Bearer <token>`
+(a random 192-bit token kept in `config.json`, readable by root only). It exposes only the notification call. Wrong tokens lock
+an address out for ten minutes, requests are limited to 20 a minute and 32 KB, and an optional `allow` list restricts addresses.
+It is plain HTTP: the token can be read by anyone who can watch the traffic on your network.
+
+## Voice
+
+Optional and off by default. Installing it downloads files over HTTPS from PyPI, Ubuntu's archive and Moonshine's model server;
+each file is checked against a SHA-256 value written in the code, and a mismatch stops the install. The recogniser is a 64-bit
+program started by the root service with its own copy of the C library; it reads audio from a pipe and prints text.
+
+- Audio from the remote's microphone is held in memory only while recognising.
+- Only the recognised text is sent, and only to the address you set (plain `http://` is possible: the token is then visible on
+  your network) and, if you switch on AI chat, to `openrouter.ai` over HTTPS with your OpenRouter key and the model you chose.
+  OpenRouter and that model's provider see the text.
+- The phone setup page is a short-lived page on the local network (port 8769, a random 128-bit address, ten minutes, closed after
+  saving, plain HTTP: the key is visible on the network while it is typed).
+- The key is kept in `config.json` (readable by root only) and is never returned by the service.
+- Pausing LG's voice assistant sends it SIGSTOP; nothing of LG's is modified.
+
+## Trust
+
+Everything it installs comes from this repository's GitHub releases and runs as root. Releases carry a SHA-256 file, which
+detects corruption but **not a compromised repository**. Download only from the release page of this repository.
+
+## Test builds
+
+The manager's **Update channel** can follow a test build: a pre-release named `test-<branch>` that GitHub Actions publishes for
+each branch push. It is opt-in and off by default; the stable updater only reads the latest non-pre-release. A test build is
+downloaded over HTTPS from the repository the TV already updates from and checked against the `.sha256` file in the same release,
+so the check protects against a damaged download, not against someone who can publish to the repository (the same is true of
+stable releases, which are not signed yet). The tag name is checked (`test-` and lower-case letters, digits and hyphens) and the
+files must be the package and launcher names the updater already expects.
+
+## Limits to know about
+
+- Any app on the TV can already run root commands through the Homebrew Channel; apps are not a security boundary on a rooted TV.
+- `/media/developer` is world-writable on webOS. The setup removes group and other write access from this project's files and
+  keeps the playlist and settings files owner-only, but the parent folder remains writable.
+- The service API refuses requests from web pages (any `http(s)` origin); local apps and scripts are accepted.
+
+!!! tip "Move from telnet to SSH"
+    A rooted TV often has an unauthenticated telnet server open on the local network. Turn telnet off and SSH on in the
+    Homebrew Channel's settings.
+
+## Reporting
+
+Open a private security advisory on the [GitHub repository](https://github.com/lasharor/cleanyourtv-WebOS/security/advisories),
+or an issue that does not include exploit details.

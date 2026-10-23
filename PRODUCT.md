@@ -38,7 +38,7 @@ LG webOS 25 on a 65 inch OLED, viewed from about 3 m. The launcher is a plain we
 
 ## Brand Commitments
 
-Public name: "CleanYourTV for LG webOS". The home-screen design follows the Android TV project CleanYourTV (MIT licensed), which is credited in the README. The repository is MIT licensed.
+Public name: "CleanYourTV for LG webOS". The home-screen design follows the Android TV project CleanYourTV (MIT licensed), which is credited in the README and the documentation. The repository is MIT licensed.
 
 ## Evidence on Hand
 

@@ -1,2 +1,4 @@
 .impeccable/
 dist/
+site/
+.venv/

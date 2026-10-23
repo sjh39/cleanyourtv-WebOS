@@ -1,5 +1,5 @@
 #!/bin/sh
-# CleanYourTV for LG webOS: installs the manager app only. Run ON the TV, as root (see README.md). It downloads the latest
+# CleanYourTV for LG webOS: installs the manager app only. Run ON the TV, as root (see the README and https://lasharor.github.io/cleanyourtv-WebOS/install/). It downloads the latest
 # release package (an .ipk), checks its SHA-256 and installs it. The setup itself (replacing LG's Home, the Input key,
 # the debloat) is done afterwards in the CleanYourTV app on the TV: open it and choose "Set up now".
 #
@@ -62,7 +62,7 @@ main() {
     n=$((n+1))
   done
   rm -f /tmp/cytv-manager.ipk
-  [ $ok = 1 ] || die "the package did not install (see Troubleshooting in the README)"
+  [ $ok = 1 ] || die "the package did not install (see Troubleshooting in the documentation: https://lasharor.github.io/cleanyourtv-WebOS/troubleshooting/)"
   if [ -n "$SLUG" ]; then mkdir -p /media/developer/cleanyourtv && echo "test-$SLUG" > /media/developer/cleanyourtv/channel; say "the manager app now follows the test builds of $CYTV_BRANCH (Update channel in the manager switches back to the stable releases)."; fi
   say "the CleanYourTV app is installed."
   if [ -f /media/developer/cleanyourtv/helper.js ] && [ -e /var/lib/webosbrew/init.d/10-cleanyourtv-home ]; then
