@@ -508,11 +508,15 @@ var LIVE=(function(){
 
   /* ---------- the player: one <video>, several streams per channel, tuning screen, recovery ---------- */
   /* One <video> element for the whole session: creating and destroying it on every channel change makes the TV rebuild its video plane. */
+  var lastTime=-1;
   function ensureVideo(){
     if(video)return video;
     var v=document.createElement('video');v.autoplay=true;video=v;
-    v.addEventListener('playing',function(){started=true;clearTimeout(spinT);clearTimeout(stallT);layer('lv-spin',false);layer('lv-tune',false);
-      clearTimeout(playedT);var c=byNum[cur];playedT=setTimeout(function(){markPlayed(c)},3000)});
+    /* Not every TV fires 'playing' again after 'waiting' (or at all for some streams), so moving picture time counts as playing too */
+    function onPlaying(){clearTimeout(spinT);clearTimeout(stallT);layer('lv-spin',false);layer('lv-tune',false);
+      if(!started){started=true;clearTimeout(playedT);var c=byNum[cur];playedT=setTimeout(function(){markPlayed(c)},3000)}}
+    v.addEventListener('playing',onPlaying);
+    v.addEventListener('timeupdate',function(){if(v.currentTime!==lastTime){lastTime=v.currentTime;if(v.currentTime>0)onPlaying()}});
     v.addEventListener('waiting',function(){layer('lv-spin',true);
       if(started){clearTimeout(stallT);stallT=setTimeout(stalled,STALL_MS)}});
     v.addEventListener('error',onError);
@@ -529,12 +533,12 @@ var LIVE=(function(){
     if(si<streams.length-1){si++;reloads=0;variants=variantsFor(streams[si].url);vi=0;startVariant();return}   /* the channel's next stream */
     giveUp()}
   function startVariant(){
-    clearTimeout(spinT);clearTimeout(stallT);pend=false;started=false;
+    clearTimeout(spinT);clearTimeout(stallT);pend=false;started=false;lastTime=-1;
     var v=ensureVideo(),d=variants[vi];layer('lv-spin',true);showTune();
     while(v.firstChild)v.removeChild(v.firstChild);
     if(!d.type){v.src=d.src}
     else{v.removeAttribute('src');var src=document.createElement('source');src.src=d.src;src.type=d.type;v.appendChild(src);v.load()}
-    spinT=setTimeout(function(){if(v===video&&!started&&!failed)onError()},START_MS)}
+    spinT=setTimeout(function(){if(v===video&&!started&&!failed&&!(v.readyState>=3&&!v.paused))onError()},START_MS)}
   var WHY={refused:'The server refused the stream: it may be blocked in your country or need special request headers.',gone:'The stream was not found (404): the channel is offline or its address has changed.',
     server:'The stream server reported an error.',notvideo:'The address answers with a web page, not a video.',drm:'This stream is protected by DRM and cannot be played here.',
     unreachable:'The stream server cannot be reached.',slow:'The stream is too slow to start.',ok:'The stream answers, but the TV could not play it: probably a format it cannot decode.',unknown:'This channel is not available.'};
