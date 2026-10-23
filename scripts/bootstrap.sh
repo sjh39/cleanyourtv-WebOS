@@ -116,7 +116,6 @@ fi
 
 # ---- copy the service files ----
 cp $S/helper/*.js $D/
-[ -d $S/helper/themes ] && { mkdir -p $D/themes && cp -R $S/helper/themes/. $D/themes/; }   # the bundled themes (and their wallpapers) sit next to theme.js
 if [ -f $S/BUILD ]; then cp $S/BUILD $D/BUILD; else rm -f $D/BUILD; fi   # the commit of a test build
 cp $S/scripts/* $D/
 mkdir -p $D/inputhook && cp $S/inputhook/* $D/inputhook/ && chmod 755 $D/inputhook/ezinject

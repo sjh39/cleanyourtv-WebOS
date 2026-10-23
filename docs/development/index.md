@@ -9,7 +9,7 @@ reports from TVs that are not in the [tested list](../tested-tvs.md).
 |---|---|
 | `app/` | The launcher: one HTML file of plain JavaScript, with `version.json`. |
 | `manager/`, `picker/`, `notify/` | The three apps of the package (manager, Inputs picker, picture notification card). |
-| `themes/` | The bundled [themes](../themes.md) (JSON files and wallpapers); [contribute one](../themes.md#contributing-a-theme). |
+| `themes/` | The [themes](../themes.md): one folder each (`theme.json`, `preview.jpg`, a wallpaper) and `index.json`. Read by the TVs from GitHub, not shipped with the service; [contribute one](../themes.md#contributing-a-theme). |
 | `helper/` | The root service (Node.js): API, Live TV, notifications, voice, manager, input hook, share log, self-update. |
 | `scripts/` | Boot, setup and restore scripts: `bootstrap.sh`, `10-cleanyourtv-home`, `stage-home.sh`, `undo-home.sh`, the debloat scripts. |
 | `shared/` | `flexgap.js`, added to every page by the build for older Chromium. |

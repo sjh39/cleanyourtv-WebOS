@@ -8,7 +8,8 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:var(--night);col
 #head{position:absolute;left:96px;top:70px;width:640px}
 #head h1{font-size:76px;font-weight:700;letter-spacing:-.03em;line-height:1.05}
 #head p{margin-top:18px;font-size:28px;color:var(--ink2);line-height:1.4}
-#info{margin-top:64px;font-size:30px;line-height:1.5;color:var(--ink2)}
+#pv{display:none;margin-top:36px;width:640px;height:360px;object-fit:cover;border-radius:28px;background:#14161b;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+#info{margin-top:40px;font-size:30px;line-height:1.5;color:var(--ink2)}
 #info b{display:block;margin-bottom:12px;font-size:38px;font-weight:600;line-height:1.2;color:var(--ink)}
 #panel{position:absolute;left:820px;top:60px;width:1000px;height:960px;display:flex;flex-direction:column;gap:12px}
 #listwrap{position:relative;flex:1;min-height:0;overflow:hidden}
@@ -34,7 +35,7 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:var(--night);col
 #qrbox canvas{width:600px;height:600px}
 #shareclose{position:absolute;left:96px;top:880px;padding:0 44px;height:84px;border-radius:30px;font-size:30px;font-weight:500;display:flex;align-items:center;background:var(--ink);color:#0b0c10}
 </style><script src="qrcode.js"></script></head><body>
-<div id="head"><h1>CleanYourTV</h1><p id="sub"></p><div id="info"></div></div>
+<div id="head"><h1>CleanYourTV</h1><p id="sub"></p><img id="pv" alt=""><div id="info"></div></div>
 <div id="panel"><div id="banner"></div><div id="listwrap"><div id="list"></div></div></div>
 <div id="share"><h2>Share the log</h2>
   <ol><li>Phone on the <b>same Wi-Fi</b> as the TV.</li><li>Scan the code with the camera.</li><li>Tap <b>Copy</b> on the page and paste it into your message.</li></ol>
@@ -44,7 +45,7 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:var(--night);col
 var kFlow='input', kText='', kRows=[], kTimer=0, upd=null, checkedOffline=false, forceOffer=false, API='http://127.0.0.1:8765', SVC='/media/developer/apps/usr/palm/services/com.cleanyourtv.manager.service';
 var napi=null, lv=null, th=null, vo=null, mdl=[], agl=[], tst=null, shareMode='log', pairBase=0,  idxStack=[], setupIdx=0, updIdx=0, st=null, rows=[], idx=0, view='main', pending=null, pollT=0, setup={debloat:true,inputKey:true}, offline=false, busyMsg='';
 function $(i){return document.getElementById(i)}
-function api(p,body){return new Promise(function(res,rej){var x=new XMLHttpRequest();x.open(body?'POST':'GET',API+p);x.timeout=30000;
+function api(p,body,ms){return new Promise(function(res,rej){var x=new XMLHttpRequest();x.open(body?'POST':'GET',API+p);x.timeout=ms||30000;
   x.onload=function(){try{res(JSON.parse(x.responseText))}catch(e){rej(e)}};x.onerror=x.ontimeout=function(){rej(new Error('no answer'))};x.send(body?JSON.stringify(body):null)})}
 function rootExec(cmd){return new Promise(function(res){try{var b=new PalmServiceBridge();b.onservicecallback=function(m){res(m)};
   b.call('luna://org.webosbrew.hbchannel.service/exec',JSON.stringify({command:cmd}))}catch(e){res(JSON.stringify({returnValue:false,errorText:String(e)}))}})}
@@ -61,7 +62,7 @@ function build(){
   if(view==='notifyhow'||view==='voicehow'){rows.push({label:'Back',fn:pop});return}
   if(view==='theme'){
     var tc=(th&&th.current)||{id:'classic',accent:''};
-    (th&&th.themes||[]).forEach(function(x){rows.push({label:x.name,sub:x.id===tc.id?'selected':'',info:{t:x.name,d:x.description+(x.author?'\n\nBy '+x.author:'')},fn:function(){setTheme({id:x.id})}})});
+    (th&&th.themes||[]).forEach(function(x){rows.push({label:x.name,sub:x.id===tc.id?'selected':(x.installed?'':'on GitHub'),pv:x.preview?x.id:'',info:{t:x.name,d:x.description+(x.author?'\n\nBy '+x.author:'')+(x.installed||x.id==='classic'?'':'\n\nDownloaded from GitHub when you choose it.')},fn:function(){setTheme({id:x.id,name:x.name})}})});
     rows.push({sep:true});
     var an='Theme default';((th&&th.accents)||[]).forEach(function(a){if(a.hex===tc.accent)an=a.name});
     rows.push({label:'Theme options',sub:'accent colour \u00B7 '+an,fn:function(){push('themeopts')}});
@@ -266,6 +267,7 @@ function scrollList(){
 function draw(){
   var h='';rows.forEach(function(r,i){h+=r.sep?'<div class="sep"></div>':'<div class="row'+(i===idx?' f':'')+(r.dim?' dim':'')+'" data-i="'+i+'"><span class="lb"></span>'+(r.sub?'<span class="st"></span>':'')+'</div>'});
   $('list').innerHTML=h;scrollList();var el=$('list').children;rows.forEach(function(r,i){if(r.sep)return;el[i].querySelector('.lb').textContent=r.label;if(r.sub)el[i].querySelector('.st').textContent=r.sub});
+  var pvEl=$('pv'),pvId=rows[idx]&&rows[idx].pv;if(pvId){var pu=API+'/api/theme/preview/'+pvId;if(pvEl.getAttribute('data-id')!==pvId){pvEl.setAttribute('data-id',pvId);pvEl.src=pu}pvEl.style.display='block'}else{pvEl.style.display='none';pvEl.removeAttribute('data-id')}
   var inf=infoFor(rows[idx]),ie=$('info');ie.textContent='';
   $('sub').style.wordBreak='';
   if(view==='notifyhow'||view==='voicehow'){$('sub').textContent=kText;$('sub').style.whiteSpace='pre-line';$('sub').style.wordBreak='break-all';return}
@@ -308,9 +310,9 @@ function openLivePair(){
     (function poll(n){if(view!=='share'||shareMode!=='live')return;api('/api/live/status').then(function(s2){if(s2.configured&&(!lv||!lv.configured||s2.channels!==lv.channels)){lv=s2;closeShare();banner('Playlist saved','ok');return}if(n<300)setTimeout(function(){poll(n+1)},2000)},function(){setTimeout(function(){poll(n+1)},3000)})})(0)},function(){$('sharemsg').textContent='The service did not answer.'})}
 function openTheme(){
   banner('Loading themes\u2026','work');
-  api('/api/theme/list').then(function(r){if(r.error){banner(r.error,'err');return}banner('');th=r;push('theme');for(var k=0;k<rows.length;k++)if(rows[k].sub&&/^selected/.test(rows[k].sub)){idx=k;draw();break}},function(){banner('The service did not answer','err')})}
-function setTheme(b){themeCall('/api/theme/set',b,'Theme applied. Open Home to see it.')}
-function themeCall(path,b,msg,back){api(path,b).then(function(r){if(r.error){banner(r.error,'err');return}th=r;banner(msg,'ok');if(back)pop();else{build();draw()}},function(){banner('The service did not answer','err')})}
+  api('/api/theme/list').then(function(r){if(r.error){banner(r.error,'err');return}banner(r.catalogue&&!r.catalogue.ok?'Could not reach GitHub ('+r.catalogue.error+'): showing the themes on this TV.':'',r.catalogue&&!r.catalogue.ok?'err':'');th=r;push('theme');for(var k=0;k<rows.length;k++)if(rows[k].sub&&/^selected/.test(rows[k].sub)){idx=k;draw();break}},function(){banner('The service did not answer','err')})}
+function setTheme(b){var n=b.name;delete b.name;banner('Getting '+n+'\u2026','work');themeCall('/api/theme/set',b,n+' applied. Open Home to see it.')}
+function themeCall(path,b,msg,back){api(path,b,60000).then(function(r){if(r.error){banner(r.error,'err');return}th=r;banner(msg,'ok');if(back)pop();else{build();draw()}},function(){banner('The service did not answer','err')})}
 function openChannel(){
   banner('Looking for test builds\u2026','work');
   api('/api/manager/tests').then(function(r){banner('');tst=r;push('channel');for(var k=0;k<rows.length;k++)if(rows[k].sub&&/^selected/.test(rows[k].sub)){idx=k;draw();break}},function(){banner('The service did not answer','err')})}
