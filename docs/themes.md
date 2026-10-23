@@ -60,6 +60,49 @@ Themes live in the repository, so a new one is a pull request:
 When you add a setting to the engine, add one row to `SCHEMA` in `helper/theme.js`, read its variable in `app/index.html`, and run
 `node tools/theme-docs.js` to regenerate the table below.
 
+## Making a theme with an AI assistant
+
+An assistant such as Claude can write a theme from a description ("a calm blue theme with big tiles and the dock at the bottom"). Give it a
+checkout of the repository (or these files) and the rules below.
+
+**What it needs to read**
+- The table of settings further down this page (or `SCHEMA` in `helper/theme.js`, the source of that table): every key, its range and its default.
+- `themes/classic/theme.json` and one existing theme that is close to the goal, for example `themes/bloom/theme.json`.
+- `themes/README.md` for the folder layout.
+
+**Rules**
+- A theme is data only: `themes/<id>/theme.json` with keys from the table, nothing else. No CSS, no script, no URLs. Unknown keys and
+  out-of-range values are ignored or clamped, so a value that is not in the table has no effect.
+- Positions and sizes are pixels on a 1920 x 1080 canvas. Keep the clock and the buttons at least 60 px from the screen edges (TVs can
+  crop the picture), and make sure the dock fits: `dock.count` x `dock.w` plus the gaps must be at most the screen width (a panel adds
+  `dock.panelPad` on each side).
+- Text must stay readable: about 4.5 : 1 between `colors.ink` and the surfaces it sits on, and a visible focus ring. The text colour on the
+  accent is chosen automatically.
+- The TV's graphics chip is weak: no blurred or animated wallpapers, one static image at most, 1920 x 1080, at most 1.5 MB (`.jpg`,
+  `.png` or `.webp`), kept in the theme's folder and named in `effects.wallpaper`. Prefer the dock and grid settings over tricks.
+- A wallpaper must be original (drawn or generated for the theme) or under a licence that allows redistribution. Do not copy other
+  people's artwork, screenshots or logos, and do not use brand names or trademarks in a theme.
+- Use `"extends"` to start from another theme and list only what changes. Do not rename a setting group: `name`, `author`, `description` and
+  `extends` are the theme's own fields.
+
+**Steps**
+1. Create `themes/<id>/theme.json` (and the wallpaper, if any).
+2. Look at it: `node tools/theme-preview.mjs <id> --out /tmp/preview` renders the home screen with made-up apps in headless Chrome and writes
+   `rest.png` (home), `grid.png` (the focus moved down into the apps) and `menu.png` (a menu). It needs Node.js 22 or newer and Chrome. Open
+   the images, fix what looks wrong (overlapping parts, unreadable text, clipped tiles) and render again.
+3. When it looks right, `node tools/theme-preview.mjs <id> --write` also writes `themes/<id>/preview.jpg` (needs `ffmpeg`), the screenshot the TV shows.
+4. `node tools/theme-index.js` updates `themes/index.json`; `node tools/node8-check.js` checks every theme folder, the screenshot and the index.
+5. Commit and open a pull request; say where the wallpaper comes from.
+
+**A prompt to start with**
+
+> Create a theme for CleanYourTV. Read the settings table in `docs/themes.md`, `themes/classic/theme.json` and `themes/bloom/theme.json`.
+> The theme: *describe the look and the layout you want*. Write `themes/<id>/theme.json` using only keys from the table (data only; ranges
+> are enforced), generate an original wallpaper if it needs one (1920 x 1080, under 1.5 MB, saved in the theme's folder), render it with
+> `node tools/theme-preview.mjs <id> --out /tmp/preview`, look at `rest.png`, `grid.png` and `menu.png`, fix problems and render again, then
+> run `node tools/theme-preview.mjs <id> --write`, `node tools/theme-index.js` and `node tools/node8-check.js`. Keep text readable and the
+> wallpaper my own work.
+
 ## Theme files
 
 A theme is `themes/<id>/theme.json` in the repository. Every key is optional.

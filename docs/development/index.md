@@ -15,7 +15,7 @@ reports from TVs that are not in the [tested list](../tested-tvs.md).
 | `shared/` | `flexgap.js`, added to every page by the build for older Chromium. |
 | `voice/` | Source of the small speech program `cytv-asr` and its build script. |
 | `third-party/` | The bundled inputhook files and the QR library. |
-| `tools/` | `node8-check.sh`: service and theme checks under Node 8.12.0; `theme-docs.js`: regenerates the table of theme settings in the docs. |
+| `tools/` | `node8-check.sh`: service and theme checks under Node 8.12.0; `theme-docs.js`: regenerates the table of theme settings in the docs; `theme-index.js`: writes `themes/index.json`; `theme-preview.mjs`: renders a theme in headless Chrome (and makes its screenshot). |
 | `ipk/build.py` | Builds the release files. |
 | `compat.json` | The list of tested firmware the setup reads. |
 | `install.sh`, `uninstall.sh` | The installer and uninstaller. |
