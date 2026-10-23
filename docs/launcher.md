@@ -61,6 +61,11 @@ into the tile, and the ambient glow comes from the icon's most vivid colour. Col
 
 Menus follow the TV's language: English, Dutch, German, French and Spanish.
 
+## Themes
+
+The look of the home screen (colours, tile and text size, columns, clock, glow, animation speed, wallpaper) is a [theme](themes.md),
+chosen in the manager app.
+
 ## Settings file
 
 Settings are stored on the TV in `/media/developer/cleanyourtv/config.json`:

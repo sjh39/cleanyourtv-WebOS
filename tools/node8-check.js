@@ -16,7 +16,7 @@ const files = fs.readdirSync(helper).filter(f => /\.js$/.test(f)).map(f => path.
 for (const f of files) { const r = cp.spawnSync(process.execPath, ['--check', f], { encoding: 'utf8' }); ok(r.status === 0, 'syntax ' + path.relative(root, f) + (r.status ? '\n' + r.stderr : '')); }
 
 // 2. modules load (helper.js starts the service, so it is only parsed above)
-for (const m of ['netcompat', 'notify', 'notifyapi', 'sharelog', 'picker', 'inputhook', 'manager', 'live', 'voice']) { try { require(path.join(helper, m)); ok(true, 'loads ' + m); } catch (e) { ok(false, 'loads ' + m + ': ' + e.message); } }
+for (const m of ['netcompat', 'notify', 'notifyapi', 'sharelog', 'picker', 'inputhook', 'manager', 'live', 'voice', 'theme']) { try { require(path.join(helper, m)); ok(true, 'loads ' + m); } catch (e) { ok(false, 'loads ' + m + ': ' + e.message); } }
 
 const nc = require(path.join(helper, 'netcompat'));
 const call = (fn, url, method, body) => new Promise((resolve, reject) => {
@@ -134,6 +134,30 @@ const fake = (url, method) => { const res = { code: 0, out: '', writeHead(c) { t
   await vask('set', { llm: { clearKey: true } }); r = await vask('ask', { text: 'turn on the light', card: false }); ok(!r.j.answer && /Home Assistant:/.test(r.j.error), 'Home Assistant unreachable and no AI: the error is reported');
   await vask('set', { ha: { clear: true } }); r = await vask('status', null, 'GET'); ok(r.j.ha.configured === false && r.j.ha.hasToken === false, 'removing Home Assistant clears the address and token');
   haSrv.close(); orSrv.close();
+  // 8. Themes: bundled files are valid, values are whitelisted and clamped, set / revert work, wallpapers only from the bundled folder
+  const themeMod = require(path.join(helper, 'theme')), tdir = path.join(helper, 'themes');
+  const bundled = fs.readdirSync(tdir).filter(n => /\.json$/.test(n));
+  ok(bundled.length >= 5 && bundled.indexOf('classic.json') >= 0, 'themes are bundled with the package');
+  let allOk = true; for (const n of bundled) { const raw = JSON.parse(fs.readFileSync(path.join(tdir, n), 'utf8')), t = themeMod.normalize(raw, n.replace(/\.json$/, '')); if (!t || (raw.effects && raw.effects.wallpaper && t.effects.wallpaper !== raw.effects.wallpaper)) { allOk = false; console.log('  invalid theme file ' + n); } }
+  ok(allOk, 'every bundled theme file is valid and its wallpaper is accepted');
+  const bad = themeMod.normalize({ name: 'x'.repeat(500), colors: { night: 'red; background:url(//evil)', ink: '#12345', accent: 5 }, layout: { cols: 99, tileH: -5, fontScale: '2', clock: 'sideways', tileRadius: 1e9 }, effects: { glow: 7, speed: NaN, wallpaper: '../../etc/passwd', wallpaperDim: 5 }, css: 'body{display:none}' }, 'evil');
+  ok(bad.name.length === 40 && bad.colors.night === '#07080b' && bad.colors.ink === '#f5f6f8' && bad.colors.accent === '#f5f6f8', 'colours must be #rrggbb, anything else falls back');
+  ok(bad.layout.cols === 12 && bad.layout.tileH === 90 && bad.layout.fontScale === 1 && bad.layout.clock === 'left' && bad.layout.tileRadius === 80, 'layout numbers are clamped and enums checked');
+  ok(bad.effects.glow === 1 && bad.effects.speed === 1 && bad.effects.wallpaper === '' && bad.effects.wallpaperDim === 0.9 && !('css' in bad), 'effects are clamped, a wallpaper path is refused and unknown keys are dropped');
+  ok(themeMod.normalize({}, '../x') === null, 'a bad theme id is refused');
+  let tconf = {}; const th = themeMod.create({ readConf: () => JSON.parse(JSON.stringify(tconf)), writeConf: c => { tconf = JSON.parse(JSON.stringify(c)); } });
+  const tcall = async (act, body, method) => { const x = fake('/api/theme/' + act, method || 'POST'); await th.handle(x.req, x.res, '/api/theme/' + act, async () => body || {}); return { code: x.res.code, j: x.res.out && x.res.out[0] === '{' ? JSON.parse(x.res.out) : x.res.out }; };
+  r = await tcall('list', null, 'GET'); ok(r.j.current.id === 'classic' && r.j.themes.length === bundled.length && r.j.previous === null, 'the default theme is classic');
+  ok(th.resolved().vars['--cols'] === '10' && th.resolved().vars['--tile-h'] === '151px' && th.resolved().vars['--acc'] === '#f5f6f8', 'classic resolves to the original look');
+  r = await tcall('set', { id: 'nope' }); ok(r.code === 400, 'an unknown theme is refused');
+  r = await tcall('set', { id: 'compact' }); ok(r.j.current.id === 'compact' && r.j.previous.id === 'classic' && th.resolved().cols === 12, 'choosing a theme applies it and remembers the previous one');
+  r = await tcall('set', { accent: 'blue' }); ok(r.code === 400, 'an accent must be a hex colour');
+  r = await tcall('set', { accent: '#FF8A3D' }); ok(th.resolved().vars['--acc'] === '#ff8a3d' && th.resolved().vars['--acc-ink'] === '#0b0c10', 'an accent overrides the theme\'s own, with readable text on it');
+  r = await tcall('set', { id: 'midnight' }); ok(r.j.current.accent === '' && th.resolved().wallpaper && th.resolved().wallpaper.file === 'midnight.jpg', 'a new theme brings its own accent and wallpaper');
+  r = await tcall('revert'); ok(r.j.current.id === 'compact', 'revert goes back to the previous theme');
+  r = await tcall('wallpaper/midnight.jpg', null, 'GET'); ok(r.code === 200, 'a bundled wallpaper is served');
+  r = await tcall('wallpaper/notused.jpg', null, 'GET'); ok(r.code === 404, 'a file no theme uses is not served');
+  r = await tcall('wallpaper/..%2f..%2fpasswd', null, 'GET'); ok(r.code === 404, 'a path is not served as a wallpaper');
 
   console.log(failed ? '\n' + failed + ' check(s) failed on Node ' + process.version : '\nall checks passed on Node ' + process.version);
   fs.rmSync ? fs.rmSync(tmp, { recursive: true, force: true }) : cp.spawnSync('rm', ['-rf', tmp]);

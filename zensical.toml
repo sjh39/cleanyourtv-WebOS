@@ -19,6 +19,7 @@ nav = [
   { "Updating and uninstalling" = "managing.md" },
   { "Using it" = [
     { "The launcher" = "launcher.md" },
+    { "Themes" = "themes.md" },
     { "Live TV" = "live-tv.md" },
     { "The Input key" = "input-key.md" },
     { "Picture notifications" = "notifications.md" },

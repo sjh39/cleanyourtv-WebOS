@@ -78,6 +78,8 @@ let pickerShownAt = 0;
 let voice = null;
 try { if (notify) voice = require('./voice').create({ notify, readConf, writeConf }); } catch (e) { console.error('voice module failed:', e.message); }
 inputhook.setVoiceKey(voiceKey);
+let theme = null;
+try { theme = require('./theme').create({ readConf, writeConf }); } catch (e) { console.error('theme module failed:', e.message); }
 let notifyApi = null;
 try { if (notify) notifyApi = require('./notifyapi').create({ notify, readConf, writeConf }); } catch (e) { console.error('notification api module failed:', e.message); }
 let manager = null;
@@ -103,11 +105,12 @@ http.createServer(async (req, res) => {
     if (notify && u.startsWith('/api/notify')) return notify.handle(req, res, u, body);
     if (voice && u.startsWith('/api/voice/')) return voice.handle(req, res, u, body);
     if (live && u.startsWith('/api/live/')) return live.handle(req, res, u, body);
+    if (theme && u.startsWith('/api/theme/')) return theme.handle(req, res, u, body);
     if (u === '/api/log') { if (/picker show/.test(decodeURIComponent(req.url.split('m=')[1] || ''))) pickerShownAt = Date.now(); console.log(fs.readFileSync('/proc/uptime', 'utf8').split(' ')[0] + ' ' + decodeURIComponent((req.url.split('m=')[1] || '')).slice(0, 300)); return json({}); }   // small diagnostics from the overlay apps
     if (manager && u.startsWith('/api/manager/')) return manager.handle(req, res, u, body);
     if (u === '/api/frontend-ok' && req.method === 'POST') { const b = await body(req); if (manager) manager.frontendLoaded(String(b.version || '')); return json({ returnValue: true }); }
     if (u === '/api/version') return json({ version: VERSION });
-    if (u === '/api/apps') return json({ apps: await apps(), config: (({ voice, notifyApi, ...rest }) => rest)(readConf()), usage: usageScores(), version: VERSION });
+    if (u === '/api/apps') return json({ apps: await apps(), config: Object.assign((({ voice, notifyApi, theme: _t, ...rest }) => rest)(readConf()), theme ? { theme: theme.resolved() } : {}), usage: usageScores(), version: VERSION });
     if (u === '/api/inputs') return json(await luna('luna://com.webos.service.eim/getAllInputStatus', {}));
     if (u === '/api/foreground') return json(await luna('luna://com.webos.applicationManager/getForegroundAppInfo', {}));
     if (u === '/api/launch' && req.method === 'POST') {

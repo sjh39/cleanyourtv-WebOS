@@ -37,7 +37,7 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:var(--night);col
   <div id="qrbox"><canvas id="qr"></canvas></div></div>
 <script>
 var kFlow='input', kText='', kRows=[], kTimer=0, upd=null, checkedOffline=false, forceOffer=false, API='http://127.0.0.1:8765', SVC='/media/developer/apps/usr/palm/services/com.cleanyourtv.manager.service';
-var napi=null, vo=null, mdl=[], agl=[], tst=null, shareMode='log', pairBase=0,  idxStack=[], setupIdx=0, updIdx=0, st=null, rows=[], idx=0, view='main', pending=null, pollT=0, setup={debloat:true,inputKey:true}, offline=false, busyMsg='';
+var napi=null, th=null, vo=null, mdl=[], agl=[], tst=null, shareMode='log', pairBase=0,  idxStack=[], setupIdx=0, updIdx=0, st=null, rows=[], idx=0, view='main', pending=null, pollT=0, setup={debloat:true,inputKey:true}, offline=false, busyMsg='';
 function $(i){return document.getElementById(i)}
 function api(p,body){return new Promise(function(res,rej){var x=new XMLHttpRequest();x.open(body?'POST':'GET',API+p);x.timeout=30000;
   x.onload=function(){try{res(JSON.parse(x.responseText))}catch(e){rej(e)}};x.onerror=x.ontimeout=function(){rej(new Error('no answer'))};x.send(body?JSON.stringify(body):null)})}
@@ -54,6 +54,18 @@ function build(){
   if(view==='share'){rows.push({label:'Close',fn:closeShare});return}
   if(view==='keys'){rows=kRows;return}
   if(view==='notifyhow'||view==='voicehow'){rows.push({label:'Back',fn:pop});return}
+  if(view==='theme'){
+    var tc=(th&&th.current)||{id:'classic',accent:''};
+    (th&&th.themes||[]).forEach(function(x){rows.push({label:x.name,sub:(x.id===tc.id?'selected \u00B7 ':'')+x.description,fn:function(){setTheme({id:x.id})}})});
+    rows.push({sep:true});
+    var an='Theme default';((th&&th.accents)||[]).forEach(function(a){if(a.hex===tc.accent)an=a.name});
+    rows.push({label:'Accent colour',sub:an,fn:function(){push('accent')}});
+    rows.push({label:'Go back to the previous theme',sub:th&&th.previous?th.previous.id:'nothing to go back to',dim:!(th&&th.previous),fn:function(){if(th&&th.previous)themeCall('/api/theme/revert',{},'Previous theme restored')}});
+    rows.push({sep:true});rows.push({label:'Back',fn:pop});return}
+  if(view==='accent'){
+    var ta=(th&&th.current&&th.current.accent)||'';
+    ((th&&th.accents)||[]).forEach(function(a){rows.push({label:a.name,sub:(a.hex===ta?'selected':(a.hex||'')),fn:function(){themeCall('/api/theme/set',{accent:a.hex},a.name==='Theme default'?'Accent: theme default':'Accent: '+a.name,true)}})});
+    rows.push({sep:true});rows.push({label:'Back',fn:pop});return}
   if(view==='channel'){
     var cc=(st&&st.channel)||'';
     rows.push({label:'Stable releases',sub:(cc?'':'selected \u00B7 ')+'the latest published release',fn:function(){setChannel('')}});
@@ -146,6 +158,7 @@ function build(){
   rows.push({sep:true});
   rows.push({label:'CleanYourTV as Home',sub:onoff(st.home&&st.home.enabled),fn:function(){push('confirm-home')}});
   rows.push({label:'Debloat LG’s ads and telemetry',sub:onoff(st.options.debloat),fn:function(){opt({debloat:!st.options.debloat})}});
+  rows.push({label:'Theme',sub:th&&th.current?th.current.id:'',fn:openTheme});
   rows.push({label:'Network notifications',sub:onoff(st.notifyApi&&st.notifyApi.enabled),fn:function(){api('/api/manager/notify-api').then(function(n){napi=n;push('notifyapi')},function(){banner('The service did not answer','err')})}});
   rows.push({label:'Voice',sub:st.voice?(st.voice.installed?onoff(st.voice.enabled):'not installed'):'',fn:function(){api('/api/voice/status').then(function(v){vo=v;push('voice');if(v.job&&v.job.state==='working'||v.listening)voiceRefresh()},function(){banner('The service did not answer','err')})}});
   rows.push({label:'Input key',sub:(st.inputhook&&st.inputhook.hook&&!st.inputhook.hook.attached)?'not available':onoff(st.options.inputKey),fn:function(){push('inputkey')}});
@@ -163,6 +176,8 @@ var INFO={
  'CleanYourTV as Home':'On: the Home button opens this launcher. Off: LG\u2019s own Home. Switching restarts the TV (about a minute); the service keeps running either way.',
  'Debloat LG\u2019s ads and telemetry':'Stops LG\u2019s ad, recommendation and telemetry services and blocks a few ad servers. Nothing is uninstalled, and it only applies while this launcher is Home.',
 
+ 'Theme':'Choose how the home screen looks: colours, the size of tiles and text, the number of columns, the clock, the ambient glow, animation speed and a wallpaper. Themes are small data files bundled with the package; the accent colour can be changed on top of any of them.',
+ 'Accent colour':'The colour of the focus ring and of the highlighted button or menu row. \u201CTheme default\u201D uses the theme\u2019s own colour.',
  'Network notifications':'Lets other devices on your network send picture notifications to this TV with a POST request and a secret token. Off by default.',
  'Accept notifications from the network':'On: the TV listens on port 8767 for POST /notify with the token. Anyone who has the token and network access can show cards on this screen.',
  'How to send':'Shows the address, the token and an example request.',
@@ -210,6 +225,8 @@ function draw(){
   if(view==='models'){$('sub').textContent='Choose the model that answers';return}
   if(view==='agents'){$('sub').textContent='Choose the Home Assistant agent';return}
   if(view==='channel'){$('sub').textContent='Where updates come from';return}
+  if(view==='theme'){$('sub').textContent='Choose how Home looks. The change shows the next time you open Home.';return}
+  if(view==='accent'){$('sub').textContent='The colour of the focus ring and highlights';return}
   if(view==='voice'){var vv=vo||{},ls=vv.last?(vv.last.text?'Last heard: \u201C'+vv.last.text+'\u201D'+(vv.last.ms?' ('+(vv.last.ms/1000).toFixed(1)+' s)':'')+(vv.last.error?'\nNot sent: '+vv.last.error:''):'Last try: '+vv.last.state+(vv.last.error?'\n'+vv.last.error:'')):'';
     $('sub').textContent='Voice \u00B7 '+(vv.engine||'')+(ls?'\n'+ls:'');$('sub').style.whiteSpace='pre-line';if(inf){var b2=document.createElement('b');b2.textContent=inf.t;ie.appendChild(b2);ie.appendChild(document.createTextNode(inf.d))}return}
   if(view==='keys'){$('sub').textContent=kText;$('sub').style.whiteSpace='pre-line';return}
@@ -225,6 +242,11 @@ function next(dir){var n=rows.length,i=idx;do{i=(i+dir+n)%n}while(rows[i].sep);i
 function act(){var r=rows[idx];if(r&&r.fn&&!(st&&st.job&&st.job.state==='working'&&r.dim))r.fn()}
 
 function aiHelp(){return 'Chat with a language model through OpenRouter. Run these on the TV (ssh):\n\ncurl -X POST localhost:8765/api/voice/set -d \'{"llm":{"key":"sk-or-...","model":"openrouter/auto"}}\'\ncurl -X POST localhost:8765/api/voice/set -d \'{"llm":{"enabled":true}}\'\n\nOptional: "system" sets the instructions. Ask by text from anywhere on the TV:\ncurl -X POST localhost:8765/api/voice/ask -d \'{"text":"What is the capital of Peru?"}\'\n\nSpoken and typed questions go to OpenRouter and the model you chose; no audio does. The key stays on the TV.\n\nHome Assistant (Assist), with a long-lived access token:\ncurl -X POST localhost:8765/api/voice/set -d \'{"ha":{"url":"http://homeassistant.local:8123","token":"..."}}\'\nOptional: "route" is ha-first, ha-only or ai-only; "selfSigned":true accepts a self-signed certificate; "agent" is a conversation entity.'}
+function openTheme(){
+  banner('Loading themes\u2026','work');
+  api('/api/theme/list').then(function(r){if(r.error){banner(r.error,'err');return}banner('');th=r;push('theme');for(var k=0;k<rows.length;k++)if(rows[k].sub&&/^selected/.test(rows[k].sub)){idx=k;draw();break}},function(){banner('The service did not answer','err')})}
+function setTheme(b){themeCall('/api/theme/set',b,'Theme applied. Open Home to see it.')}
+function themeCall(path,b,msg,back){api(path,b).then(function(r){if(r.error){banner(r.error,'err');return}th=r;banner(msg,'ok');if(back)pop();else{build();draw()}},function(){banner('The service did not answer','err')})}
 function openChannel(){
   banner('Looking for test builds\u2026','work');
   api('/api/manager/tests').then(function(r){banner('');tst=r;push('channel');for(var k=0;k<rows.length;k++)if(rows[k].sub&&/^selected/.test(rows[k].sub)){idx=k;draw();break}},function(){banner('The service did not answer','err')})}

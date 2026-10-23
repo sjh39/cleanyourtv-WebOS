@@ -7,6 +7,7 @@
 | Row | Function |
 |---|---|
 | Launcher, Service | Installed version; offers an update when the latest release is newer. |
+| Theme | Choose a theme and an accent colour for the home screen. See [Themes](themes.md). |
 | Check for updates | Asks GitHub for the latest release. |
 | Update channel | Follow the stable releases or a [test build](managing.md#test-builds). |
 | Go back to launcher | Appears after a launcher update. |
