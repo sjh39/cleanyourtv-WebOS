@@ -15,6 +15,8 @@
   gives the key back to LG.
 - **The manager list does not show Share log or Uninstall.** Before v1.5.13 the list could not scroll; update, then move down: the
   list scrolls and fades where more rows are hidden.
+- **Text appears twice in menus or the Live TV list on webOS 5 (blurred, overlapping).** webOS 5's browser (Chromium 68) can keep the old
+  text when a list is redrawn. From v1.5.13 the launcher swaps the list for a fresh element there instead of rewriting it.
 - **The service restarts by itself.** On some TVs Node.js 8 stops with `uv_close: Assertion ... failed`. From v1.5.13 the service
   logs its last operations when it finds that the previous run ended without a clean exit; they appear in **Share log** under the
   service log, so a report names the cause.
