@@ -37,7 +37,7 @@ each. Attach them to a GitHub release tagged `v<version>`. The **service** versi
 - **The pages run in Chromium 79 and newer.** The launcher is written in plain ES5 style without a framework, and only transform
   and opacity are animated, because the TV's GPU is weak. No flex `gap` without the polyfill the build adds.
 - **Do not store private data in the repository.** No playlist addresses, access keys, IP addresses or names.
-- **Documentation must match the code.** When a feature changes, change its page here and the README.
+- **Documentation must match the code.** When a feature changes, change its page here and, if it is mentioned there, the README.
 - **Licence.** The project is MIT. Do not copy code from GPL projects into it; describe behaviour and write your own.
 
 ## Adding a TV to the tested list

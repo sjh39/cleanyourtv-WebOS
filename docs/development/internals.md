@@ -40,6 +40,10 @@ webOS 5 and 6 ship Node.js 8, and webOS 6 has Chromium 79.
 - The service accepts the `file://<appId>-webos` origin that webOS 6 apps send, for our own apps and the Home slot only.
 - `scripts/reload-home.sh` restarts `webapp-mgr` on webOS 6, where a relaunch alone keeps the old page.
 
+!!! note "Not yet tried on a webOS 5 or 6 TV"
+    These changes follow a community fork for webOS 6 and a report from a webOS 5.6.2 TV. The service is tested under Node 8.12.0
+    (`tools/node8-check.sh`) and the pages in a current Chrome with the detection switched off, but not on a TV of those versions.
+
 ## Things that were tried
 
 !!! info "A native launcher"
