@@ -1,4 +1,4 @@
-// Themes for the launcher's home screen. A theme is a data file (helper/themes/<id>.json) that sets values from the table SCHEMA below:
+// Themes for the launcher's home screen. A theme is a data file (themes/<id>.json in the repository) that sets values from the table SCHEMA below:
 // colours, surfaces, text, and the position and size of every part of the screen (clock, buttons, app name, dock, grid), plus effects
 // and a wallpaper. There is no CSS or script in a theme. Every value is checked against SCHEMA and clamped, a value that is missing or
 // invalid keeps the value of the theme it extends (or the default, the original look), and unknown keys are ignored, so a theme can change
@@ -6,7 +6,8 @@
 // from SCHEMA (tools/theme-docs.js).
 // API (loopback only): GET /api/theme/list, POST /api/theme/set {id, accent}, POST /api/theme/revert, GET /api/theme/wallpaper/<file>.
 const fs = require('fs'), path = require('path');
-const DIR = process.env.CYTV_THEMES || path.join(__dirname, 'themes');
+// in the package the themes sit next to this file (helper/themes); in a checkout of the repository they are in themes/
+const DIR = process.env.CYTV_THEMES || (fs.existsSync(path.join(__dirname, 'themes')) ? path.join(__dirname, 'themes') : path.join(__dirname, '..', 'themes'));
 const DEFAULT_ID = 'classic', MAX_WALLPAPER = 1.5 * 1024 * 1024;
 const HEX = /^#[0-9a-f]{6}$/i, FILE = /^[\w-]{1,40}\.(?:jpg|png|webp)$/, ID = /^[a-z0-9-]{1,30}$/;
 const ACCENTS = [['Theme default', ''], ['White', '#f5f6f8'], ['Blue', '#4c8dff'], ['Teal', '#2ec4b6'], ['Green', '#46c37b'], ['Yellow', '#f2c94c'], ['Orange', '#ff8a3d'], ['Red', '#ff5a5f'], ['Pink', '#ff6fb5'], ['Purple', '#a77bff']];
@@ -46,11 +47,11 @@ const SCHEMA = [
   ['bar.y', 'int', [0, 900], 54, 'Distance from the top or bottom edge, in px.'],
   ['bar.size', 'int', [40, 100], 64, 'Height of a button, in px.'],
   ['bar.gap', 'int', [4, 40], 16, 'Space between buttons, in px.'],
-  ['name.show', 'bool', null, true, 'Show the large name of the focused app.'],
-  ['name.align', 'enum', POS, 'left', 'Text alignment of the name.'],
-  ['name.x', 'int', [0, 900], 96, 'Margin on both sides, in px.'],
-  ['name.y', 'int', [0, 900], 150, 'Distance from the top edge, in px.'],
-  ['name.scale', 'num', [0.4, 1.6], 1, 'Scale of the name.'],
+  ['shelf.show', 'bool', null, true, 'Show the large name of the focused app.'],
+  ['shelf.align', 'enum', POS, 'left', 'Text alignment of the name.'],
+  ['shelf.x', 'int', [0, 900], 96, 'Margin on both sides, in px.'],
+  ['shelf.y', 'int', [0, 900], 150, 'Distance from the top edge, in px.'],
+  ['shelf.scale', 'num', [0.4, 1.6], 1, 'Scale of the name.'],
   ['dock.anchor', 'enum', TOPBOT, 'top', 'Which screen edge `dock.y` counts from. A dock at the bottom makes the grid an overlay.'],
   ['dock.align', 'enum', POS, 'left', 'Which side `dock.x` counts from; `center` centres the dock.'],
   ['dock.x', 'int', [0, 900], 96, 'Distance from that side, in px.'],
@@ -84,7 +85,7 @@ const SCHEMA = [
   ['effects.glow', 'num', [0, 1], 1, 'Strength of the ambient glow at the top.'],
   ['effects.glowColor', 'enum', ['app', 'accent'], 'app', '`app`: taken from the focused icon; `accent`: the accent colour.'],
   ['effects.speed', 'num', [0, 2], 1, 'Animation speed multiplier; 0 switches the animations off.'],
-  ['effects.wallpaper', 'file', null, '', 'A file name in `helper/themes/wallpapers/`: `.jpg`, `.png` or `.webp`, at most 1.5 MB; drawn at 1920 x 1080.'],
+  ['effects.wallpaper', 'file', null, '', 'A file name in `themes/wallpapers/`: `.jpg`, `.png` or `.webp`, at most 1.5 MB; drawn at 1920 x 1080.'],
   ['effects.wallpaperDim', 'num', [0, 0.9], 0.4, 'How far the wallpaper is darkened with the background colour.'],
 ];
 const DEFAULTS = {}; for (const r of SCHEMA) DEFAULTS[r[0]] = r[3];
@@ -178,7 +179,7 @@ function resolve(t, accent) {
     '--pill-h': px(v['bar.size']), '--bar-gap': px(v['bar.gap']), '--menu-bg': 'rgba(' + night.join(',') + ',' + v['surface.menuAlpha'] + ')', '--row-r': px(v['surface.rowRadius']),
     '--clock-l': clock.l, '--clock-r': clock.r, '--clock-t': clock.t, '--clock-b': clock.b, '--clock-tx': clock.tx, '--clock-ai': { left: 'flex-start', center: 'center', right: 'flex-end' }[v['clock.align']], '--clock-s': String(v['clock.scale']), '--date-s': String(v['clock.dateScale']),
     '--clock-d': v['clock.show'] ? 'flex' : 'none', '--date-d': v['clock.date'] ? 'block' : 'none', '--bar-l': bar.l, '--bar-r': bar.r, '--bar-t': bar.t, '--bar-b': bar.b, '--bar-tx': bar.tx, '--bar-d': v['bar.show'] ? 'flex' : 'none',
-    '--name-d': v['name.show'] ? 'block' : 'none', '--name-x': px(v['name.x']), '--name-y': px(v['name.y']), '--name-a': v['name.align'], '--name-s': String(v['name.scale']),
+    '--name-d': v['shelf.show'] ? 'block' : 'none', '--name-x': px(v['shelf.x']), '--name-y': px(v['shelf.y']), '--name-a': v['shelf.align'], '--name-s': String(v['shelf.scale']),
     '--view-top': px(viewTop), '--dock-l': dock.l, '--dock-r': dock.r, '--dock-t': dock.t, '--dock-b': dock.b, '--dock-tx': dock.tx, '--dock-w': px(v['dock.w']), '--dock-h': px(v['dock.h']), '--dock-gap': px(v['dock.gap']), '--dock-rad': px(v['dock.radius']),
     '--dock-panel': String(v['dock.panel']), '--dock-pad': px(pad), '--dock-lift': px(-v['dock.lift']), '--dock-fs': String(v['dock.focusScale']),
     '--cols': String(v['grid.cols']), '--tile-h': px(v['grid.tileH']), '--gap-x': px(v['grid.gapX']), '--gap-y': px(v['grid.gapY']), '--tile-r': px(v['grid.radius']), '--grid-l': px(v['grid.x']), '--grid-w': px(v['grid.width']),

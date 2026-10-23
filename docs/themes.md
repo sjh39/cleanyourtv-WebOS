@@ -19,20 +19,32 @@ In the manager app, **Theme** lists the themes. Choosing one applies it; the hom
 | Compact | Twelve columns of smaller tiles: more apps on screen. |
 | Large print | Eight columns of big tiles and larger text. |
 | Still | No animation and a quiet glow. |
-| Sunset | A wallpaper with the dock at the bottom in a glass panel, six dock apps, round buttons and a stacked clock. Down from the dock opens all apps over the wallpaper; Back closes them. |
+| Bloom | A flower wallpaper with the dock at the bottom in a glass panel, six dock apps, round buttons and a stacked clock. Down from the dock opens all apps over the wallpaper; Back closes them. |
 
 ![Classic, Compact, Large print and Midnight](screenshots/themes-1.jpg)
 
 ![OLED black, Still, Warm and Classic with an orange accent](screenshots/themes-2.jpg)
 
-![Sunset: the home screen and the app grid opened with Down](screenshots/themes-3.jpg)
+![Bloom: the home screen and the app grid opened with Down](screenshots/themes-3.jpg)
 
 The pictures are the launcher page rendered in a browser with each theme.
 
+## Contributing a theme
+
+Themes live in the repository, so a new one is a pull request:
+
+1. Copy a theme that is close to what you want from [`themes/`](https://github.com/lasharor/cleanyourtv-WebOS/tree/main/themes), for example `classic.json`, to `themes/<id>.json`. The id is lower-case letters, digits and `-`.
+2. Change only what you want to change; the rest keeps its default, or the value of the theme named in `"extends"`.
+3. If it uses a wallpaper, add a `.jpg`, `.png` or `.webp` (at most 1.5 MB, 1920 x 1080) to `themes/wallpapers/` and name it in `effects.wallpaper`. A wallpaper must be your own work or under a licence that allows redistribution; say which in the pull request.
+4. Run `node tools/node8-check.js`: it checks every theme file against the schema, and that this page's table is up to date.
+5. Open the pull request with a screenshot if you can. The [themes folder](https://github.com/lasharor/cleanyourtv-WebOS/tree/main/themes) shows how the bundled ones look.
+
+When you add a setting to the engine, add one row to `SCHEMA` in `helper/theme.js`, read its variable in `app/index.html`, and run
+`node tools/theme-docs.js` to regenerate the table below.
+
 ## Theme files
 
-A theme is a JSON file in `helper/themes/` of this repository, shipped with the service. To contribute one, add
-`helper/themes/<id>.json` (and a wallpaper in `helper/themes/wallpapers/` if it uses one) in a pull request. Every key is optional.
+A theme is a JSON file in [`themes/`](https://github.com/lasharor/cleanyourtv-WebOS/tree/main/themes) of this repository, shipped with the service. Every key is optional.
 A missing or invalid value keeps the value of the theme named in `"extends"`, or the default, which is the original look, so a
 theme lists only what it changes. Positions and sizes are in pixels on a 1920 x 1080 canvas.
 
@@ -93,12 +105,12 @@ when the focus moves down into it (Back or Up closes it); a dock at the top leav
 | `bar.y` | 0 to 900 | `54` | Distance from the top or bottom edge, in px. |
 | `bar.size` | 40 to 100 | `64` | Height of a button, in px. |
 | `bar.gap` | 4 to 40 | `16` | Space between buttons, in px. |
-| **name** | | | |
-| `name.show` | `true` or `false` | `true` | Show the large name of the focused app. |
-| `name.align` | `left`, `center`, `right` | `left` | Text alignment of the name. |
-| `name.x` | 0 to 900 | `96` | Margin on both sides, in px. |
-| `name.y` | 0 to 900 | `150` | Distance from the top edge, in px. |
-| `name.scale` | 0.4 to 1.6 | `1` | Scale of the name. |
+| **shelf** | | | |
+| `shelf.show` | `true` or `false` | `true` | Show the large name of the focused app. |
+| `shelf.align` | `left`, `center`, `right` | `left` | Text alignment of the name. |
+| `shelf.x` | 0 to 900 | `96` | Margin on both sides, in px. |
+| `shelf.y` | 0 to 900 | `150` | Distance from the top edge, in px. |
+| `shelf.scale` | 0.4 to 1.6 | `1` | Scale of the name. |
 | **dock** | | | |
 | `dock.anchor` | `top`, `bottom` | `top` | Which screen edge `dock.y` counts from. A dock at the bottom makes the grid an overlay. |
 | `dock.align` | `left`, `center`, `right` | `left` | Which side `dock.x` counts from; `center` centres the dock. |
@@ -136,7 +148,7 @@ when the focus moves down into it (Back or Up closes it); a dock at the top leav
 | `effects.glow` | 0 to 1 | `1` | Strength of the ambient glow at the top. |
 | `effects.glowColor` | `app`, `accent` | `app` | `app`: taken from the focused icon; `accent`: the accent colour. |
 | `effects.speed` | 0 to 2 | `1` | Animation speed multiplier; 0 switches the animations off. |
-| `effects.wallpaper` | a file name | none | A file name in `helper/themes/wallpapers/`: `.jpg`, `.png` or `.webp`, at most 1.5 MB; drawn at 1920 x 1080. |
+| `effects.wallpaper` | a file name | none | A file name in `themes/wallpapers/`: `.jpg`, `.png` or `.webp`, at most 1.5 MB; drawn at 1920 x 1080. |
 | `effects.wallpaperDim` | 0 to 0.9 | `0.4` | How far the wallpaper is darkened with the background colour. |
 <!-- schema:end -->
 

@@ -76,6 +76,16 @@ and troubleshooting.
 
 ---
 
+## Themes
+
+Pick how Home looks in the manager app: colours, the position and size of the clock, buttons, dock and grid, a wallpaper, animation
+speed. Eight themes are bundled in [`themes/`](themes/); a theme is a small JSON file, so adding one is a pull request
+([how](https://lasharor.github.io/cleanyourtv-WebOS/themes/#contributing-a-theme)).
+
+<p align="center"><a href="themes/"><img src="docs/screenshots/themes-readme.jpg" alt="Classic, Midnight, Warm and Bloom themes" width="800"></a></p>
+
+---
+
 ## Screenshots
 
 <p align="center">

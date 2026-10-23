@@ -135,7 +135,7 @@ const fake = (url, method) => { const res = { code: 0, out: '', writeHead(c) { t
   await vask('set', { ha: { clear: true } }); r = await vask('status', null, 'GET'); ok(r.j.ha.configured === false && r.j.ha.hasToken === false, 'removing Home Assistant clears the address and token');
   haSrv.close(); orSrv.close();
   // 8. Themes: bundled files are valid, values are whitelisted and clamped, extends works, set / revert work, wallpapers only from the bundled folder
-  const themeMod = require(path.join(helper, 'theme')), tdir = path.join(helper, 'themes');
+  const themeMod = require(path.join(helper, 'theme')), tdir = path.join(root, 'themes');
   const bundled = fs.readdirSync(tdir).filter(n => /\.json$/.test(n));
   ok(bundled.length >= 5 && bundled.indexOf('classic.json') >= 0, 'themes are bundled with the package');
   let allOk = true; for (const n of bundled) { const raw = JSON.parse(fs.readFileSync(path.join(tdir, n), 'utf8')), t = themeMod.normalize(raw, n.replace(/\.json$/, '')); if (!t || (raw.effects && raw.effects.wallpaper && t.v['effects.wallpaper'] !== raw.effects.wallpaper)) { allOk = false; console.log('  invalid theme file ' + n); } }
@@ -143,6 +143,7 @@ const fake = (url, method) => { const res = { code: 0, out: '', writeHead(c) { t
   const unknownKeys = [], known = new Set(themeMod.SCHEMA.map(r => r[0])); const walk = (o, pre) => { for (const k of Object.keys(o)) { const key = pre ? pre + '.' + k : k; if (o[k] && typeof o[k] === 'object') walk(o[k], key); else if (!known.has(key) && ['name', 'author', 'description', 'extends'].indexOf(key) < 0) unknownKeys.push(key); } };
   for (const n of bundled) walk(JSON.parse(fs.readFileSync(path.join(tdir, n), 'utf8')), '');
   ok(unknownKeys.length === 0, 'bundled theme files use only keys of the schema' + (unknownKeys.length ? ': ' + unknownKeys.join(', ') : ''));
+  ok(themeMod.SCHEMA.every(r => ['name', 'author', 'description', 'extends'].indexOf(r[0].split('.')[0]) < 0), 'no setting group shares a name with the theme\'s own fields (name, author, description, extends)');
   const bad = themeMod.normalize({ name: 'x'.repeat(500), colors: { night: 'red; background:url(//evil)', ink: '#12345', accent: 5 }, grid: { cols: 99, tileH: -5, radius: 1e9 }, type: { scale: '2', font: 'comic' }, clock: { layout: 'sideways', scale: 50 }, effects: { glow: 7, speed: NaN, wallpaper: '../../etc/passwd', wallpaperDim: 5 }, css: 'body{display:none}' }, 'evil');
   ok(bad.name.length === 40 && bad.v['colors.night'] === '#07080b' && bad.v['colors.ink'] === '#f5f6f8' && bad.v['colors.accent'] === '#f5f6f8', 'colours must be #rrggbb, anything else falls back');
   ok(bad.v['grid.cols'] === 14 && bad.v['grid.tileH'] === 80 && bad.v['grid.radius'] === 100 && bad.v['type.scale'] === 1 && bad.v['type.font'] === 'default' && bad.v['clock.layout'] === 'inline' && bad.v['clock.scale'] === 2.5, 'numbers are clamped, enums and types are checked');
@@ -160,7 +161,7 @@ const fake = (url, method) => { const res = { code: 0, out: '', writeHead(c) { t
   r = await tcall('set', { accent: 'blue' }); ok(r.code === 400, 'an accent must be a hex colour');
   r = await tcall('set', { accent: '#FF8A3D' }); ok(th.resolved().vars['--acc'] === '#ff8a3d' && th.resolved().vars['--acc-ink'] === '#0b0c10' && th.resolved().vars['--focus'] === '#ff8a3d', 'an accent overrides the theme\'s own, with readable text on it');
   r = await tcall('set', { id: 'midnight' }); ok(r.j.current.accent === '' && th.resolved().wallpaper && th.resolved().wallpaper.file === 'midnight.jpg', 'a new theme brings its own accent and wallpaper');
-  r = await tcall('set', { id: 'sunset' }); const sn = th.resolved();
+  r = await tcall('set', { id: 'bloom' }); const sn = th.resolved();
   ok(sn.overlay === true && sn.attrs.grid === 'overlay' && sn.attrs.bar === 'round' && sn.attrs.labels === 'hide' && sn.attrs.clock === 'stack' && sn.dockN === 6 && sn.vars['--dock-b'] === '68px' && sn.vars['--dock-t'] === 'auto' && sn.vars['--dock-tx'] === 'translateX(-50%)' && sn.vars['--view-top'] === '0px' && sn.vars['--name-d'] === 'none', 'a dock at the bottom resolves to an overlay grid with its positions');
   r = await tcall('revert'); ok(r.j.current.id === 'midnight', 'revert goes back to the previous theme');
   r = await tcall('wallpaper/midnight.jpg', null, 'GET'); ok(r.code === 200, 'a bundled wallpaper is served');
