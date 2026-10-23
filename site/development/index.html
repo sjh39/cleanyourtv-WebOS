@@ -16,7 +16,7 @@
       
       
       
-        <link rel="prev" href="../troubleshooting/">
+        <link rel="prev" href="../ai/">
       
       
         <link rel="next" href="./testing/">
@@ -370,6 +370,8 @@
       
         
       
+        
+      
     
     
     
@@ -429,6 +431,33 @@
     
   
   The launcher
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../themes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Themes
 
     
   </span>
@@ -628,6 +657,8 @@
       
         
       
+        
+      
     
     
     
@@ -768,6 +799,33 @@
     
   
   Troubleshooting
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  With an AI assistant
 
     
   </span>
@@ -1152,6 +1210,10 @@ reports from TVs that are not in the <a href="../tested-tvs/">tested list</a>.</
 <td>The three apps of the package (manager, Inputs picker, picture notification card).</td>
 </tr>
 <tr>
+<td><code>themes/</code></td>
+<td>The <a href="../themes/">themes</a>: one folder each (<code>theme.json</code>, <code>preview.jpg</code>, a wallpaper) and <code>index.json</code>. Read by the TVs from GitHub, not shipped with the service; <a href="../themes/#contributing-a-theme">contribute one</a>.</td>
+</tr>
+<tr>
 <td><code>helper/</code></td>
 <td>The root service (Node.js): API, Live TV, notifications, voice, manager, input hook, share log, self-update.</td>
 </tr>
@@ -1173,7 +1235,7 @@ reports from TVs that are not in the <a href="../tested-tvs/">tested list</a>.</
 </tr>
 <tr>
 <td><code>tools/</code></td>
-<td><code>node8-check.sh</code>: service checks under Node 8.12.0.</td>
+<td><code>node8-check.sh</code>: service and theme checks under Node 8.12.0; <code>theme-docs.js</code>: regenerates the table of theme settings in the docs; <code>theme-index.js</code>: writes <code>themes/index.json</code>; <code>theme-preview.mjs</code>: renders a theme in headless Chrome (and makes its screenshot).</td>
 </tr>
 <tr>
 <td><code>ipk/build.py</code></td>
@@ -1199,6 +1261,8 @@ reports from TVs that are not in the <a href="../tested-tvs/">tested list</a>.</
 <p>writes the release files to <code>dist/</code>: <code>com.cleanyourtv.manager_&lt;version&gt;_all.ipk</code>, <code>frontend-&lt;version&gt;.tgz</code> and a <code>.sha256</code> file for
 each. Attach them to a GitHub release tagged <code>v&lt;version&gt;</code>. The <strong>service</strong> version is <code>VERSION</code> in <code>helper/helper.js</code>; the
 <strong>launcher</strong> version is <code>app/version.json</code> and <code>VERSION</code> in <code>app/index.html</code> (the build refuses to run when they differ).</p>
+<p>Using an AI assistant to find or fix a bug is welcome: see <a href="../ai/">Working on problems with an AI assistant</a> and <code>AGENTS.md</code> in the
+repository root.</p>
 <h2 id="rules-of-the-road">Rules of the road<a class="headerlink" href="#rules-of-the-road" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>Support webOS 5.</strong> The service must run on Node.js 8: no <code>crypto.randomInt</code>, no <code>fs.promises</code>, no <code>URL</code> as a global,
@@ -1254,7 +1318,7 @@ See <a href="testing/">Testing and CI</a>.</p>
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../troubleshooting/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Troubleshooting">
+          <a href="../ai/" class="md-footer__link md-footer__link--prev" aria-label="Previous: With an AI assistant">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
@@ -1264,7 +1328,7 @@ See <a href="testing/">Testing and CI</a>.</p>
                 Previous
               </span>
               <div class="md-ellipsis">
-                Troubleshooting
+                With an AI assistant
               </div>
             </div>
           </a>

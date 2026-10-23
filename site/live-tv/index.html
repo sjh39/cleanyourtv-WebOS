@@ -16,7 +16,7 @@
       
       
       
-        <link rel="prev" href="../launcher/">
+        <link rel="prev" href="../themes/">
       
       
         <link rel="next" href="../input-key/">
@@ -372,6 +372,8 @@
       
         
       
+        
+      
     
     
     
@@ -431,6 +433,33 @@
     
   
   The launcher
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../themes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Themes
 
     
   </span>
@@ -520,6 +549,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#turning-it-off" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Turning it off
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#keys" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -527,6 +567,23 @@
       </span>
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Keys">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-guide-button" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The Guide button
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -721,6 +778,8 @@
       
         
       
+        
+      
     
     
     
@@ -861,6 +920,33 @@
     
   
   Troubleshooting
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  With an AI assistant
 
     
   </span>
@@ -1091,6 +1177,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#turning-it-off" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Turning it off
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#keys" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1098,6 +1195,23 @@
       </span>
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Keys">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-guide-button" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The Guide button
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1181,6 +1295,8 @@
       
         
       
+        
+      
     
     
     
@@ -1232,38 +1348,80 @@ and no playlist.</p>
 <p>From a shell on the TV instead:</p>
 <div class="language-sh highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>localhost:8765/api/live/settings<span class="w"> </span>-d<span class="w"> </span><span class="s1">'{"playlistUrl":"http://...","epgUrl":"http://..."}'</span>
 </span></code></pre></div>
+<h2 id="turning-it-off">Turning it off<a class="headerlink" href="#turning-it-off" title="Permanent link">&para;</a></h2>
+<p>Live TV is optional. In the manager app, <strong>Live TV</strong> &gt; <strong>Show Live TV</strong> switches it on and off. Off hides it everywhere: the Live TV button and tile in
+the launcher, <strong>Live TV</strong> in the Inputs list, and the Guide key takeover (below). LG's own player and guide are used as before.
+The playlist and your favourites are kept, so switching it on again brings them back.</p>
 <h2 id="keys">Keys<a class="headerlink" href="#keys" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
 <th>Key</th>
-<th>Action</th>
+<th>Watching</th>
+<th>In the guide (OK)</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>Up / Down, CH+ / CH-</td>
 <td>Next / previous channel</td>
+<td>Move; CH+ / CH- page</td>
+</tr>
+<tr>
+<td>Left / Right</td>
+<td>Channel banner (now and next)</td>
+<td>Previous / next tab</td>
 </tr>
 <tr>
 <td>Digits</td>
 <td>Jump to a channel number (playlist order)</td>
+<td>Same</td>
 </tr>
 <tr>
 <td>OK</td>
 <td>Open the guide</td>
+<td>Play the channel</td>
 </tr>
 <tr>
-<td>Info, Left / Right</td>
-<td>Channel banner (now and next)</td>
+<td>Guide</td>
+<td>Open the guide</td>
+<td>Close the guide</td>
 </tr>
 <tr>
-<td>Back, Home</td>
+<td>Green</td>
+<td>Add / remove favourite</td>
+<td>Add / remove favourite</td>
+</tr>
+<tr>
+<td>Yellow</td>
+<td>Player menu (favourite, stream, statistics)</td>
+<td>Filters</td>
+</tr>
+<tr>
+<td>Blue</td>
+<td>Statistics</td>
+<td></td>
+</tr>
+<tr>
+<td>Red</td>
+<td></td>
+<td>Search (the TV's keyboard)</td>
+</tr>
+<tr>
+<td>Back</td>
 <td>Return to the launcher</td>
+<td>Clear filters and search, then close the guide</td>
 </tr>
 </tbody>
 </table>
-<p>In the guide: Up/Down move through the channels, Left/Right change the group tab, CH+/CH- page, OK plays, Back closes it.</p>
+<p>The tabs are <strong>All channels</strong>, <strong>Favourites</strong>, <strong>Recent</strong> and one per category of your playlist. Channels show badges for country,
+language and quality when the playlist names them (for example <code>NL</code>, <code>EN</code>, <code>HD</code>). Filters narrow the list by country, language and
+quality; search matches names across all channels.</p>
+<h3 id="the-guide-button">The Guide button<a class="headerlink" href="#the-guide-button" title="Permanent link">&para;</a></h3>
+<p>By default the remote's Guide button belongs to LG. In the manager app, <strong>Live TV</strong> &gt; <strong>Learn the Guide key</strong> records the
+button's code; afterwards it opens the Live TV channel guide over whatever is running, and closes it again when Live TV is open.
+<strong>Clear</strong> gives LG's guide back. The button is only taken over while Live TV is on and a code is learned. It uses the same hook as
+the <a href="../input-key/">Input key</a>.</p>
 <h2 id="how-it-plays">How it plays<a class="headerlink" href="#how-it-plays" title="Permanent link">&para;</a></h2>
 <ul>
 <li>The TV's own player plays <strong>HLS</strong> (<code>.m3u8</code>).</li>
@@ -1271,18 +1429,19 @@ and no playlist.</p>
   are never requested from your provider, which matters for accounts that allow one connection.</li>
 <li>The player uses one video element for the whole session instead of creating one per channel.</li>
 <li>The guide (XMLTV) is refreshed twice a day and keeps 36 hours.</li>
+<li>When a playlist lists the same channel in several qualities (for example <code>HD</code> and <code>SD</code>), they are merged into one channel with
+  several streams. If one does not start, the next is tried; a stream that stalls is reloaded once.</li>
+<li>When a channel does not play, the screen says why: the server refused it, the stream is gone, it needs DRM, it is not video, or
+  it is too slow.</li>
+<li><strong>Statistics</strong> (Blue) show the resolution, buffer, dropped frames and which stream is playing.</li>
 </ul>
-<p>There is no recording, pause or favourites.</p>
+<p>There is no recording and no pause.</p>
 <h2 id="where-it-is-stored">Where it is stored<a class="headerlink" href="#where-it-is-stored" title="Permanent link">&para;</a></h2>
 <p>The playlist address, which usually contains an access key, is stored only on the TV, in
 <code>/media/developer/cleanyourtv/live/</code>, readable by root only. To clear it:</p>
 <div class="language-sh highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>localhost:8765/api/live/reset
 </span></code></pre></div>
-<div class="admonition note">
-<p class="admonition-title">Test builds</p>
-<p>Favourites, recent channels, filters, search, several streams per channel, failure reasons and statistics are in a test
-build (branch <code>live-tv-features</code>) and are not part of the stable release yet. See <a href="../managing/#test-builds">Test builds</a>.</p>
-</div>
+<p>Favourites, recent channels and the failed-channel list are stored in <code>state.json</code> in the same folder.</p>
 
 
 
@@ -1322,7 +1481,7 @@ build (branch <code>live-tv-features</code>) and are not part of the stable rele
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../launcher/" class="md-footer__link md-footer__link--prev" aria-label="Previous: The launcher">
+          <a href="../themes/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Themes">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
@@ -1332,7 +1491,7 @@ build (branch <code>live-tv-features</code>) and are not part of the stable rele
                 Previous
               </span>
               <div class="md-ellipsis">
-                The launcher
+                Themes
               </div>
             </div>
           </a>

@@ -32,6 +32,7 @@ nav = [
     { "What it changes on the TV" = "tv-changes.md" },
     { "Service API" = "api.md" },
     { "Troubleshooting" = "troubleshooting.md" },
+    { "With an AI assistant" = "ai.md" },
   ] },
   { "Development" = [
     { "Contributing" = "development/index.md" },

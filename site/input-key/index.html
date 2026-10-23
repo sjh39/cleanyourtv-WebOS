@@ -372,6 +372,8 @@
       
         
       
+        
+      
     
     
     
@@ -431,6 +433,33 @@
     
   
   The launcher
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../themes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Themes
 
     
   </span>
@@ -534,6 +563,17 @@
       On this page
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-the-key-shows" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        What the key shows
+      </span>
+    </span>
+  </a>
+  
+</li>
       
         <li class="md-nav__item">
   <a href="#how-it-works" class="md-nav__link">
@@ -699,6 +739,8 @@
       
         
       
+        
+      
     
     
     
@@ -839,6 +881,33 @@
     
   
   Troubleshooting
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  With an AI assistant
 
     
   </span>
@@ -1058,6 +1127,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#what-the-key-shows" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        What the key shows
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#how-it-works" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1137,6 +1217,8 @@
       
         
       
+        
+      
     
     
     
@@ -1177,7 +1259,7 @@
 <p>The remote's <strong>Input</strong> button opens an Inputs picker over the running app.</p>
 <p><img alt="Inputs picker on the Input key" src="../screenshots/picker.jpg" /></p>
 <p>The picker shows the dock apps in a row, the inputs below (each with its port and what is connected, and a green dot on the
-active one) and <strong>Live TV</strong>.</p>
+active one) and, when <a href="../live-tv/">Live TV</a> is on, <strong>Live TV</strong>.</p>
 <table>
 <thead>
 <tr>
@@ -1205,6 +1287,39 @@ active one) and <strong>Live TV</strong>.</p>
 </tbody>
 </table>
 <p>The pointer works too.</p>
+<h2 id="what-the-key-shows">What the key shows<a class="headerlink" href="#what-the-key-shows" title="Permanent link">&para;</a></h2>
+<p>The Input button can show the Inputs list in three ways. <strong>Input key</strong> &gt; <strong>Input key shows</strong> in the manager app chooses; each press of
+that row goes to the next one.</p>
+<table>
+<thead>
+<tr>
+<th>Choice</th>
+<th>What happens</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Over the running app, ready in the background</td>
+<td>A small app, <code>com.cleanyourtv.picker</code>, is started hidden after boot and the key only wakes it: instant.</td>
+<td>webOS 25 and newer</td>
+</tr>
+<tr>
+<td>Over the running app, started when pressed</td>
+<td>The same app is started by the key and closes itself after use (Back, a choice, or ten idle seconds). Nothing runs hidden, so it cannot keep the remote. The first moment takes longer.</td>
+<td>webOS before 10</td>
+</tr>
+<tr>
+<td>The launcher's Inputs list</td>
+<td>The TV goes to Home with the Inputs list open. Needs CleanYourTV as Home; when LG's Home is selected the key stays with LG.</td>
+<td>none</td>
+</tr>
+</tbody>
+</table>
+<p>On webOS 6.5 (reports) the hidden background app kept the remote and showed a loading circle, which is why older webOS starts it on
+demand. If the TV closes the background app three times in ten minutes, the service switches to <em>started when pressed</em> by itself
+(<code>picker.mode: ondemand</code> in <code>config.json</code>). Other overlay projects for rooted TVs also start their overlay on demand and close it after
+use.</p>
 <h2 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h2>
 <p>It uses the bundled <a href="../credits/#inputhook">inputhook</a> library, which injects a small hook into LG's input process so that a remote
 button can run a command. The Input button's code is <strong>241</strong> by default. The command opens the picker app
@@ -1213,6 +1328,7 @@ button can run a command. The Input button's code is <strong>241</strong> by def
 <p>Remotes differ. In the manager app, <strong>Input key</strong> &gt; <strong>Learn the Input key</strong> reads the code of the button you press and tests that
 the picker opens. <strong>Clear</strong> restores the default.</p>
 <p>The switch in the same menu removes the bind and gives the button back to LG's own picker. <strong>Learn the Home key</strong> is optional.</p>
+<p>The Guide button can be bound the same way; that is part of <a href="../live-tv/#the-guide-button">Live TV</a> (manager app &gt; <strong>Live TV</strong> &gt; <strong>Learn the Guide key</strong>).</p>
 <div class="admonition note">
 <p class="admonition-title">When the hook is not attached</p>
 <p>On some firmware the hook cannot attach. The manager then shows the Input key as not available and LG's picker is used.</p>

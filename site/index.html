@@ -481,6 +481,8 @@
       
         
       
+        
+      
     
     
     
@@ -540,6 +542,33 @@
     
   
   The launcher
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./themes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Themes
 
     
   </span>
@@ -739,6 +768,8 @@
       
         
       
+        
+      
     
     
     
@@ -879,6 +910,33 @@
     
   
   Troubleshooting
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./ai/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  With an AI assistant
 
     
   </span>
@@ -1210,13 +1268,15 @@ on-device voice recognition, and an optional debloat of LG's ads and telemetry.<
 <li><strong>Input key.</strong> The remote's Input button opens an Inputs list over the running app. <a href="input-key/">More</a>.</li>
 <li><strong>Picture notifications.</strong> A card with a photo over whatever is on screen, triggered from your network, for example by
   Home Assistant. <a href="notifications/">More</a>.</li>
-<li><strong>Voice (optional).</strong> Speech recognition on the TV (Moonshine), with answers from a language model through OpenRouter or from
-  your own server, shown as text. <a href="voice/">More</a>.</li>
+<li><strong>Voice (optional).</strong> Speech recognition on the TV (Moonshine), with answers from Home Assistant's Assist, a language model through
+  OpenRouter or your own server, shown as text. <a href="voice/">More</a>.</li>
 <li><strong>Debloat.</strong> Stops LG's ad and telemetry services and blocks a few ad servers. <a href="debloat/">More</a>.</li>
 <li><strong>Manager app.</strong> Sets up, updates and removes everything from the TV. <a href="manager/">More</a>.</li>
 </ul>
-<p>Everything is applied in RAM at boot. Nothing under <code>/usr</code>, <code>/etc</code> or the firmware is modified, and a reboot without the boot
-scripts brings LG's Home back. See <a href="tv-changes/">What it changes on the TV</a>.</p>
+<p>LG's system files are not modified. The launcher takes over Home with a mount that exists only in RAM, so a reboot without the
+boot scripts brings LG's Home back. Everything we install is stored in <code>/media/developer/cleanyourtv</code> (plus two boot scripts and the
+key binds), and the uninstall removes it. The project has no server or account and collects no data; optional features contact the
+services you choose (update checks go to GitHub). See <a href="tv-changes/">What it changes on the TV</a> and <a href="security/">Security</a>.</p>
 <h2 id="compatibility-at-a-glance">Compatibility at a glance<a class="headerlink" href="#compatibility-at-a-glance" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

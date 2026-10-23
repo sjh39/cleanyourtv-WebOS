@@ -370,6 +370,8 @@
       
         
       
+        
+      
     
     
     
@@ -429,6 +431,33 @@
     
   
   The launcher
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../themes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Themes
 
     
   </span>
@@ -621,6 +650,8 @@
   
     
     
+      
+        
       
         
       
@@ -861,6 +892,33 @@
     
   
   Troubleshooting
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  With an AI assistant
 
     
   </span>
@@ -1175,6 +1233,8 @@
       
         
       
+        
+      
     
     
     
@@ -1212,8 +1272,11 @@
 
 
 <h1 id="what-it-changes-on-the-tv">What it changes on the TV<a class="headerlink" href="#what-it-changes-on-the-tv" title="Permanent link">&para;</a></h1>
-<p>Everything is applied in RAM at boot or lives in the writable partitions. Nothing under <code>/usr</code>, <code>/etc</code> (apart from the marked
-debloat lines in <code>/etc/hosts</code>) or the firmware is modified, and a reboot without the boot scripts brings LG's Home back.</p>
+<p>Only the takeover of Home and the debloat's <code>/etc/hosts</code> lines are applied in RAM at boot, as mounts. Everything else is stored in
+the writable partitions listed below and stays after a reboot until you uninstall. Nothing under <code>/usr</code>, <code>/etc</code> or the firmware
+is modified on disk, and a reboot without the boot scripts brings LG's Home back.</p>
+<p>The optional voice download (about 80 MB) is stored in <code>/media/developer/cleanyourtv/voice</code> and stays until <strong>Remove voice</strong> or the
+uninstall. Optional features contact other services only when you switch them on; see <a href="../security/">Security</a>.</p>
 <h2 id="files">Files<a class="headerlink" href="#files" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -1225,7 +1288,7 @@ debloat lines in <code>/etc/hosts</code>) or the firmware is modified, and a reb
 <tbody>
 <tr>
 <td><code>/media/developer/cleanyourtv/</code></td>
-<td>The service (<code>helper.js</code> and modules), the launcher (<code>app/</code>), scripts, <code>config.json</code>, <code>usage.json</code>, the backup of the original state in <code>backup/</code>, Live TV data in <code>live/</code>, the optional voice download in <code>voice/</code></td>
+<td>The service (<code>helper.js</code> and modules), the launcher (<code>app/</code>), scripts, <code>config.json</code>, <code>usage.json</code>, the backup of the original state in <code>backup/</code>, downloaded themes in <code>themes/</code>, Live TV data in <code>live/</code>, the optional voice download in <code>voice/</code></td>
 </tr>
 <tr>
 <td><code>/media/developer/apps/usr/palm/applications/</code></td>
