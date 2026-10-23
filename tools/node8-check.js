@@ -228,15 +228,21 @@ const fake = (url, method) => { const res = { code: 0, out: '', writeHead(c) { t
   const pickerMod = require(path.join(helper, 'picker'));
   let pkClock = 1000, pkLaunches = 0, pkRunning = [], pkSaved = {};
   const pluna = async uri => { if (/getPowerState/.test(uri)) return { state: 'Active' }; if (/running/.test(uri)) return { running: pkRunning }; if (/getAppInfo/.test(uri)) return { returnValue: true }; if (/launch/.test(uri)) { pkLaunches++; return { returnValue: true }; } return {}; };
-  let pkTick = pickerMod.make(pluna, () => true, { get: () => pkSaved, set: v => { pkSaved = v; } }, () => pkClock);
+  const pkMake = () => { pkLaunches = 0; pkSaved = {}; pkClock = 1000; return pickerMod.make(pluna, () => true, { get: () => pkSaved, set: v => { pkSaved = v; } }, () => pkClock); };
+  let pkTick = pkMake();
   await pkTick(); ok(pkLaunches === 1, 'the picker is started once when it is not running');
   pkClock += 5000; await pkTick(); ok(pkLaunches === 1, 'it is not started again while it is still starting');
-  pkClock += 20000; await pkTick(); ok(pkLaunches === 2 && pkSaved.prewarm === undefined, 'the system closed it once: one more try');
-  pkClock += 25000; const r10 = await pkTick(); ok(pkLaunches === 2 && pkSaved.prewarm === false && r10 === true && /closes/.test(pkSaved.reason), 'closed twice: prewarming is switched off and pkSaved');
-  pkClock += 60000; await pkTick(); await pkTick(); ok(pkLaunches === 2, 'it is never started again while switched off');
-  pkLaunches = 0; pkSaved = {}; pkClock = 1000; pkRunning = [{ appId: 'com.cleanyourtv.picker' }]; pkTick = pickerMod.make(pluna, () => true, { get: () => pkSaved, set: v => { pkSaved = v; } }, () => pkClock);
-  await pkTick(); pkClock += 60000; await pkTick(); ok(pkLaunches === 0 && pkSaved.prewarm === undefined, 'a picker that stays running (listed by id or appId) is left alone');
-  pkRunning = []; pkSaved = { prewarm: true }; await pkTick(); ok(pkLaunches === 1, 'switching it back on in the manager starts it again');
+  pkClock += 25000; await pkTick(); pkClock += 30000; await pkTick(); ok(pkLaunches === 3 && pkSaved.prewarm === undefined, 'a picker that vanishes is started again');
+  pkClock += 30000; const r10 = await pkTick(); ok(pkLaunches === 3 && pkSaved.prewarm === false && r10 === true && /keeps closing/.test(pkSaved.reason), 'three starts in ten minutes: prewarming is switched off and saved');
+  pkClock += 60000; await pkTick(); await pkTick(); ok(pkLaunches === 3, 'it is never started again while switched off');
+  pkTick = pkMake(); await pkTick();   // it is listed as running for a moment after every start, then closed: that still counts
+  for (let i = 0; i < 4; i++) { pkRunning = [{ id: 'com.cleanyourtv.picker' }]; pkClock += 5000; await pkTick(); pkRunning = []; pkClock += 40000; await pkTick(); }
+  ok(pkSaved.prewarm === false && pkLaunches === 3, 'a picker that is listed once after each start but then closed still ends up switched off');
+  pkTick = pkMake(); pkRunning = [{ appId: 'com.cleanyourtv.picker' }]; await pkTick(); pkClock += 3600000; await pkTick(); await pkTick();
+  ok(pkLaunches === 0 && pkSaved.prewarm === undefined, 'a picker that stays running (listed by id or appId) is never started');
+  pkTick = pkMake(); pkRunning = []; await pkTick(); pkClock += 15 * 60000; await pkTick(); pkClock += 15 * 60000; await pkTick(); pkClock += 15 * 60000; await pkTick();
+  ok(pkLaunches === 4 && pkSaved.prewarm === undefined, 'a start every quarter of an hour (standby, wake) is normal and stays on');
+  pkTick = pkMake(); pkSaved = { prewarm: true }; await pkTick(); ok(pkLaunches === 1, 'switching it back on in the manager starts it again');
 
   // 11. Diagnostics: child processes with their own timeout; the last operations survive a process that died
   process.env.CYTV_RUNFILE = path.join(tmp, 'run.json');

@@ -20,7 +20,7 @@ The pointer works too.
 
 The Inputs list is a small app. A cold start takes about eight seconds, so the service starts it hidden in the background after boot
 and the key only wakes it. Some TVs close a hidden app again straight away, which shows a loading circle each time. The service
-checks that the picker stays running; if the system closes it twice it stops starting it (saved in `config.json` as
+counts the starts; if it has to start the picker three times in ten minutes, the system keeps closing it, and the service stops starting it (saved in `config.json` as
 `picker.prewarm: false`) and the first press of the Input key takes a few seconds instead. **Input key** > **Keep the Inputs list
 ready** in the manager app shows the state and switches it on or off.
 
