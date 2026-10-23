@@ -4,6 +4,10 @@ name: Test build
 on:
   push:
     branches-ignore: [main]
+    paths-ignore:   # a documentation-only push does not need a test build
+      - "docs/**"
+      - "zensical.toml"
+      - ".github/workflows/docs.yml"
 permissions:
   contents: write
 jobs:

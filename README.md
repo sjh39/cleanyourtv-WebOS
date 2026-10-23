@@ -3,6 +3,8 @@
 A fast home screen for rooted LG webOS TVs, with Live TV from your own playlist, an Inputs list on the Input key,
 picture notifications and an optional debloat of LG's ads and telemetry.
 
+**Documentation:** <https://lasharor.github.io/cleanyourtv-WebOS/> (source in `docs/`, built with [Zensical](https://zensical.org)).
+
 - **Launcher:** replaces LG's Home with a dock of four apps, a top shelf, an app grid sorted by use, an Inputs picker,
   a Settings shortcut and a clock.
 - **Voice (optional):** speech recognition on the TV (Moonshine), answers from a language model through OpenRouter or from your own server, shown as text on screen.
