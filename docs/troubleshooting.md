@@ -9,9 +9,9 @@
 - **The Input key opens LG's picker.** Check the Input key switch in the manager app and run **Learn the Input key**.
 - **A loading circle appears every half minute and the remote stops responding until you hold Back.** The Input key can show the
   Inputs list over the running app with a small app that the service starts in the background. On webOS 6.5 (reports) the TV closes that
-  app again and it keeps the remote. From v1.5.13 webOS before 10 uses the launcher's own Inputs list instead (the TV goes to Home
-  with the list open), and on any TV the service switches to that when it had to start the background app three times in ten minutes
-  (`picker.mode: launcher` in `config.json`). **Input key** > **Input key shows** chooses by hand; switching the Input key off entirely
+  app again and it keeps the remote. From v1.5.13 webOS before 10 starts the app only when the key is pressed and closes it after use,
+  and on any TV the service switches to that when it had to start the background app three times in ten minutes
+  (`picker.mode: ondemand` in `config.json`). **Input key** > **Input key shows** chooses by hand; switching the Input key off entirely
   gives the key back to LG.
 - **The manager list does not show Share log or Uninstall.** Before v1.5.13 the list could not scroll; update, then move down: the
   list scrolls and fades where more rows are hidden.

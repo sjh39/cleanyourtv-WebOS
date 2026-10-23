@@ -61,7 +61,12 @@ function launch(id,params){
   x.onload=function(){log('launch reply '+x.responseText.slice(0,120))};
   x.onerror=x.ontimeout=function(){log('helper did not answer; trying the system');call('luna://com.webos.applicationManager/launch',{id:id,params:params||{}})};
   x.send(JSON.stringify({id:id,params:params||{}}))}
-function hide(){log('hide');shown=false;document.body.classList.remove('on');try{webOSSystem.hide()}catch(e){}}
+/* Started on demand by the Input key ({"ondemand":true}): nothing runs hidden in the background. Dismissing closes the app (platformBack,
+   window.close, and the service asks the app manager as well); a hidden overlay can keep the remote on some TVs. Closes by itself when idle. */
+var ondemand=false,idleT=0;
+function closeSoon(){log('close');try{if(window.webOS&&webOS.platformBack)webOS.platformBack()}catch(e){}try{window.close()}catch(e){}}
+function idle(){clearTimeout(idleT);if(ondemand&&shown)idleT=setTimeout(function(){if(shown)hide()},10000)}
+function hide(){log('hide');shown=false;clearTimeout(idleT);document.body.classList.remove('on');try{webOSSystem.hide()}catch(e){}if(ondemand)closeSoon()}
 function cur(){return row===0?apps:inputs}
 function persist(){try{localStorage.setItem(KEY,JSON.stringify(cache))}catch(e){}}
 
@@ -124,7 +129,7 @@ function load(){   // the last known layout, ready before the first open
   try{var c=JSON.parse(localStorage.getItem(KEY)||'null');if(c&&c.inputs&&c.inputs.length){cache=c;cache.icons=cache.icons||{};cache.colors=cache.colors||{}}}catch(e){}
   setData(cache.inputs.length?cache:{apps:[],inputs:buildInputs([])},true)}
 function show(){
-  shown=true;moved=false;shownAt=Date.now();log('show');
+  shown=true;moved=false;shownAt=Date.now();log('show');idle();
   setData({apps:apps,inputs:inputs},true);   // focus back on the active input
   document.body.classList.add('on');
   requestAnimationFrame(function(){log('painted')});
@@ -138,18 +143,21 @@ function move(dr,dc){
   paint()}
 document.addEventListener('keydown',function(e){
   if(!shown)return;
+  idle();
   var k=e.keyCode;
   if(k===37)move(0,-1);else if(k===39)move(0,1);else if(k===38)move(-1,0);else if(k===40)move(1,0);
   else if(k===13)choose();
   else if(k===461||k===27||k===8||k===10009)hide();
   e.preventDefault()});
-document.addEventListener('click',function(e){if(!shown)return;var r=e.target.closest&&e.target.closest('[data-r]');if(r){row=+r.getAttribute('data-r');col[row]=+r.getAttribute('data-i');paint();choose()}else hide()});
+document.addEventListener('click',function(e){if(!shown)return;idle();var r=e.target.closest&&e.target.closest('[data-r]');if(r){row=+r.getAttribute('data-r');col[row]=+r.getAttribute('data-i');paint();choose()}else hide()});
 document.addEventListener('mousemove',function(e){var r=e.target.closest&&e.target.closest('[data-r]');if(!r)return;var a=+r.getAttribute('data-r'),i=+r.getAttribute('data-i');if(a!==row||i!==col[row]){moved=true;row=a;col[row]=i;paint()}});
 document.addEventListener('webOSRelaunch',function(){
   log('relaunch shown='+shown);
   if(params().prewarm)return;
+  idle();
   if(shown){if(Date.now()-shownAt>700)hide()}   // Input pressed again closes it
   else show()});
+ondemand=!!params().ondemand;
 load();
 if(params().prewarm){
   refresh();   // built and filled while hidden

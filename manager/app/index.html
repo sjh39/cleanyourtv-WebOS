@@ -163,9 +163,8 @@ function build(){
     var hk=st.inputhook||{},na=hk.hook&&!hk.hook.attached;
     rows.push({label:'Input key opens our Inputs list',sub:na?'not available on this firmware':onoff(st.options.inputKey),fn:function(){opt({inputKey:!st.options.inputKey})}});
     rows.push({label:'Learn the Input key',sub:(st.keys&&st.keys.inputIsDefault)?'default ('+st.keys.input+')':'learned: '+(st.keys&&st.keys.input),fn:function(){openKeys('input')}});
-    var pk=st.picker||{},pkOff=pk.prewarm===false,pkLauncher=pk.mode==='launcher';
-    rows.push({label:'Input key shows',sub:pkLauncher?'the launcher\u2019s Inputs list'+(pk.reason?' \u00B7 '+pk.reason:' \u00B7 default on this webOS'):'the Inputs list over the running app',fn:function(){opt({pickerMode:pkLauncher?'overlay':'launcher'})}});
-    if(!pkLauncher)rows.push({label:'Keep the Inputs list ready',sub:pkOff?'off'+(pk.reason?' \u00B7 '+pk.reason:'')+' \u00B7 the first press takes a few seconds':'on \u00B7 opens at once',fn:function(){opt({pickerPrewarm:pkOff})}});
+    var pk=st.picker||{},pkMode=pk.mode||'overlay',PKT={overlay:'over the running app, ready in the background (instant)',ondemand:'over the running app, started when pressed',launcher:'the launcher\u2019s Inputs list'};
+    rows.push({label:'Input key shows',sub:(pk.released?'LG\u2019s own list: CleanYourTV is not the Home':PKT[pkMode])+(pk.reason&&!pk.released?' \u00B7 '+pk.reason:''),fn:function(){var o=['overlay','ondemand','launcher'];opt({pickerMode:o[(o.indexOf(pkMode)+1)%3]})}});
     rows.push({label:'Learn the Home key',sub:'optional · '+(st.keys&&st.keys.home?'now: '+st.keys.home:'not learned'),fn:function(){openKeys('home')}});
     rows.push({sep:true});
     rows.push({label:'Back',fn:pop});
@@ -236,8 +235,7 @@ var INFO={
  'Remove the playlist':'Deletes the playlist address, the channel list, the guide and your favourites from the TV.',
  'Yes, remove the playlist':'Deletes the playlist and everything stored for it on the TV. You can set it up again.',
  'Learn the Guide key':'Records the Guide button\u2019s code. Afterwards it opens the Live TV channel guide over whatever is running (only while Live TV is on). Clear it to get LG\u2019s guide back.',
- 'Input key shows':'The Input button opens either the Inputs list over the running app (a small app started in the background; works on webOS 25) or the launcher\u2019s own Inputs list (the TV goes to Home with the list open). On older webOS the background app kept the remote and showed a loading circle, so there the launcher\u2019s list is the default. Choose to switch.',
- 'Keep the Inputs list ready':'On: the Inputs list is started in the background so the Input key opens it at once. Some TVs close it again and show a loading circle every half minute; then this switches itself off and the first press of the Input key takes a few seconds instead. You can switch it on or off here.',
+ 'Input key shows':'How the Input button shows the Inputs. Over the running app, ready in the background: instant, tested on webOS 25. Over the running app, started when pressed: nothing runs hidden, so it cannot keep the remote; the default on older webOS, where the background one showed a loading circle. The launcher\u2019s Inputs list: the TV goes to our Home (needs CleanYourTV as Home; otherwise the key stays with LG). Choose to go to the next one.',
  'Learn the Home key':'Optional. Records the Home button\u2019s code. The Home key keeps working exactly as before.',
  'Back':'Back to the main list.',
  'Cancel':'Nothing changes.',

@@ -48,6 +48,7 @@ function setHome(enabled) {
 
 function create(ctx) {
   const { luna, readConf, writeConf, inputhook, VERSION, pickerShown, notifyApi, voice } = ctx, pickerMode = ctx.pickerMode || (() => 'overlay'), syncPickerMode = ctx.syncPickerMode || (() => {});
+  const inputKeyOn = ctx.inputKeyOn || (() => options().inputKey);
   const keys = () => { const k = Object.assign({ input: '', home: '', voice: '', guide: '', learned: false }, readConf().keys || {}); return Object.assign(k, { inputIsDefault: !k.input, input: k.input || '241' }); };
   let job = { state: 'idle', message: '', at: 0 }, release = null, releaseAt = 0, releaseErr = '', frontendOk = null, checking = false;
   const setJob = (state, message) => { job = { state, message, at: Date.now() }; };
@@ -109,7 +110,7 @@ function create(ctx) {
       frontend: { version: fe.version || '?', build: frontendBuild(), previous: prevInfo() && prevInfo().version || null,
         updateTo: lat && differs(lat.frontend, fe.version, lat.build, frontendBuild()) ? lat.frontend : null },
       channel: channel(), release: lat ? { version: lat.version, frontend: lat.frontend, service: lat.service, build: lat.build, test: lat.test, notes: lat.notes } : null, checkedAt: releaseAt, checking, checkError: releaseErr,
-      options: options(), picker: Object.assign({}, readConf().picker || {}, { mode: pickerMode() }), voice: voice ? (v => ({ installed: v.installed, enabled: v.enabled }))(voice.status()) : null, notifyApi: notifyApi ? { enabled: notifyApi.info().enabled, port: notifyApi.info().port } : { enabled: false }, home: { enabled: !fs.existsSync(D + '/DISABLE'), fullhome: fs.existsSync('/usr/palm/applications/com.webos.app.fullhome'), ours: (() => { try { return fs.readFileSync('/proc/mounts', 'utf8').includes(' /usr/palm/applications/com.webos.app.home '); } catch (_) { return false; } })() },
+      options: options(), picker: Object.assign({}, readConf().picker || {}, { mode: pickerMode(), released: !!options().inputKey && !inputKeyOn() }), voice: voice ? (v => ({ installed: v.installed, enabled: v.enabled }))(voice.status()) : null, notifyApi: notifyApi ? { enabled: notifyApi.info().enabled, port: notifyApi.info().port } : { enabled: false }, home: { enabled: !fs.existsSync(D + '/DISABLE'), fullhome: fs.existsSync('/usr/palm/applications/com.webos.app.fullhome'), ours: (() => { try { return fs.readFileSync('/proc/mounts', 'utf8').includes(' /usr/palm/applications/com.webos.app.home '); } catch (_) { return false; } })() },
       inputhook: inputhook.status(keys().input), keys: keys(), job, repo: repoUrl().replace(/^https?:\/\/[^/]+\/repos\//, '').replace(/\/releases.*$/, ''),
     };
   }
@@ -213,13 +214,13 @@ function create(ctx) {
     if (typeof o.inputKey === 'boolean') next.inputKey = o.inputKey;
     if (typeof o.liveTv === 'boolean') next.liveTv = o.liveTv;
     if (typeof o.pickerPrewarm === 'boolean') c.picker = Object.assign({}, c.picker, o.pickerPrewarm ? { prewarm: true } : { prewarm: false, reason: 'switched off in the manager', at: Date.now() });
-    if (o.pickerMode === 'overlay' || o.pickerMode === 'launcher') c.picker = Object.assign({}, c.picker, { mode: o.pickerMode, prewarm: o.pickerMode === 'overlay' ? true : (c.picker || {}).prewarm, reason: 'chosen in the manager', at: Date.now() });
+    if (['overlay', 'ondemand', 'launcher'].indexOf(o.pickerMode) >= 0) c.picker = Object.assign({}, c.picker, { mode: o.pickerMode, prewarm: o.pickerMode === 'overlay' ? true : (c.picker || {}).prewarm, reason: 'chosen in the manager', at: Date.now() });
     c.options = next; writeConf(c); syncPickerMode();
     if (next.debloat !== cur.debloat) {
       if (next.debloat) await sh('ln -sf ' + D + '/15-cleanyourtv-debloat /var/lib/webosbrew/init.d/15-cleanyourtv-debloat; sh ' + D + '/debloat-stop.sh', 60000);
       else await sh('rm -f /var/lib/webosbrew/init.d/15-cleanyourtv-debloat; sh ' + D + '/debloat-undo.sh', 60000);
     }
-    inputhook.ensure(next.inputKey, keys().input);
+    inputhook.ensure(inputKeyOn(), keys().input);
     return next;
   }
 
@@ -233,7 +234,7 @@ function create(ctx) {
         const c = readConf(), k = Object.assign({ input: '241', home: '', voice: '' }, c.keys || {});
         k[l.name] = l.code; c.keys = k; writeConf(c);   // 'learned' is set when the Input flow is finished (keys-done)
         inputhook.markSaved && inputhook.markSaved();
-        if (l.name === 'input') inputhook.ensure(options().inputKey, l.code); else if (l.name === 'voice' || l.name === 'guide') inputhook.ensure(options().inputKey, keys().input);
+        if (l.name === 'input') inputhook.ensure(inputKeyOn(), l.code); else if (l.name === 'voice' || l.name === 'guide') inputhook.ensure(inputKeyOn(), keys().input);
       }
       return json(l);
     }
@@ -265,7 +266,7 @@ function create(ctx) {
     if (act === 'clear-key') {   // forget a learned code: Input goes back to the default, Home to none
       const name = ['home', 'voice', 'guide'].includes(b.name) ? b.name : 'input', c = readConf(), k = Object.assign({ input: '', home: '', voice: '', guide: '' }, c.keys || {});
       k[name] = ''; if (name === 'input') k.learned = false; c.keys = k; writeConf(c);
-      if (name !== 'home') inputhook.ensure(options().inputKey, keys().input);
+      if (name !== 'home') inputhook.ensure(inputKeyOn(), keys().input);
       return json({ returnValue: true });
     }
     if (act === 'keys-done') { const c = readConf(); c.keys = Object.assign({ input: '241', home: '' }, c.keys || {}, { learned: true }); writeConf(c); return json({ returnValue: true }); }
