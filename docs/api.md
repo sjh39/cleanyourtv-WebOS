@@ -14,6 +14,7 @@ you can call it from a shell on the TV (for example over SSH).
 | `GET /api/inputs` | HDMI inputs and their state |
 | `POST /api/notify` | Picture notification (on the network: `POST :8767/notify` with the token) |
 | `GET /api/voice/status`, `POST /api/voice/install`, `/uninstall`, `/set`, `/listen`, `/ask`, `/forget` | Optional voice function and AI chat |
+| `GET /api/theme/list`, `POST /api/theme/set`, `/revert` | Themes for the home screen; see [Themes](themes.md) |
 | `GET /api/live/status`, `/api/live/channels`, `/api/live/epg` | Live TV data |
 | `POST /api/live/settings`, `/api/live/refresh`, `/api/live/reset` | Live TV setup |
 | `GET /api/manager/status` | Versions, updates, options, hook state |

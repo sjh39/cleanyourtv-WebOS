@@ -52,7 +52,7 @@ and troubleshooting.
 
 1. **[A launcher that is quick and yours](https://lasharor.github.io/cleanyourtv-WebOS/launcher/).** A dock of four apps, an app
    grid sorted by how often you use each app, top buttons you choose, an Inputs list and a clock; menus in English, Dutch, German,
-   French and Spanish.
+   French and Spanish; [themes](https://lasharor.github.io/cleanyourtv-WebOS/themes/) for colours, layout and wallpaper.
 
 2. **[Live TV from your own playlist](https://lasharor.github.io/cleanyourtv-WebOS/live-tv/).** Plays an M3U playlist (HLS) with a
    channel list, a programme guide (XMLTV) and number entry. It does not use LG's tuner, and the project provides no channels.

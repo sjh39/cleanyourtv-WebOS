@@ -5,49 +5,54 @@
 /* Built for a weak TV GPU: only transform and opacity ever animate; no blur, masks or filters. */
 :root{
   --ink:#f5f6f8; --ink2:rgba(245,246,248,.62); --night:#07080b; --panel:#14161b;
+  --panel2:#1a1c22; --acc:#f5f6f8; --acc-ink:#0b0c10; --glow-op:1; --spd:1; --fs:1; --cols:10; --tile-h:151px; --tile-r:34px; --gap-x:24px; --gap-y:26px;
+  --dock-w:408px; --dock-h:230px; --dock-r:36px; --dock-gap:32px; --wall:none;   /* the theme (manager > Theme) overrides these */
   --font:"LG Smart UI","Helvetica Neue",Helvetica,Arial,sans-serif;
 }
 *{box-sizing:border-box;margin:0}
 html,body{width:1920px;height:1080px;overflow:hidden;background:var(--night);color:var(--ink);font-family:var(--font)}
+body{background-image:var(--wall);background-size:1920px 1080px}
+.clk-off #time,.clk-off #date{display:none}
+.clk-right #bar{order:1}.clk-right .sp{order:2}.clk-right #time{order:3}.clk-right #date{order:4}
 ::selection{background:rgba(255,255,255,.25)}
 
-.glow{position:absolute;left:0;top:0;width:1920px;height:720px;opacity:0;transition:opacity .35s linear;will-change:opacity;
+.glow{position:absolute;left:0;top:0;width:1920px;height:720px;opacity:0;transition:opacity calc(.35s*var(--spd)) linear;will-change:opacity;
   background:radial-gradient(ellipse 1400px 640px at 26% -6%,rgba(var(--c),.45),transparent 70%)}
-.glow.on{opacity:1}
+.glow.on{opacity:var(--glow-op)}
 
 #top{position:absolute;left:96px;right:96px;top:54px;height:76px;display:flex;align-items:center;z-index:5}
-#time{font-size:56px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
-#date{font-size:28px;color:rgba(245,246,248,.88);margin-left:22px;padding-top:14px}
+#time{font-size:calc(56px*var(--fs));font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
+#date{font-size:calc(28px*var(--fs));color:rgba(245,246,248,.88);margin-left:22px;padding-top:14px}
 #top .sp{flex:1}
 #bar{display:flex}
-.pill{display:flex;align-items:center;gap:14px;height:64px;padding:0 30px 0 24px;margin-left:16px;border-radius:32px;font-size:26px;font-weight:500;
-  background:rgba(255,255,255,.09);box-shadow:inset 0 0 0 1px rgba(255,255,255,.10);transition:transform .12s cubic-bezier(.3,1.35,.5,1);will-change:transform}
+.pill{display:flex;align-items:center;gap:14px;height:64px;padding:0 30px 0 24px;margin-left:16px;border-radius:32px;font-size:calc(26px*var(--fs));font-weight:500;
+  background:rgba(255,255,255,.09);box-shadow:inset 0 0 0 1px rgba(255,255,255,.10);transition:transform calc(.12s*var(--spd)) cubic-bezier(.3,1.35,.5,1);will-change:transform}
 .pill svg{width:30px;height:30px;flex:none}
-.pill.f{background:var(--ink);color:#0b0c10;transform:scale(1.07)}
+.pill.f{background:var(--acc);color:var(--acc-ink);transform:scale(1.07)}
 
 #shelf{position:absolute;left:96px;right:96px;top:150px;height:120px;z-index:5}
-#name{font-size:92px;font-weight:700;letter-spacing:-.028em;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#name{font-size:calc(92px*var(--fs));font-weight:700;letter-spacing:-.028em;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* the view clips rows as they scroll up under the shelf */
 #view{position:absolute;left:0;top:300px;width:1920px;height:780px;overflow:hidden;z-index:2}
-#scroll{position:absolute;left:0;top:0;width:1920px;height:780px;transition:transform .3s ease-out;will-change:transform}
-#dock{position:absolute;left:96px;top:60px;display:flex;gap:32px}
-#grid{position:absolute;left:96px;top:350px;width:1728px;display:grid;grid-template-columns:repeat(10,151px);gap:26px 24px}
+#scroll{position:absolute;left:0;top:0;width:1920px;height:780px;transition:transform calc(.3s*var(--spd)) ease-out;will-change:transform}
+#dock{position:absolute;left:96px;top:60px;display:flex;gap:var(--dock-gap)}
+#grid{position:absolute;left:96px;top:calc(var(--dock-h) + 120px);width:1728px;display:grid;grid-template-columns:repeat(var(--cols),1fr);gap:var(--gap-y) var(--gap-x)}
 
 .tile{--c:74,84,112;--b:20,22,27;position:relative;display:flex;align-items:center;justify-content:center;will-change:transform;
-  background:rgb(var(--b));transition:transform .12s cubic-bezier(.3,1.35,.5,1)}
+  background:rgb(var(--b));transition:transform calc(.12s*var(--spd)) cubic-bezier(.3,1.35,.5,1)}
 .snap .tile,.snap .pill{transition:none}   /* held arrow key: follow the focus without animating each step */
-.tile.press{transform:scale(.96)!important;transition-duration:.06s}
+.tile.press{transform:scale(.96)!important;transition-duration:calc(.06s*var(--spd))}
 .tile.launching{opacity:.82}
 .tile img{object-fit:contain}
 .tile svg{fill:none;stroke:var(--ink);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;opacity:.9}
-.tile .t{font-size:26px;font-weight:600;padding:12px;text-align:center;line-height:1.15;opacity:.9}
-.tile.f{z-index:3;outline:4px solid rgba(255,255,255,.95);outline-offset:4px;box-shadow:0 24px 36px rgba(0,0,0,.6)}
-#dock .tile{width:408px;height:230px;border-radius:36px}
+.tile .t{font-size:calc(26px*var(--fs));font-weight:600;padding:12px;text-align:center;line-height:1.15;opacity:.9}
+.tile.f{z-index:3;outline:4px solid var(--acc);outline-offset:4px;box-shadow:0 24px 36px rgba(0,0,0,.6)}
+#dock .tile{width:var(--dock-w);height:var(--dock-h);border-radius:var(--dock-r)}
 #dock .tile img{height:56%;max-width:46%}
 #dock .tile svg{width:96px;height:96px}
 #dock .tile.f{transform:translateY(-10px) scale(1.05)}
-#grid .tile{height:151px;border-radius:34px}
+#grid .tile{height:var(--tile-h);border-radius:var(--tile-r)}
 #grid .tile img{width:64%;height:64%}
 #grid .tile svg{width:64px;height:64px}
 #grid .tile.f{transform:scale(1.12)}
@@ -56,20 +61,20 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:var(--night);col
 #grid .tile.sys{background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
 
 #toast{position:absolute;bottom:64px;left:50%;transform:translateX(-50%);z-index:40;padding:18px 38px;border-radius:34px;font-size:28px;
-  background:#14161b;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);opacity:0;pointer-events:none}
+  background:var(--panel);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);opacity:0;pointer-events:none}
 #toast.on{opacity:1}
 
 /* menus */
 #ov{position:absolute;left:0;top:0;width:1920px;height:1080px;z-index:30;background:rgba(5,6,9,.97);display:flex;align-items:center;justify-content:center}
 #ov .panel{width:760px;display:flex;flex-direction:column;gap:12px}
 #ov h2{font-size:46px;font-weight:700;letter-spacing:-.02em;margin-bottom:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.row{display:flex;align-items:center;gap:22px;height:84px;padding:0 34px;border-radius:30px;font-size:30px;font-weight:500;
-  background:#1a1c22;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.row{display:flex;align-items:center;gap:22px;height:84px;padding:0 34px;border-radius:30px;font-size:calc(30px*var(--fs));font-weight:500;
+  background:var(--panel2);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
 .row svg{width:34px;height:34px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .row .lb{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .row .st{font-size:22px;opacity:.65}
 .row.dim{opacity:.6}
-.row.f{background:var(--ink);color:#0b0c10;opacity:1}
+.row.f{background:var(--acc);color:var(--acc-ink);opacity:1}
 .more{height:22px;text-align:center;font-size:20px;color:var(--ink2)}
 
 /* Live TV (inside the launcher) */
@@ -142,7 +147,7 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:var(--night);col
 <div id="lv"><div id="lv-stage"></div><div id="lv-spin" class="layer"></div><div id="lv-osd" class="layer"><img class="logo" id="lv-ologo" alt=""><div class="num" id="lv-onum"></div><div class="info"><div class="name" id="lv-oname"></div><div class="now" id="lv-onow"></div><div class="next" id="lv-onext"></div><div class="pbar"><i id="lv-obar"></i></div></div></div><div id="lv-numin" class="layer"></div><div id="lv-guide" class="layer"><div id="lv-glow"></div><div id="lv-gtop"><div id="lv-gtitle"></div><div id="lv-gtabs"></div><div id="lv-gclock"></div></div><div id="lv-rows"></div><div id="lv-detail"></div></div><div id="lv-msg" class="layer"></div></div>
 <div id="toast"></div>
 <script>
-var API='http://127.0.0.1:8765', CACHE_KEY='cytv.cache.v2', VERSION='1.4.5';
+var API='http://127.0.0.1:8765', CACHE_KEY='cytv.cache.v2', VERSION='1.4.9';
 var DEFAULTS={
   dock:['netflix','youtube.leanback.v4','amazon','com.disney.disneyplus-prod'],
   topbar:[{label:'Inputs',icon:'inputs',action:'inputs'},{label:'Live TV',icon:'tv',action:'live'},{label:'Settings',icon:'settings',app:'com.palm.app.settings'}]
@@ -233,11 +238,24 @@ function tile(a){
 
 /* ---------- ambient glow: two layers cross-fade, updated only once focus settles ---------- */
 function glowNow(e){
-  var col=e.style.getPropertyValue('--c')||'74,84,112';
+  var col=TH.glow||e.style.getPropertyValue('--c')||'74,84,112';
   if(col===gColor)return;gColor=col;
   var on=gSide?$('gB'):$('gA'),off=gSide?$('gA'):$('gB');gSide^=1;
   on.style.setProperty('--c',col);on.classList.add('on');off.classList.remove('on')}
 function glowSoon(e){clearTimeout(gT);gT=setTimeout(function(){glowNow(e)},110)}
+
+/* ---------- theme: the service resolves the chosen theme (manager > Theme) into CSS variables and a few numbers ---------- */
+var TH={cols:10,tileH:151,gapY:26,dockH:230,glow:''},themeKeys=[];
+function applyTheme(t){
+  var st=document.documentElement.style,b=document.body.classList,k;
+  for(k=0;k<themeKeys.length;k++)st.removeProperty(themeKeys[k]);themeKeys=[];
+  b.remove('clk-off','clk-right');
+  if(!t||!t.vars){TH={cols:10,tileH:151,gapY:26,dockH:230,glow:''};return}
+  for(k in t.vars){st.setProperty(k,t.vars[k]);themeKeys.push(k)}
+  var w=t.wallpaper;
+  if(w){var d='rgba('+t.nightRgb+','+w.dim+')';st.setProperty('--wall','linear-gradient('+d+','+d+'),url("'+API+'/api/theme/wallpaper/'+w.file+'")');themeKeys.push('--wall')}
+  if(t.clock==='off')b.add('clk-off');else if(t.clock==='right')b.add('clk-right');
+  TH={cols:t.cols||10,tileH:t.tileH||151,gapY:t.gapY||26,dockH:t.dockH||230,glow:t.glowRgb||''}}
 
 function setFocus(nr,nc,first){
   var old=rows[r]&&rows[r][c];if(old)old.classList.remove('f');
@@ -246,7 +264,7 @@ function setFocus(nr,nc,first){
   if(n.textContent!==nm)n.textContent=nm;
   if(first)glowNow(e);else glowSoon(e);
   var sh=0;
-  if(r>=2){var gr=rows.length-2;sh=Math.min(0,Math.max(50-(350+(r-2)*177),726-(350+gr*151+(gr-1)*26)))}   /* row height 151 + gap 26: no layout reads */
+  if(r>=2){var gr=rows.length-2;var gt=TH.dockH+120;sh=Math.min(0,Math.max(50-(gt+(r-2)*(TH.tileH+TH.gapY)),726-(gt+gr*TH.tileH+(gr-1)*TH.gapY)))}   /* row height + gap from the theme: no layout reads */
   $('scroll').style.transform=sh?'translateY('+sh+'px)':''}
 function mapCol(from,to,col){return from>1?Math.round(col*(to-1)/(from-1)):0}
 function posOf(e){for(var i=0;i<rows.length;i++){var j=rows[i].indexOf(e);if(j>=0)return [i,j]}return null}
@@ -370,7 +388,7 @@ function rebuild(){
     var p=document.createElement('div');p.className='pill';p._o=o;p.innerHTML=svg(o.icon)+'<span></span>';p.lastChild.textContent=barLabel(o);
     hit(p);bar.appendChild(p);return p});
   rows=[tb,d.length?d:tb];
-  for(var i=0;i<g.length;i+=10)rows.push(g.slice(i,i+10));
+  for(var i=0;i<g.length;i+=TH.cols)rows.push(g.slice(i,i+TH.cols));
   var nr=Math.min(r,rows.length-1),nc=c;
   if(keep&&tiles[keep]){var p=posOf(tiles[keep]);if(p){nr=p[0];nc=p[1]}}
   setFocus(nr,nc,true)}
@@ -381,7 +399,7 @@ function load(){api('/api/apps').then(function(x){
   var rank=Object.keys(usage).sort(function(a,b){return usage[b]-usage[a]});
   var sig=JSON.stringify([x.apps.map(function(a){return a.id}),x.config,rank]);
   if(sig===lastSig)return;lastSig=sig;
-  apps=x.apps.map(function(a){return {id:a.id,title:a.title}});apps.push({id:'__live',title:t('Live TV')});cfg=x.config||{};store();rebuild()
+  apps=x.apps.map(function(a){return {id:a.id,title:a.title}});apps.push({id:'__live',title:t('Live TV')});cfg=x.config||{};applyTheme(cfg.theme);store();rebuild()
 }).catch(function(){toast(t('Helper not reachable, retrying...'));setTimeout(load,3000)})}
 
 /* ---------- input: tap OK to open, hold OK for options ---------- */
@@ -589,7 +607,7 @@ var LIVE=(function(){
 
 /* first paint straight from the last known layout, then refresh from the helper */
 try{var cached=JSON.parse(localStorage.getItem(CACHE_KEY)||'null');
-  if(cached&&cached.apps&&cached.apps.length){apps=cached.apps;cfg=cached.cfg||{};usage=cached.usage||{};colors=cached.colors||{};rebuild()}}catch(e){}
+  if(cached&&cached.apps&&cached.apps.length){apps=cached.apps;cfg=cached.cfg||{};applyTheme(cfg.theme);usage=cached.usage||{};colors=cached.colors||{};rebuild()}}catch(e){}
 load();wantInputs();
 api('/api/frontend-ok',{version:VERSION}).catch(function(){});   // lets the manager know an updated launcher started
 </script></body></html>
