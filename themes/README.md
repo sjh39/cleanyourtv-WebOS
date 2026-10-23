@@ -1,83 +1,92 @@
 # Themes
 
-The bundled themes of CleanYourTV. A theme changes how the home screen looks: colours, the position and size of the clock, buttons,
-app name, dock and grid, text, effects and a wallpaper. Choose one in the manager app under **Theme**.
+The themes of CleanYourTV. A theme changes how the home screen looks: colours, the position and size of the clock, buttons, app name,
+dock and grid, text, effects and a wallpaper. In the manager app, **Theme** lists them with these screenshots; the TV reads this folder
+from GitHub (the `main` branch) and downloads a theme when you choose it. A new theme is available to every TV as soon as it is merged,
+without a release.
 
 [![Classic, Midnight, Warm and Bloom](../docs/screenshots/themes-readme.jpg)](../docs/screenshots/themes-readme.jpg)
 
-Each `<id>.json` here is one theme; `wallpapers/` holds the images they use. They are packaged with the service. Every setting a
-theme can use, with its range and default, is in the [Themes page of the documentation](https://lasharor.github.io/cleanyourtv-WebOS/themes/).
-The pictures are the launcher page rendered in a browser with each theme.
+| File | What it is |
+|---|---|
+| `index.json` | The list the TV downloads. Generated: `node tools/theme-index.js`. |
+| `<id>/theme.json` | The theme: colours, positions, sizes, effects. Every key is optional. |
+| `<id>/preview.jpg` | The screenshot shown in the manager. |
+| `<id>/<wallpaper>` | The wallpaper, if the theme uses one. |
+
+Every setting, with its range and default, is in the [Themes page of the documentation](https://lasharor.github.io/cleanyourtv-WebOS/themes/).
 
 ## Make your own
 
-1. Copy a theme that is close to what you want, for example `classic.json`, to `<id>.json` (lower-case letters, digits and `-`).
-2. Change only what you want to change. A missing value keeps the default, or the value of the theme named in `"extends"`.
-3. If it uses a wallpaper, put a `.jpg`, `.png` or `.webp` (at most 1.5 MB, 1920 x 1080) in `wallpapers/` and name it in `effects.wallpaper`.
-4. Check it: `node tools/node8-check.js` validates every theme in this folder.
-5. Open a pull request with the file, the wallpaper and, if you can, a screenshot. A wallpaper must be your own work or under a licence
-   that allows redistribution; say which.
+1. Copy a folder, for example `classic/`, to `<id>/` (lower-case letters, digits and `-`).
+2. Change only what you want to change in `theme.json`. A missing value keeps the default, or the value of the theme named in `"extends"`.
+3. Put a screenshot of the result in `preview.jpg` (16:9, about 800 px wide, at most 600 KB).
+4. If it uses a wallpaper, put a `.jpg`, `.png` or `.webp` (at most 1.5 MB, 1920 x 1080) in the folder and name it in `effects.wallpaper`.
+5. Run `node tools/theme-index.js`, then `node tools/node8-check.js`.
+6. Open a pull request. A wallpaper must be your own work or under a licence that allows redistribution; say which.
+
+## The themes
 
 ### Classic
 
 The original look: near-black, white focus, ten columns.
 
-[![Classic](../docs/screenshots/theme-classic.jpg)](../docs/screenshots/theme-classic.jpg)
+[![Classic](classic/preview.jpg)](classic/preview.jpg)
 
-File: [`classic.json`](classic.json)
+Folder: [`classic/`](classic/)
 
-### Midnight
+### Bloom
 
-Deep blue with a soft wallpaper and a blue focus.
+A flower wallpaper with the dock in a glass panel at the bottom. Down moves the dock up and the apps appear below it, centred.
 
-[![Midnight](../docs/screenshots/theme-midnight.jpg)](../docs/screenshots/theme-midnight.jpg)
+[![Bloom](bloom/preview.jpg)](bloom/preview.jpg)
 
-File: [`midnight.json`](midnight.json)
-
-### OLED black
-
-Pure black, no ambient glow: unlit pixels stay off.
-
-[![OLED black](../docs/screenshots/theme-oled.jpg)](../docs/screenshots/theme-oled.jpg)
-
-File: [`oled.json`](oled.json)
-
-### Warm
-
-Brown and amber with the glow in the accent colour.
-
-[![Warm](../docs/screenshots/theme-warm.jpg)](../docs/screenshots/theme-warm.jpg)
-
-File: [`warm.json`](warm.json)
+Folder: [`bloom/`](bloom/)
 
 ### Compact
 
 Twelve columns of smaller tiles: more apps on screen.
 
-[![Compact](../docs/screenshots/theme-compact.jpg)](../docs/screenshots/theme-compact.jpg)
+[![Compact](compact/preview.jpg)](compact/preview.jpg)
 
-File: [`compact.json`](compact.json)
+Folder: [`compact/`](compact/)
 
 ### Large print
 
 Eight columns of big tiles and bigger text, easier to read from the sofa.
 
-[![Large print](../docs/screenshots/theme-large.jpg)](../docs/screenshots/theme-large.jpg)
+[![Large print](large/preview.jpg)](large/preview.jpg)
 
-File: [`large.json`](large.json)
+Folder: [`large/`](large/)
+
+### Midnight
+
+Deep blue with a soft wallpaper and a blue focus.
+
+[![Midnight](midnight/preview.jpg)](midnight/preview.jpg)
+
+Folder: [`midnight/`](midnight/)
+
+### OLED black
+
+Pure black, no ambient glow: unlit pixels stay off.
+
+[![OLED black](oled/preview.jpg)](oled/preview.jpg)
+
+Folder: [`oled/`](oled/)
 
 ### Still
 
 No animation and a quiet glow, for anyone who prefers a calm screen.
 
-[![Still](../docs/screenshots/theme-still.jpg)](../docs/screenshots/theme-still.jpg)
+[![Still](still/preview.jpg)](still/preview.jpg)
 
-File: [`still.json`](still.json)
+Folder: [`still/`](still/)
 
-### Bloom
+### Warm
 
-A flower wallpaper with the dock at the bottom in a glass panel, round buttons and a stacked clock. Down opens all apps.
+Brown and amber with the glow in the accent colour.
 
-[![Bloom](../docs/screenshots/theme-bloom.jpg)](../docs/screenshots/theme-bloom.jpg)
+[![Warm](warm/preview.jpg)](warm/preview.jpg)
 
-File: [`bloom.json`](bloom.json)
+Folder: [`warm/`](warm/)

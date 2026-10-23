@@ -1,7 +1,7 @@
 {
  "name": "Bloom",
  "author": "CleanYourTV",
- "description": "A flower wallpaper with the dock at the bottom in a glass panel, round buttons and a stacked clock. Down opens all apps.",
+ "description": "A flower wallpaper with the dock in a glass panel at the bottom. Down moves the dock up and the apps appear below it, centred.",
  "colors": {
   "night": "#0b0a1c",
   "panel": "#2a2038",
@@ -32,10 +32,14 @@
   "panel": 0.14
  },
  "grid": {
-  "mode": "overlay",
+  "mode": "push",
+  "dockUp": 230,
+  "clipTop": 210,
   "cols": 8,
   "tileH": 150,
-  "gapX": 26
+  "gapX": 26,
+  "align": "center",
+  "overlayDim": 0.55
  },
  "tile": {
   "gloss": 0.6

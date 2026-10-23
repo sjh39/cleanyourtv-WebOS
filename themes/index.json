@@ -1,0 +1,61 @@
+{
+ "v": 1,
+ "themes": [
+  {
+   "id": "classic",
+   "name": "Classic",
+   "author": "CleanYourTV",
+   "description": "The original look: near-black, white focus, ten columns.",
+   "preview": "classic/preview.jpg"
+  },
+  {
+   "id": "bloom",
+   "name": "Bloom",
+   "author": "CleanYourTV",
+   "description": "A flower wallpaper with the dock in a glass panel at the bottom. Down moves the dock up and the apps appear below it, centred.",
+   "preview": "bloom/preview.jpg"
+  },
+  {
+   "id": "compact",
+   "name": "Compact",
+   "author": "CleanYourTV",
+   "description": "Twelve columns of smaller tiles: more apps on screen.",
+   "preview": "compact/preview.jpg"
+  },
+  {
+   "id": "large",
+   "name": "Large print",
+   "author": "CleanYourTV",
+   "description": "Eight columns of big tiles and bigger text, easier to read from the sofa.",
+   "preview": "large/preview.jpg"
+  },
+  {
+   "id": "midnight",
+   "name": "Midnight",
+   "author": "CleanYourTV",
+   "description": "Deep blue with a soft wallpaper and a blue focus.",
+   "preview": "midnight/preview.jpg"
+  },
+  {
+   "id": "oled",
+   "name": "OLED black",
+   "author": "CleanYourTV",
+   "description": "Pure black, no ambient glow: unlit pixels stay off.",
+   "preview": "oled/preview.jpg"
+  },
+  {
+   "id": "still",
+   "name": "Still",
+   "author": "CleanYourTV",
+   "description": "No animation and a quiet glow, for anyone who prefers a calm screen.",
+   "preview": "still/preview.jpg"
+  },
+  {
+   "id": "warm",
+   "name": "Warm",
+   "author": "CleanYourTV",
+   "description": "Brown and amber with the glow in the accent colour.",
+   "preview": "warm/preview.jpg"
+  }
+ ]
+}

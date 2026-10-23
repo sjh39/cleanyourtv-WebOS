@@ -4,11 +4,24 @@ A theme changes how the home screen looks: colours, the size of tiles and text, 
 the speed of animations and a wallpaper. Themes apply to the launcher's home screen (dock, top shelf, grid, top buttons and menus).
 Live TV, the Inputs picker and the notification cards keep their own look.
 
-In the manager app, **Theme** lists the themes. Choosing one applies it; the home screen shows it the next time you open Home.
-**Accent colour** changes the colour of the focus ring and of the highlighted button or menu row on top of any theme.
-**Go back to the previous theme** undoes the last change.
+In the manager app, **Theme** lists the themes with a screenshot and a description of the highlighted one. Choosing one applies it; the
+home screen shows it the next time you open Home. **Theme options** holds the **Accent colour** (the colour of the focus ring and of the
+highlighted button or menu row, on top of any theme) and **Go back to the previous theme**.
 
-## Bundled themes
+## Where the themes come from
+
+Themes are not part of the service. They are read from the [`themes/`](https://github.com/lasharor/cleanyourtv-WebOS/tree/main/themes)
+folder of the GitHub repository (the `main` branch):
+
+- The manager downloads `themes/index.json` (the list) and the screenshots when you open **Theme**.
+- Choosing a theme downloads its `theme.json` and its wallpaper to the TV (`/media/developer/cleanyourtv/themes/<id>/`) and keeps them,
+  so it keeps working offline. Choosing it again downloads the latest version. If GitHub cannot be reached, the list shows the themes
+  that are already on the TV and says why.
+- **Classic** is built into the service and always works.
+- A theme is data only (values, an image): the service checks every value, limits the file sizes (theme 32 KB, wallpaper 1.5 MB,
+  screenshot 600 KB) and checks that the images are images. There is no script or CSS in a theme.
+
+## The themes
 
 | Theme | What it is |
 |---|---|
@@ -19,7 +32,7 @@ In the manager app, **Theme** lists the themes. Choosing one applies it; the hom
 | Compact | Twelve columns of smaller tiles: more apps on screen. |
 | Large print | Eight columns of big tiles and larger text. |
 | Still | No animation and a quiet glow. |
-| Bloom | A flower wallpaper with the dock at the bottom in a glass panel, six dock apps, round buttons and a stacked clock. Down from the dock opens all apps over the wallpaper; Back closes them. |
+| Bloom | A flower wallpaper with the dock in a glass panel at the bottom. Down moves the dock up and the apps appear below it, centred. |
 
 ![Classic, Compact, Large print and Midnight](screenshots/themes-1.jpg)
 
@@ -33,18 +46,23 @@ The pictures are the launcher page rendered in a browser with each theme.
 
 Themes live in the repository, so a new one is a pull request:
 
-1. Copy a theme that is close to what you want from [`themes/`](https://github.com/lasharor/cleanyourtv-WebOS/tree/main/themes), for example `classic.json`, to `themes/<id>.json`. The id is lower-case letters, digits and `-`.
-2. Change only what you want to change; the rest keeps its default, or the value of the theme named in `"extends"`.
-3. If it uses a wallpaper, add a `.jpg`, `.png` or `.webp` (at most 1.5 MB, 1920 x 1080) to `themes/wallpapers/` and name it in `effects.wallpaper`. A wallpaper must be your own work or under a licence that allows redistribution; say which in the pull request.
-4. Run `node tools/node8-check.js`: it checks every theme file against the schema, and that this page's table is up to date.
-5. Open the pull request with a screenshot if you can. The [themes folder](https://github.com/lasharor/cleanyourtv-WebOS/tree/main/themes) shows how the bundled ones look.
+1. Copy a folder from [`themes/`](https://github.com/lasharor/cleanyourtv-WebOS/tree/main/themes), for example `classic`, to `themes/<id>/`.
+   The id is lower-case letters, digits and `-`.
+2. Edit `theme.json`; the rest keeps its default, or the value of the theme named in `"extends"`.
+3. Add `preview.jpg`: a screenshot of the home screen with your theme (16:9, about 800 px wide, at most 600 KB). The TV shows it in the
+   theme list.
+4. If it uses a wallpaper, add the image to the same folder (`.jpg`, `.png` or `.webp`, at most 1.5 MB, 1920 x 1080) and name it in
+   `effects.wallpaper`. A wallpaper must be your own work or under a licence that allows redistribution; say which in the pull request.
+5. Run `node tools/theme-index.js` to update `themes/index.json`, then `node tools/node8-check.js`: it checks every theme folder against the
+   schema, that the screenshot is there, and that the index is up to date.
+6. Open the pull request. Once it is merged into `main`, every TV can download the theme; no release is needed.
 
 When you add a setting to the engine, add one row to `SCHEMA` in `helper/theme.js`, read its variable in `app/index.html`, and run
 `node tools/theme-docs.js` to regenerate the table below.
 
 ## Theme files
 
-A theme is a JSON file in [`themes/`](https://github.com/lasharor/cleanyourtv-WebOS/tree/main/themes) of this repository, shipped with the service. Every key is optional.
+A theme is `themes/<id>/theme.json` in the repository. Every key is optional.
 A missing or invalid value keeps the value of the theme named in `"extends"`, or the default, which is the original look, so a
 theme lists only what it changes. Positions and sizes are in pixels on a 1920 x 1080 canvas.
 
@@ -112,7 +130,7 @@ when the focus moves down into it (Back or Up closes it); a dock at the top leav
 | `shelf.y` | 0 to 900 | `150` | Distance from the top edge, in px. |
 | `shelf.scale` | 0.4 to 1.6 | `1` | Scale of the name. |
 | **dock** | | | |
-| `dock.anchor` | `top`, `bottom` | `top` | Which screen edge `dock.y` counts from. A dock at the bottom makes the grid an overlay. |
+| `dock.anchor` | `top`, `bottom` | `top` | Which screen edge `dock.y` counts from. |
 | `dock.align` | `left`, `center`, `right` | `left` | Which side `dock.x` counts from; `center` centres the dock. |
 | `dock.x` | 0 to 900 | `96` | Distance from that side, in px. |
 | `dock.y` | px, 0 to 1000 | empty | Distance from the top or bottom edge, in px. Empty: 360 from the top, 68 from the bottom. |
@@ -126,7 +144,9 @@ when the focus moves down into it (Back or Up closes it); a dock at the top leav
 | `dock.lift` | 0 to 40 | `10` | How far the focused dock tile rises, in px. |
 | `dock.focusScale` | 1 to 1.3 | `1.05` | Scale of the focused dock tile. |
 | **grid** | | | |
-| `grid.mode` | `below`, `overlay` | `below` | `below`: the grid sits under the dock and scrolls; `overlay`: it opens over the screen when the focus moves down into it. Forced to `overlay` for a dock at the bottom. |
+| `grid.mode` | `below`, `push`, `overlay` | `below` | `below`: the grid sits under the dock and scrolls (a dock at the bottom behaves as `push`); `push`: the grid sits under the dock out of sight, and when the focus moves down into it the dock moves up to `grid.dockUp` and the grid appears below it; `overlay`: the grid opens over the screen above the dock. |
+| `grid.dockUp` | 0 to 700 | `220` | `push` mode: where the dock stops, counted from the top of the screen, while the grid has the focus, in px. |
+| `grid.align` | `left`, `center` | `left` | `center` centres every row of tiles, also a last row that is not full. |
 | `grid.cols` | 4 to 14 | `10` | Columns. |
 | `grid.tileH` | 80 to 240 | `151` | Height of a tile, in px; the width follows from the columns. |
 | `grid.gapX` | 6 to 60 | `24` | Horizontal space between tiles, in px. |
@@ -153,13 +173,13 @@ when the focus moves down into it (Back or Up closes it); a dock at the top leav
 <!-- schema:end -->
 
 A theme file holds values only. The service checks every value against the table and clamps numbers to their range; there is no CSS
-and no script, and a wallpaper path is accepted only as a plain file name from the bundled folder that is also a real image of the
+and no script, and a wallpaper is accepted only as a plain file name from the theme's folder that is also a real image of the
 right type. Anything else is ignored. The launcher draws the wallpaper once and nothing blurs or filters it, because the TV's GPU is weak.
 
 From a shell on the TV:
 
 ```sh
 curl localhost:8765/api/theme/list
-curl -X POST localhost:8765/api/theme/set -d '{"id":"midnight","accent":"#ff8a3d"}'
+curl -X POST localhost:8765/api/theme/set -d '{"id":"midnight","accent":"#ff8a3d"}'   # downloads the theme if it is not on the TV
 curl -X POST localhost:8765/api/theme/revert
 ```

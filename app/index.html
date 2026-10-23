@@ -13,7 +13,7 @@
   --name-d:block; --name-x:96px; --name-y:150px; --name-a:left; --name-s:1;
   --view-top:300px; --dock-l:96px; --dock-r:auto; --dock-t:60px; --dock-b:auto; --dock-tx:none; --dock-w:408px; --dock-h:230px; --dock-gap:32px; --dock-rad:36px;
   --dock-panel:0; --dock-pad:0px; --dock-lift:-10px; --dock-fs:1.05;
-  --cols:10; --tile-h:151px; --gap-x:24px; --gap-y:26px; --tile-r:34px; --grid-l:96px; --grid-w:1728px; --grid-t:350px; --grid-fs:1.12; --ov-dim:.95;
+  --cols:10; --tile-w:151px; --tile-h:151px; --gap-x:24px; --gap-y:26px; --tile-r:34px; --grid-l:96px; --grid-w:1728px; --grid-t:350px; --grid-fs:1.12; --ov-dim:.95;
   --gloss:0; --tile-border:0; --ring-w:4px; --ring-off:4px;
 }
 *{box-sizing:border-box;margin:0}
@@ -53,8 +53,14 @@ body{background-image:var(--wall);background-size:1920px 1080px}
 /* an overlay grid: hidden until the focus moves down into it, then dark layer + grid over the screen above the dock */
 [data-grid=overlay] #grid{z-index:3;opacity:0;pointer-events:none;transition:opacity calc(.22s*var(--spd)) linear}
 [data-grid=overlay].grid-open #grid{opacity:1;pointer-events:auto}
-[data-grid=overlay] #scroll::before{content:'';position:absolute;left:0;top:0;width:1920px;height:1080px;z-index:2;opacity:0;pointer-events:none;background:rgba(var(--night-rgb),var(--ov-dim));transition:opacity calc(.22s*var(--spd)) linear}
-[data-grid=overlay].grid-open #scroll::before{opacity:1}
+[data-grid=overlay] #scroll::before,[data-grid=push] #scroll::before{content:'';position:absolute;left:0;top:-1600px;width:1920px;height:4400px;z-index:2;opacity:0;pointer-events:none;background:rgba(var(--night-rgb),var(--ov-dim));transition:opacity calc(.22s*var(--spd)) linear}
+[data-grid=overlay].grid-open #scroll::before,[data-grid=push].grid-open #scroll::before{opacity:1}
+/* push: the grid sits under the dock; focusing it scrolls the dock up and fades the grid in */
+[data-grid=push] #grid{z-index:3;opacity:0;pointer-events:none;transition:opacity calc(.25s*var(--spd)) linear}
+[data-grid=push].grid-open #grid{opacity:1;pointer-events:auto}
+/* every row of tiles centred, also a last row that is not full */
+[data-galign=center] #grid{display:flex;flex-wrap:wrap;justify-content:center}
+[data-galign=center] #grid .tile{width:var(--tile-w)}
 .tile::after{content:'';position:absolute;left:0;top:0;right:0;bottom:0;border-radius:inherit;pointer-events:none;opacity:var(--gloss);
   background:linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,0) 46%,rgba(0,0,0,.24))}
 
@@ -185,7 +191,7 @@ body{background-image:var(--wall);background-size:1920px 1080px}
 <div id="lv"><div id="lv-stage"></div><div id="lv-spin" class="layer"></div><div id="lv-osd" class="layer"><img class="logo" id="lv-ologo" alt=""><div class="num" id="lv-onum"></div><div class="info"><div class="name" id="lv-oname"></div><div class="now" id="lv-onow"></div><div class="next" id="lv-onext"></div><div class="facts" id="lv-ofacts"></div><div class="pbar"><i id="lv-obar"></i></div></div></div><div id="lv-numin" class="layer"></div><div id="lv-guide" class="layer"><div id="lv-glow"></div><div id="lv-gtop"><div id="lv-gtitle"></div><div id="lv-gtabs"></div><input id="lv-search" type="text" autocomplete="off"><div id="lv-gclock"></div></div><div id="lv-rows"></div><div id="lv-detail"></div></div><div id="lv-filter" class="layer"></div><div id="lv-menu" class="layer"></div><div id="lv-msg" class="layer"></div><div id="lv-tune" class="layer"></div><div id="lv-toast" class="layer"></div><div id="lv-stats" class="layer"></div></div>
 <div id="toast"></div>
 <script>
-var API='http://127.0.0.1:8765', CACHE_KEY='cytv.cache.v4', VERSION='1.4.13';
+var API='http://127.0.0.1:8765', CACHE_KEY='cytv.cache.v4', VERSION='1.4.14';
 var DEFAULTS={
   dock:['netflix','youtube.leanback.v4','amazon','com.disney.disneyplus-prod'],
   topbar:[{label:'Inputs',icon:'inputs',action:'inputs'},{label:'Live TV',icon:'tv',action:'live'},{label:'Settings',icon:'settings',app:'com.palm.app.settings'}]
@@ -339,7 +345,7 @@ function glowNow(e){
 function glowSoon(e){clearTimeout(gT);gT=setTimeout(function(){glowNow(e)},110)}
 
 /* ---------- theme: the service resolves the chosen theme (manager > Theme) into CSS variables and a few numbers ---------- */
-var TH0={cols:10,tileH:151,gapY:26,gt:350,viewH:780,dockN:4,overlay:false,overlayH:510,glow:''},TH=TH0,themeKeys=[],themeAttrs=['data-bar','data-labels','data-clock','data-grid'];
+var TH0={cols:10,tileH:151,gapY:26,gt:350,viewH:780,dockN:4,overlay:false,push:null,overlayH:510,glow:''},TH=TH0,themeKeys=[],themeAttrs=['data-bar','data-labels','data-clock','data-grid','data-galign'];
 function applyTheme(t){
   var st=document.documentElement.style,b=document.body,k;
   for(k=0;k<themeKeys.length;k++)st.removeProperty(themeKeys[k]);themeKeys=[];
@@ -347,9 +353,9 @@ function applyTheme(t){
   if(!t||!t.vars){TH=TH0;return}
   for(k in t.vars){st.setProperty(k,t.vars[k]);themeKeys.push(k)}
   var w=t.wallpaper;
-  if(w){var d='rgba('+t.nightRgb+','+w.dim+')';st.setProperty('--wall','linear-gradient('+d+','+d+'),url("'+API+'/api/theme/wallpaper/'+w.file+'")');themeKeys.push('--wall')}
+  if(w){var d='rgba('+t.nightRgb+','+w.dim+')';st.setProperty('--wall','linear-gradient('+d+','+d+'),url("'+API+'/api/theme/wallpaper/'+w.id+'/'+w.file+'")');themeKeys.push('--wall')}
   for(k in t.attrs)b.setAttribute('data-'+k,t.attrs[k]);
-  TH={cols:t.cols||10,tileH:t.tileH||151,gapY:t.gapY||26,gt:t.gt||350,viewH:t.viewH||780,dockN:t.dockN||4,overlay:!!t.overlay,overlayH:t.overlayH||510,glow:t.glowRgb||''}}
+  TH={cols:t.cols||10,tileH:t.tileH||151,gapY:t.gapY||26,gt:t.gt||350,viewH:t.viewH||780,dockN:t.dockN||4,overlay:!!t.overlay,push:t.push||null,overlayH:t.overlayH||510,glow:t.glowRgb||''}}
 
 function setFocus(nr,nc,first){
   var old=rows[r]&&rows[r][c];if(old)old.classList.remove('f');
@@ -358,6 +364,10 @@ function setFocus(nr,nc,first){
   if(n.textContent!==nm)n.textContent=nm;
   if(first)glowNow(e);else glowSoon(e);
   var sh=0;
+  if(TH.push){   /* the grid sits under the dock: focusing it scrolls everything up (the dock stops at its 'up' position) and the grid fades in */
+    document.body.classList.toggle('grid-open',r>=2);
+    var ps=0;if(r>=2){var bot=TH.push.gridTop-TH.push.up+(r-2)*(TH.tileH+TH.gapY)+TH.tileH,ex=Math.max(0,bot-(1080-60));ps=-(TH.push.up+ex)}
+    $('scroll').style.transform=ps?'translateY('+ps+'px)':'';$('grid').style.transform='';return}
   if(TH.overlay){   /* the grid is an overlay above the dock: it opens when the focus goes down into it and scrolls on its own */
     document.body.classList.toggle('grid-open',r>=2);
     var gs=0;if(r>=2)gs=Math.min(0,TH.overlayH-((r-2)*(TH.tileH+TH.gapY)+TH.tileH+24));
@@ -536,7 +546,7 @@ document.addEventListener('keydown',function(e){
   if(stack.length){
     if(k===13){if(downEnter&&Date.now()-lastEnter<1500){lastEnter=Date.now();e.preventDefault();return}downEnter=true;lastEnter=Date.now();swallowUp=true}
     if(menuKey(k))e.preventDefault();return}
-  if(TH.overlay&&r>=2&&(k===461||k===27||k===8)){setFocus(1,Math.min(c,rows[1].length-1));e.preventDefault();return}   /* Back closes the grid overlay */
+  if((TH.overlay||TH.push)&&r>=2&&(k===461||k===27||k===8)){setFocus(1,Math.min(c,rows[1].length-1));e.preventDefault();return}   /* Back closes the grid overlay */
   var len=rows[r].length;
   if(k>=37&&k<=40){var tn=performance.now();if(e.repeat||tn-lastMove<90){document.body.classList.add('snap');clearTimeout(snapT);snapT=setTimeout(function(){document.body.classList.remove('snap')},180)}lastMove=tn}
   if(k===37&&c>0)setFocus(r,c-1);

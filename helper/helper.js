@@ -1,7 +1,7 @@
 // Root service of CleanYourTV: bridges the launcher web app to luna, serves app icons, runs Live TV and picture
 // notifications, keeps the Input-key picker alive and hosts the manager API. Listens on 127.0.0.1 only.
 const http = require('http'), fs = require('fs'), path = require('path'), cp = require('child_process');
-const VERSION = '1.5.13';
+const VERSION = '1.5.14';
 const PORT = 8765, DIR = '/media/developer/cleanyourtv', CONF = DIR + '/config.json', USAGE = DIR + '/usage.json';
 const ENV = Object.assign({}, process.env, { PATH: '/usr/bin:/usr/sbin:/bin:/sbin:' + (process.env.PATH || '') });
 
@@ -94,7 +94,9 @@ let voice = null;
 try { if (notify) voice = require('./voice').create({ notify, readConf, writeConf }); } catch (e) { console.error('voice module failed:', e.message); }
 inputhook.setVoiceKey(voiceKey);
 let theme = null;
-try { theme = require('./theme').create({ readConf, writeConf }); } catch (e) { console.error('theme module failed:', e.message); }
+try { theme = require('./theme').create({ readConf, writeConf, slug: () => { try { const x = fs.readFileSync(DIR + '/source', 'utf8').trim().split(/\s+/)[0]; if (/^[\w.-]+\/[\w.-]+$/.test(x)) return x; } catch (_) {} return 'lasharor/cleanyourtv-WebOS'; },
+    // the branch of the themes folder: main, unless D/source names another one after the repository (only to try a theme before it is merged)
+    ref: () => { try { const x = fs.readFileSync(DIR + '/source', 'utf8').trim().split(/\s+/)[1]; if (/^[\w.\/-]{1,60}$/.test(x || '')) return x; } catch (_) {} return 'main'; } }); } catch (e) { console.error('theme module failed:', e.message); }
 inputhook.setGuideKey && inputhook.setGuideKey(guideKey);
 let notifyApi = null;
 try { if (notify) notifyApi = require('./notifyapi').create({ notify, readConf, writeConf }); } catch (e) { console.error('notification api module failed:', e.message); }

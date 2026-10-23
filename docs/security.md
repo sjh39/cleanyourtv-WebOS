@@ -22,6 +22,14 @@ Off until switched on in the manager app. It then listens on port 8767 for `POST
 an address out for ten minutes, requests are limited to 20 a minute and 32 KB, and an optional `allow` list restricts addresses.
 It is plain HTTP: the token can be read by anyone who can watch the traffic on your network.
 
+## Themes
+
+The manager downloads the theme list, screenshots, theme files and wallpapers from `raw.githubusercontent.com` (the `main` branch of this
+repository) over HTTPS, when you open **Theme** or choose a theme. They are data only: the service checks every value against its list,
+limits the sizes (theme 32 KB, wallpaper 1.5 MB, screenshot 600 KB), checks that images are images and refuses anything else. There is
+no script or CSS in a theme. Anything merged into `main` becomes available to every TV, which is the same trust you place in the
+releases of this repository; there is no signature.
+
 ## Voice
 
 Optional and off by default. Installing it downloads files over HTTPS from PyPI, Ubuntu's archive and Moonshine's model server;
