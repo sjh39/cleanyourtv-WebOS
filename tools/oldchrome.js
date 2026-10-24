@@ -183,7 +183,7 @@ function run(bin, url, extra) {
           e[0] + ': ' + p[0] + ' loads' + (r.status ? ' (' + (r.error || r.stderr.slice(-300)) + ')' : '')
         );
         ok(!errs, e[0] + ': ' + p[0] + ' runs without script errors' + (errs ? ': ' + errs : ''));
-        ok(n >= p[3], e[0] + ': ' + p[0] + ' draws its content (' + n + ' found, ' + p[3] + ' expected)');
+        ok(n >= p[3], e[0] + ': ' + p[0] + ' draws its content (' + n + ' found, ' + p[3] + ' expected)' + (n >= p[3] ? '' : '\n  page: ' + dom.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g, '').slice(0, 600) + '\n  browser: ' + (r.stderr || '').slice(-600)));
         if (shots) await run(bin, url, ['--screenshot=' + path.join(shots, e[1] + '-' + p[0] + '.png')]);
       }
     }
