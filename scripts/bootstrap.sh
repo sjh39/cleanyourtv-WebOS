@@ -8,11 +8,13 @@
 # service follows. The steps are the functions below; the order is at the end of the file.
 export PATH=/usr/bin:/usr/sbin:/bin:/sbin:$PATH
 S=$(cd "$(dirname "$0")" && pwd)
-D=/media/developer/cleanyourtv
-INITD=/var/lib/webosbrew/init.d
+R=${CYTV_TEST_ROOT:-}                 # a folder that stands in for / (tools/test/scripts.test.js only; empty on a TV)
+MD=$R/media/developer
+D=$MD/cleanyourtv
+INITD=$R/var/lib/webosbrew/init.d
 J="node $S/scripts/jtool.js"          # JSON helper (node, not python3)
 TV="node $S/helper/tvprofile.js"      # per-TV decisions
-HOME_DIR=/usr/palm/applications/com.webos.app.home
+HOME_DIR=$R/usr/palm/applications/com.webos.app.home
 
 MODE=${1:-install}; [ $# -gt 0 ] && shift
 WANT=""; [ "$MODE" = update ] && { WANT=$1; shift; }
@@ -36,10 +38,10 @@ opt() { $J opt "$D/config.json" "$1"; }
 
 # ---- checks before anything is changed ----
 preflight() {
-  [ "$(id -u)" = 0 ] || die "run as root"
+  [ -n "$R" ] || [ "$(id -u)" = 0 ] || die "run as root"
   command -v luna-send >/dev/null || die "this does not look like webOS (no luna-send)"
   [ -d "$INITD" ] || die "$INITD not found: root with the Homebrew Channel is required (https://rootmy.tv)"
-  [ -w /media/developer ] || die "/media/developer is not writable"
+  [ -w $MD ] || die "/media/developer is not writable"
   for t in tar node; do command -v $t >/dev/null || die "missing tool: $t"; done
   # hard requirements: --force does not skip these (older webOS has no systemd and an old Node that cannot run the service)
   command -v systemctl >/dev/null || die "this TV has no systemd (webOS older than 5): CleanYourTV needs a newer webOS and cannot be set up here. Nothing was changed."
@@ -64,7 +66,7 @@ detect() {
 # (ensure_apps restarts it, the screen blinks once).
 NOTIFY_CHANGED=0
 fix_notify_window() {
-  NA=/media/developer/apps/usr/palm/applications/com.cleanyourtv.notify/appinfo.json
+  NA=$MD/apps/usr/palm/applications/com.cleanyourtv.notify/appinfo.json
   [ -f $NA ] || return 0
   want=$($TV get notifyWindow --sdk "$sdk")
   [ -n "$want" ] || want=overlay
@@ -77,7 +79,7 @@ check_compat() {
   say "TV: ${model:-unknown model}, firmware ${fw:-?}, webOS SDK ${sdk:-?}"
   mkdir -p $D
   COMPATREPO=$(cut -d' ' -f1 $D/source 2>/dev/null); [ -n "$COMPATREPO" ] || COMPATREPO=lasharor/cleanyourtv-WebOS
-  curl -fsSL -m 6 "https://raw.githubusercontent.com/$COMPATREPO/main/compat.json" -o /tmp/cytv-compat.json 2>/dev/null && node -e 'JSON.parse(require("fs").readFileSync("/tmp/cytv-compat.json","utf8"))' 2>/dev/null && cp /tmp/cytv-compat.json $D/compat.json
+  [ -z "$R" ] && curl -fsSL -m 6 "https://raw.githubusercontent.com/$COMPATREPO/main/compat.json" -o /tmp/cytv-compat.json 2>/dev/null && node -e 'JSON.parse(require("fs").readFileSync("/tmp/cytv-compat.json","utf8"))' 2>/dev/null && cp /tmp/cytv-compat.json $D/compat.json
   COMPATNOTE=$($TV get testedNote --firmware "$fw" --sdk "$sdk" --compat $D/compat.json $S/compat.json)
 
   SRCINFO=$D/backup/home-appinfo.orig.json; [ -f "$SRCINFO" ] || SRCINFO=$HOME_DIR/appinfo.json
@@ -150,7 +152,7 @@ boot_scripts() {
 ensure_apps() {
   missing=0
   for id in com.cleanyourtv.picker com.cleanyourtv.notify; do
-    [ -d /media/developer/apps/usr/palm/applications/$id ] && ! luna com.webos.applicationManager/getAppInfo "{\"id\":\"$id\"}" | grep -q '"returnValue": true' && missing=1
+    [ -d $MD/apps/usr/palm/applications/$id ] && ! luna com.webos.applicationManager/getAppInfo "{\"id\":\"$id\"}" | grep -q '"returnValue": true' && missing=1
   done
   [ $NOTIFY_CHANGED = 1 ] && missing=1
   [ $missing = 0 ] && return 0
@@ -212,9 +214,9 @@ verify() {
   if [ $ok = 0 ]; then
     warn "the new Home did not come up (app type: ${type:-none}, service: ${hv:-not answering}); rolling back"
     # restoring LG's Home live does not always work; without the boot scripts a restart brings it back
-    cp /tmp/cleanyourtv-helper.log /media/developer/cytv-setup.log.service 2>/dev/null
+    cp /tmp/cleanyourtv-helper.log $MD/cytv-setup.log.service 2>/dev/null
     rm -f $INITD/10-cleanyourtv-home $INITD/15-cleanyourtv-debloat
-    echo '{"lastAppId":"com.webos.app.home"}' > /var/luna/preferences/bootd_last_foreground_app_id.json 2>/dev/null
+    echo '{"lastAppId":"com.webos.app.home"}' > $R/var/luna/preferences/bootd_last_foreground_app_id.json 2>/dev/null
     (sleep 4; reboot) </dev/null >/dev/null 2>&1 &
     die "rolled back: the boot scripts are removed and the TV restarts with LG's Home. Details: /media/developer/cytv-setup.log and cytv-setup.log.service"
   fi
@@ -223,7 +225,7 @@ verify() {
 finish() {
   ensure_apps
   say "done. Hold OK on an app to customise the dock, or use the Customise button at the top right."
-  [ -d /usr/palm/applications/com.webos.app.fullhome ] && say "This TV also has LG's full-screen Home. If the Home button opens that instead of CleanYourTV: TV Settings > General > Home Settings > Home Style > Basic."
+  [ -d $R/usr/palm/applications/com.webos.app.fullhome ] && say "This TV also has LG's full-screen Home. If the Home button opens that instead of CleanYourTV: TV Settings > General > Home Settings > Home Style > Basic."
   say "Back to LG's Home any time: switch off 'CleanYourTV as Home' in the manager app, or run: sh $D/undo-home.sh"
 }
 
