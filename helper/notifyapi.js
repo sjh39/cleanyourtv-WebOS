@@ -30,7 +30,7 @@ function create(ctx) {
       const m = /^(\d+\.\d+\.\d+\.\d+)(?:\/(8|16|24))?$/.exec(String(a));
       if (!m) return false;
       if (!m[2]) return ip === m[1];
-      const k = m[2] / 8;
+      const k = Number(m[2]) / 8;
       return ip.split('.').slice(0, k).join('.') === m[1].split('.').slice(0, k).join('.');
     });
   const stop = () => {

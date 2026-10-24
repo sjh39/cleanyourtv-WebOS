@@ -65,6 +65,7 @@ async function handle(req, res, u, body) {
   web.notFound(res);
 }
 
-const create = () => ({ name: 'notify', prefix: '/api/notify', handle, show });
+// ctx is not needed: this part keeps its own state
+const create = (/** @type {any} */ _ctx) => ({ name: 'notify', prefix: '/api/notify', handle, show });
 
 module.exports = { create, handle, show };

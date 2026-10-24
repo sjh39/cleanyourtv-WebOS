@@ -42,7 +42,7 @@ document.addEventListener('webOSRelaunch', function () {
   view = 'main';
   idx = 0;
   idxStack = [];
-  scrollY = 0;
+  listY = 0;
   load();
 });
 banner('Reading status…', 'work');

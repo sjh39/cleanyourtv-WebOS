@@ -4,6 +4,7 @@
 // removable again. It is a 64-bit program, so it runs through its own copy of the 64-bit C library, which this TV (32-bit
 // userland on a 64-bit kernel) does not have. API (loopback only): GET /api/voice/status, POST install | uninstall | set | listen.
 const fs = require('fs'),
+  http = require('http'),
   path = require('path'),
   cp = require('child_process'),
   crypto = require('crypto'),

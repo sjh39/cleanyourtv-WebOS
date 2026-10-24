@@ -5,6 +5,7 @@
 #    verified, cached in ~/.cache/cleanyourtv; on an Apple-silicon Mac the x64 build runs through Rosetta);
 # 2. the same tests under the Node.js of this computer, when it is a different version;
 # 3. the pages built from their sources are up to date (tools/build-pages.js --check);
+#    types, lint and formatting (tools/lint.js), when the development tools are installed (npm install);
 # 4. with --chromium: the pages in Chromium 68 and 79, the engines of webOS 5 and 6 (tools/oldchrome.js, about 200 MB downloaded once).
 # Nothing is installed and nothing leaves this machine, apart from the one Node download.
 set -e
@@ -33,6 +34,10 @@ fi
 if [ -f tools/build-pages.js ]; then
   echo; echo "== pages"
   "$N8" tools/build-pages.js --check
+fi
+if command -v node >/dev/null; then
+  echo; echo "== types, lint, formatting"
+  node tools/lint.js
 fi
 if [ "$1" = "--chromium" ]; then
   echo; echo "== pages in old Chromium"

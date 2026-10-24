@@ -170,7 +170,7 @@ function main() {
     res.end();
   });
   let port = 8768;
-  srv.on('error', e => {
+  srv.on('error', (/** @type {any} */ e) => {
     if (e.code === 'EADDRINUSE' && port < 8790) {
       port++;
       srv.listen(port, '0.0.0.0');

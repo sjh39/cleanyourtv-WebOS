@@ -1,4 +1,4 @@
-var scrollY = 0;
+var listY = 0;
 /* the list can be taller than the screen: keep the focused row in view and show a fade where more rows are hidden */
 function scrollList() {
   var wrap = $('listwrap'),
@@ -9,13 +9,13 @@ function scrollList() {
   if (el && wh) {
     var top = el.offsetTop,
       bot = top + el.offsetHeight;
-    if (top - 50 < scrollY) scrollY = Math.max(0, top - 50);
-    else if (bot + 50 > scrollY + wh) scrollY = bot + 50 - wh;
-    scrollY = Math.max(0, Math.min(scrollY, Math.max(0, lh - wh)));
-  } else scrollY = 0;
-  list.style.transform = scrollY ? 'translateY(' + -scrollY + 'px)' : '';
-  wrap.classList.toggle('mu', scrollY > 0);
-  wrap.classList.toggle('md', scrollY + wh < lh - 2);
+    if (top - 50 < listY) listY = Math.max(0, top - 50);
+    else if (bot + 50 > listY + wh) listY = bot + 50 - wh;
+    listY = Math.max(0, Math.min(listY, Math.max(0, lh - wh)));
+  } else listY = 0;
+  list.style.transform = listY ? 'translateY(' + -listY + 'px)' : '';
+  wrap.classList.toggle('mu', listY > 0);
+  wrap.classList.toggle('md', listY + wh < lh - 2);
 }
 function draw() {
   var h = '';

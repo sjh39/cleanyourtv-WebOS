@@ -43,6 +43,7 @@ let state = (o => ({
   recent: Array.isArray(o.recent) ? o.recent : [],
   failed: o.failed && typeof o.failed === 'object' ? o.failed : {},
 }))(readJson(STATE, {}));
+/** @type {any} */
 let stateT = 0;
 const saveState = () => {
   clearTimeout(stateT);
@@ -109,6 +110,7 @@ const readAll = s =>
   });
 
 // ---- M3U ----
+/** @type {Array<[RegExp, string]>} */
 const QUALITY = [
   [/\b(?:4k|uhd|2160p)\b/i, '4K'],
   [/\b(?:fhd|1080[pi])\b/i, 'FHD'],
@@ -672,6 +674,7 @@ function start() {
   setInterval(() => refresh(false), 6 * 3600 * 1000).unref();
 }
 
-const create = () => ({ name: 'live', prefix: '/api/live/', handle, start });
+// ctx is not needed: this part keeps its own state
+const create = (/** @type {any} */ _ctx) => ({ name: 'live', prefix: '/api/live/', handle, start });
 
 module.exports = { create, handle, parseM3U, probe, derivedEpgUrl, nameKey };

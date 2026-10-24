@@ -200,7 +200,7 @@ function normalize(raw, id, base, wallDir) {
   for (const row of SCHEMA) {
     if (row[1] === 'file') continue;
     const c = check(row, getPath(raw, row[0]));
-    if (c !== undefined) v[row[0]] = c;
+    if (c !== undefined) v[/** @type {string} */ (row[0])] = c;
   }
   const w = getPath(raw, 'effects.wallpaper');
   if (typeof w === 'string' && FILE.test(w)) {

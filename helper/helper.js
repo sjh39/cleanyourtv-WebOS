@@ -10,7 +10,7 @@ const P = require('./paths'),
 diag.start();
 // A promise that fails without a handler ends the process on Node 15 and newer (webOS 22 and later ship Node 16): log it and keep the
 // service running; the launcher depends on it.
-process.on('unhandledRejection', e => console.error('unhandled: ' + ((e && e.stack) || e)));
+process.on('unhandledRejection', (/** @type {any} */ e) => console.error('unhandled: ' + ((e && e.stack) || e)));
 const luna = require('./luna'),
   web = require('./web'),
   config = require('./config').main(),
@@ -64,11 +64,13 @@ require('./server')
   .create({ features: () => loaded })
   .listen(PORT, '127.0.0.1', () => {
     // the files that hold addresses and keys are for root only
-    for (const [f, mode] of [
+    /** @type {Array<[string, number]>} */
+    const secret = [
       [P.LIVE, 0o700],
       [P.CONF, 0o600],
       [P.USAGE, 0o600],
-    ]) {
+    ];
+    for (const [f, mode] of secret) {
       try {
         fs.chmodSync(f, mode);
       } catch (_) {}

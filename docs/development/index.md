@@ -16,6 +16,7 @@ reports from TVs that are not in the [tested list](../tested-tvs.md).
 | `third-party/` | The bundled inputhook files and the QR library. |
 | `tools/` | `check.sh`: every check (the tests in `tools/test` under Node 8.12.0 and the current Node, the built pages); `build-pages.js`: builds the launcher and manager pages from their sources; `theme-docs.js`: regenerates the table of theme settings in the docs; `theme-index.js`: writes `themes/index.json`; `theme-preview.mjs`: renders a theme in headless Chrome (and makes its screenshot). |
 | `ipk/build.py` | Builds the release files. |
+| `package.json`, `tsconfig.json`, `eslint.config.js`, `.prettierrc.json` | Development tools only: type checks, lint and formatting. |
 | `compat.json` | The list of tested firmware the setup reads. |
 | `install.sh`, `uninstall.sh` | The installer and uninstaller. |
 | `docs/`, `zensical.toml` | This documentation. |

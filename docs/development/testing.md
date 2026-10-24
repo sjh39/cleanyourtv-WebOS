@@ -22,6 +22,17 @@ artifact of each run.
 Nothing leaves your machine apart from the downloads. One area of tests on its own: `node tools/test.js live` (the names are
 the files in `tools/test` without `.test.js`), or `node tools/test/live.test.js`.
 
+## Types, lint and formatting
+
+`package.json` lists the development tools: TypeScript, ESLint and Prettier. None of them is shipped; the service and the pages have no
+dependencies. After `npm install` once, `tools/check.sh` (or `node tools/lint.js`) also runs:
+
+- **TypeScript** on the service (`helper/*.js`), from the code and its JSDoc comments, without compiling anything (`tsconfig.json`).
+  It found a missing `http` import in the voice setup page that no test had reached.
+- **ESLint** on the service, the scripts and the tools, and on the script of every page the TV loads, as ES5 with the TV's globals
+  (`eslint.config.js`): a name that is used but never defined, a variable declared twice, unreachable code.
+- **Prettier** in check mode. `npm run format` formats the code and rebuilds the pages.
+
 ## The tests
 
 Each file in `tools/test` is a small program that prints one line per check (`ok` or `FAIL`) and runs in a fresh process with its own

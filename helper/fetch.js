@@ -21,7 +21,7 @@ const nc = require('./netcompat'),
 const diag = require('./diag');
 
 function fail(message, code, status) {
-  const e = new Error(message);
+  const e = /** @type {Error & {code?: string, status?: number}} */ (new Error(message));
   e.code = code;
   if (status) e.status = status;
   return e;

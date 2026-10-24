@@ -106,6 +106,23 @@ run(async () => {
   await vask('set', { ha: { clear: true } });
   r = await vask('status', null, 'GET');
   ok(r.j.ha.configured === false && r.j.ha.hasToken === false, 'removing Home Assistant clears the address and token');
+  // the setup page for a phone (port 8769): it starts, answers with the token only, and stops
+  r = await vask('pair');
+  ok(r.code === 200 && /^http:\/\/.*:8769\//.test(r.j.url || ''), 'the phone setup page starts (' + JSON.stringify(r.j) + ')');
+  if (r.j && r.j.url) {
+    const page = await new Promise(res => {
+      require('http')
+        .get('http://127.0.0.1:8769' + r.j.url.replace(/^http:\/\/[^/]+/, ''), rs => {
+          let b = '';
+          rs.on('data', c => (b += c));
+          rs.on('end', () => res({ code: rs.statusCode, body: b }));
+        })
+        .on('error', e => res({ code: 0, body: String(e) }));
+    });
+    ok(page.code === 200 && /Voice setup/.test(page.body), 'the setup page answers at its address');
+  }
+  r = await vask('pair-stop');
+  ok(r.code === 200, 'the setup page stops');
   ha.server.close();
   ai.server.close();
 });

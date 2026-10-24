@@ -17,8 +17,7 @@ const files = fs
   .filter(f => !only.length || only.indexOf(f.replace(/\.test\.js$/, '')) >= 0)
   .sort();
 let failedFiles = [],
-  checks = 0,
-  fails = 0;
+  checks = 0;
 const t0 = Date.now();
 for (const f of files) {
   const r = cp.spawnSync(process.execPath, [path.join(dir, f)], { encoding: 'utf8', timeout: 180000 });
@@ -27,7 +26,6 @@ for (const f of files) {
   const okN = lines.filter(l => /^ok {3}/.test(l)).length,
     failN = lines.filter(l => /^FAIL /.test(l)).length;
   checks += okN + failN;
-  fails += failN;
   const good = r.status === 0 && failN === 0;
   if (!good) failedFiles.push(f);
   console.log(

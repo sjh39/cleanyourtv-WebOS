@@ -107,8 +107,8 @@ function analyse(img) {
         for (var t0 = 0; t0 < ring.length; t0 += 3)
           q += Math.abs(ring[t0] - mr) + Math.abs(ring[t0 + 1] - mg) + Math.abs(ring[t0 + 2] - mb);
         var st = strip(0, 1),
-          sb = strip(N - 2, N - 1),
-          vert = st && sb ? Math.abs(st[0] - sb[0]) + Math.abs(st[1] - sb[1]) + Math.abs(st[2] - sb[2]) : 0;
+          sbot = strip(N - 2, N - 1),
+          vert = st && sbot ? Math.abs(st[0] - sbot[0]) + Math.abs(st[1] - sbot[1]) + Math.abs(st[2] - sbot[2]) : 0;
         if (q / n0 / 3 > 14 || vert > 40) {
           x0 = 0;
           x1 = N - 1;
