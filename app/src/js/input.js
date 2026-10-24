@@ -78,6 +78,11 @@ document.addEventListener('keydown', function (e) {
     e.preventDefault();
     return;
   } /* Back closes the grid overlay */
+  if (k === 461 || k === 27 || k === 8) {
+    runningMenu();
+    e.preventDefault();
+    return;
+  } /* Back on the home screen: the running apps */
   var len = rows[r].length;
   if (k >= 37 && k <= 40) {
     var tn = performance.now();
@@ -157,6 +162,7 @@ document.addEventListener('webOSRelaunch', function () {
 document.addEventListener('visibilitychange', function () {
   if (document.hidden) {
     if (LIVE.on) LIVE.exit();
+    closeRunningMenu();
   } else load();
 });
 

@@ -3,6 +3,12 @@ var LOC = (window.webOSSystem && webOSSystem.locale) || navigator.language || 'e
   LANG = LOC.slice(0, 2);
 var TX = {
   nl: {
+    'Running apps': 'Geopende apps',
+    'Close': 'Sluiten',
+    'Close all': 'Alles sluiten',
+    'No apps are running': 'Er zijn geen apps geopend',
+    'Could not close': 'Kan niet sluiten',
+    'Could not read the running apps': 'Kan de geopende apps niet lezen',
     'Inputs': 'Ingangen',
     'Settings': 'Instellingen',
     'Customise': 'Aanpassen',
@@ -43,6 +49,12 @@ var TX = {
     '12-hour': '12-uurs',
   },
   de: {
+    'Running apps': 'Geöffnete Apps',
+    'Close': 'Schließen',
+    'Close all': 'Alle schließen',
+    'No apps are running': 'Keine Apps geöffnet',
+    'Could not close': 'Konnte nicht geschlossen werden',
+    'Could not read the running apps': 'Geöffnete Apps konnten nicht gelesen werden',
     'Inputs': 'Eingänge',
     'Settings': 'Einstellungen',
     'Customise': 'Anpassen',
@@ -83,6 +95,12 @@ var TX = {
     '12-hour': '12 Stunden',
   },
   fr: {
+    'Running apps': 'Apps ouvertes',
+    'Close': 'Fermer',
+    'Close all': 'Tout fermer',
+    'No apps are running': 'Aucune app ouverte',
+    'Could not close': 'Impossible de fermer',
+    'Could not read the running apps': 'Impossible de lire les apps ouvertes',
     'Inputs': 'Entrées',
     'Settings': 'Paramètres',
     'Customise': 'Personnaliser',
@@ -123,6 +141,12 @@ var TX = {
     '12-hour': '12 heures',
   },
   es: {
+    'Running apps': 'Apps abiertas',
+    'Close': 'Cerrar',
+    'Close all': 'Cerrar todas',
+    'No apps are running': 'No hay apps abiertas',
+    'Could not close': 'No se pudo cerrar',
+    'Could not read the running apps': 'No se pudieron leer las apps abiertas',
     'Inputs': 'Entradas',
     'Settings': 'Ajustes',
     'Customise': 'Personalizar',

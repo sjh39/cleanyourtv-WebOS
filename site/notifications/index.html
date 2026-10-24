@@ -603,6 +603,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#get-the-address-and-the-token-on-your-phone" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Get the address and the token on your phone
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#sending-one" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1149,6 +1160,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#get-the-address-and-the-token-on-your-phone" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Get the address and the token on your phone
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#sending-one" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1280,13 +1302,54 @@
 <h1 id="picture-notifications">Picture notifications<a class="headerlink" href="#picture-notifications" title="Permanent link">&para;</a></h1>
 <p>The <code>com.cleanyourtv.notify</code> app shows a card (picture, title, text) over whatever is on screen without taking the remote. Other
 devices send it with a POST request, for example Home Assistant showing a camera snapshot when the doorbell rings.</p>
+<p><img alt="A notification card with a camera picture, top right" src="../screenshots/notify-card-picture.jpg" /></p>
+<p><img alt="A text card at the bottom left" src="../screenshots/notify-card-text.jpg" /></p>
+<p>The pictures on this page are rendered with made-up data (a made-up camera picture and a made-up token), not taken from a real TV or home.</p>
 <h2 id="enable-it">Enable it<a class="headerlink" href="#enable-it" title="Permanent link">&para;</a></h2>
-<p>In the manager app: <strong>Network notifications</strong> &gt; <strong>Accept notifications from the network</strong>. <strong>How to send</strong> then shows the address,
-the token and an example.</p>
+<p>In the manager app: <strong>Network notifications</strong> &gt; <strong>Accept notifications from the network</strong>. It is off by default.</p>
+<p><img alt="The Network notifications menu in the manager app" src="../screenshots/notify-manager.jpg" /></p>
+<table>
+<thead>
+<tr>
+<th>Row</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>How to send</strong></td>
+<td>Shows the address, the token and an example request as text on the TV.</td>
+</tr>
+<tr>
+<td><strong>Show as QR code</strong></td>
+<td>Shows a QR code for your phone (below).</td>
+</tr>
+<tr>
+<td><strong>New token</strong></td>
+<td>Replaces the token; devices that use the old one stop working.</td>
+</tr>
+</tbody>
+</table>
 <div class="admonition warning">
 <p class="admonition-title">The token is a secret</p>
 <p>Anyone who has it and can reach the TV can show cards on its screen. <strong>New token</strong> replaces it.</p>
 </div>
+<h2 id="get-the-address-and-the-token-on-your-phone">Get the address and the token on your phone<a class="headerlink" href="#get-the-address-and-the-token-on-your-phone" title="Permanent link">&para;</a></h2>
+<p>The token is 48 characters long. Instead of typing it, scan a QR code:</p>
+<ol>
+<li>In the manager app choose <strong>Network notifications</strong> &gt; <strong>Show as QR code</strong>.</li>
+<li>Scan the code with the camera of a phone that is on the same Wi-Fi as the TV, and open the link.</li>
+</ol>
+<p><img alt="The QR code on the TV" src="../screenshots/notify-qr.jpg" /></p>
+<ol>
+<li>The page shows the address, the token and the header to send, each with a <strong>Copy</strong> button. Paste them where you need them (for
+   Home Assistant, see below).</li>
+</ol>
+<p><img alt="The page on the phone" src="../screenshots/notify-phone.jpg" /></p>
+<p>The page is served by the TV itself at a random address (<code>/t/</code> and 24 random characters) on the notification port. It works for ten
+minutes after the code was shown, then the address answers like any wrong request. It follows the same allow list as the notification
+address (see below). It is plain HTTP like the notifications, so the token crosses your Wi-Fi unencrypted: use a network you trust and
+close the screen on the TV when you are done.</p>
 <h2 id="sending-one">Sending one<a class="headerlink" href="#sending-one" title="Permanent link">&para;</a></h2>
 <div class="language-sh highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://192.168.1.50:8767/notify<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span>-H<span class="w"> </span><span class="s2">"Authorization: Bearer &lt;token&gt;"</span><span class="w"> </span>-H<span class="w"> </span><span class="s2">"Content-Type: application/json"</span><span class="w"> </span><span class="se">\</span>
@@ -1306,7 +1369,7 @@ the token and an example.</p>
 </tr>
 <tr>
 <td><code>image</code></td>
-<td><code>http(s)</code> address of a picture, up to 6 MB.</td>
+<td><code>http(s)</code> address of a picture, up to 6 MB. The TV downloads it, so the address must be reachable from the TV. If it cannot be fetched the card still appears and says why.</td>
 </tr>
 <tr>
 <td><code>seconds</code></td>
@@ -1319,15 +1382,31 @@ the token and an example.</p>
 </tbody>
 </table>
 <h2 id="home-assistant">Home Assistant<a class="headerlink" href="#home-assistant" title="Permanent link">&para;</a></h2>
+<p>Add a <code>rest_command</code> (in <code>configuration.yaml</code>; keep the token in <code>secrets.yaml</code>, for example <code>cleanyourtv_bearer: "Bearer &lt;token&gt;"</code>):</p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">rest_command</span><span class="p">:</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">tv_notify</span><span class="p">:</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">cleanyourtv_notify</span><span class="p">:</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="s">"http://192.168.1.50:8767/notify"</span>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="nt">method</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">POST</span>
 </span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span><span class="nt">headers</span><span class="p">:</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">      </span><span class="nt">Authorization</span><span class="p">:</span><span class="w"> </span><span class="s">"Bearer</span><span class="nv"> </span><span class="s">&lt;token&gt;"</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">      </span><span class="nt">Authorization</span><span class="p">:</span><span class="w"> </span><span class="kt">!secret</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cleanyourtv_bearer</span>
 </span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">      </span><span class="nt">Content-Type</span><span class="p">:</span><span class="w"> </span><span class="s">"application/json"</span>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">    </span><span class="nt">payload</span><span class="p">:</span><span class="w"> </span><span class="s">'{"title":"{{</span><span class="nv"> </span><span class="s">title</span><span class="nv"> </span><span class="s">}}","text":"{{</span><span class="nv"> </span><span class="s">text</span><span class="nv"> </span><span class="s">}}","image":"{{</span><span class="nv"> </span><span class="s">image</span><span class="nv"> </span><span class="s">}}","seconds":15}'</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">    </span><span class="nt">payload</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;-</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">      </span><span class="no">{{ {"title": title | default(""), "text": text | default(""), "image": image | default(""),</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">          </span><span class="no">"seconds": seconds | default(10), "position": position | default("top-right")} | tojson }}</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">    </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
 </span></code></pre></div>
+<p>Then call it from an automation. This shows a camera picture when a sensor fires:</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">actions</span><span class="p">:</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">rest_command.cleanyourtv_notify</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="nt">data</span><span class="p">:</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">      </span><span class="nt">title</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Front door</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">      </span><span class="nt">text</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Someone is at the door</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">      </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="s">"http://homeassistant.local:8123{{</span><span class="nv"> </span><span class="s">state_attr('camera.front_door',</span><span class="nv"> </span><span class="s">'entity_picture')</span><span class="nv"> </span><span class="s">}}"</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">      </span><span class="nt">seconds</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20</span>
+</span></code></pre></div>
+<p>The camera's <code>entity_picture</code> carries a short-lived access token, which is valid right when the card is sent. The TV downloads the
+picture, so use an address of Home Assistant that the TV can reach. Test with <strong>Developer tools</strong> &gt; <strong>Actions</strong> in Home Assistant: a 401
+means the token is wrong, a 403 means the allow list blocks Home Assistant's address.</p>
 <h2 id="limits-and-safety">Limits and safety<a class="headerlink" href="#limits-and-safety" title="Permanent link">&para;</a></h2>
 <ul>
 <li>The port (default 8767) and an allow list of addresses are in <code>config.json</code> under <code>notifyApi</code>:
