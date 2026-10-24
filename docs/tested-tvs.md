@@ -13,6 +13,7 @@ the output of **Share log** (see [Troubleshooting](troubleshooting.md#reporting-
 | OLED55G19LA | 03.53.45 | webOS 6.5 (SDK 6.5.3, Node.js 8.12) | Reported in [issue #5](https://github.com/lasharor/cleanyourtv-WebOS/issues/5): works since service 1.5.13. LG's Home is the `native` kind. The Inputs list over the running app is started when the Input key is pressed and closed after use. |
 | 43UT7590PUA | 33.31.75 | webOS 25 (10.3.2) | Reported in [issue #10](https://github.com/lasharor/cleanyourtv-WebOS/issues/10): works. Setup with debloat and the Input key on, Home takeover, Input hook and service came up cleanly and survived several reboots (service 1.5.16, launcher 1.4.15). |
 | 65UT7000PUA | 33.31.75 | webOS 25 (10.3.2) | Reported in [issue #11](https://github.com/lasharor/cleanyourtv-WebOS/issues/11): setup completed and the home screen works. The Input key opens the Inputs list in under a second; the TV closed the hidden picker, so it starts on each press. |
+| 43UR74006LB | 13.40.90 | webOS 23 (SDK 8.4.0, Node.js 12) | Reported in [issue #17](https://github.com/lasharor/cleanyourtv-WebOS/issues/17): works. Set up with **Set up anyway** (LG's Home is the `native` kind); Home takeover, the service and the input hook came up (service 1.5.16, launcher 1.4.15). |
 
 !!! note "What the status words mean"
     *Tested* means the maintainer ran it. *Reported* means someone else told us it works or what did not. A TV that is not on
