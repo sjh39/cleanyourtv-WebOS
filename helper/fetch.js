@@ -88,7 +88,12 @@ function bodyOf(res, o) {
     // look at the first bytes: 1f 8b is gzip
     const onErr = e => reject(e);
     res.once('error', onErr);
-    res.once('end', () => resolve(res));
+    // an empty body ends before any data: hand on a stream that has already ended, so a reader sees its end
+    res.once('end', () => {
+      const empty = new (require('stream').PassThrough)();
+      empty.end();
+      resolve(empty);
+    });
     res.once('data', first => {
       res.pause();
       res.unshift(first);

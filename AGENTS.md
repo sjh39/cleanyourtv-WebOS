@@ -25,7 +25,7 @@ disk, and a reboot without the boot scripts brings LG's Home back.
 | Home takeover at boot, rollback, undo | `scripts/10-cleanyourtv-home`, `scripts/stage-home.sh`, `scripts/undo-home.sh`, `scripts/bootstrap.sh` |
 | Live TV: playlist, guide, favourites | `helper/live.js` and `app/src/js/live.js` |
 | Picture notifications | `notify/app/`, `helper/notify.js`, `helper/notifyapi.js` |
-| Voice (Moonshine, OpenRouter, Home Assistant) | `helper/voice.js`, `voice/` |
+| Voice (Moonshine, OpenRouter, Home Assistant) | `helper/voice.js` (microphone, recogniser), `helper/answers.js` (Assist, OpenRouter, your server), `voice/` |
 | Themes | `helper/theme.js` (the schema), `themes/` (read from GitHub), `docs/themes.md` |
 | The report people attach to issues | `helper/sharelog.js` (`node sharelog.js --print` prints it) |
 | Node 8 compatibility helpers, diagnostics | `helper/netcompat.js`, `helper/diag.js` |

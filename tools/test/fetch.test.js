@@ -27,6 +27,7 @@ run(async () => {
       r.writeHead(200, { 'content-type': 'application/gzip' });
       return r.end(zlib.gzipSync(text));
     }
+    if (u === '/empty') return r.end();
     if (u === '/missing') {
       r.writeHead(404);
       return r.end('no');
@@ -104,6 +105,8 @@ run(async () => {
     st.on('end', () => res(b.split('\n').length));
   });
   ok(lines === 101, 'open gives a stream of the unpacked body');
+  r = await fetch.read(u + '/empty', { unzip: 'sniff', totalMs: 2000 });
+  ok(r.body.length === 0, 'an empty body ends, also when its first bytes are looked at');
   ok(Date.now() - t0 < 8000, 'all of this ends quickly');
   s.server.close();
 });

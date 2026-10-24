@@ -25,7 +25,8 @@
 | `apps.js` | The app list, icons, usage, launching and the launcher's own settings. |
 | `inputkey.js`, `inputhook.js`, `picker.js` | The Input key: the hook in LG's input processes, the key binds, the Inputs picker. |
 | `manager.js`, `updates.js`, `debloat.js` | The manager's API, updates from GitHub releases with rollback, switching the debloat. |
-| `live.js`, `theme.js`, `notify.js`, `notifyapi.js`, `voice.js` | One feature each. |
+| `live.js`, `theme.js`, `notify.js`, `notifyapi.js` | One feature each. |
+| `voice.js`, `answers.js` | Voice: the microphone, the recogniser, the phone setup page; `answers.js` asks Home Assistant, a language model or your server. |
 | `selfupdate.js`, `sharelog.js` | Programs the manager runs when the service is not running. |
 
 ## The pages
