@@ -71,7 +71,14 @@ var LIVE = (function () {
   function variantsFor(url) {
     var v = [];
     if (/\.m3u8(\?|$)/.test(url)) return [{ src: url, type: '' }];
-    if (/\/live\/.+\.ts(\?|$)/.test(url)) v.push({ src: url.replace(/\.ts(\?|$)/, '.m3u8$1'), type: 'application/x-mpegURL' });
+    /* An Xtream .ts link plays at once as a plain src (1-2 s); the provider's HLS and a typed .ts on webOS 5/6 only stall until START_MS.
+       They stay as fallbacks (issues 9 and 13). */
+    if (/\/live\/.+\.ts(\?|$)/.test(url)) {
+      v.push({ src: url, type: '' });
+      v.push({ src: url.replace(/\.ts(\?|$)/, '.m3u8$1'), type: 'application/x-mpegURL' });
+      v.push({ src: url, type: 'application/x-mpegURL' });
+      return v;
+    }
     v.push({ src: url, type: 'application/x-mpegURL' });
     v.push({ src: url, type: '' });
     return v;
@@ -152,7 +159,14 @@ var LIVE = (function () {
         stallT = setTimeout(stalled, STALL_MS);
       }
     });
-    v.addEventListener('error', onError);
+    /* capture: a failing <source> reports on the <source>, and that event does not bubble; an old, removed <source> is ignored */
+    v.addEventListener(
+      'error',
+      function (e) {
+        if (e.target === v || e.target.parentNode === v) onError();
+      },
+      true
+    );
     $('lv-stage').appendChild(v);
     return v;
   }

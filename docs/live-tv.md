@@ -60,6 +60,13 @@ the [Input key](input-key.md).
   are never requested from your provider, which matters for accounts that allow one connection.
 - The player uses one video element for the whole session instead of creating one per channel.
 - The guide (XMLTV) is refreshed twice a day and keeps 36 hours.
+- The guide address can be an `.xml` or `.xml.gz` file. When the field is empty, the address in the playlist (`url-tvg` or
+  `x-tvg-url`) is used; for an Xtream playlist (`…/get.php?username=…&password=…`) it is the provider's `xmltv.php` on the same server.
+- A playlist channel gets its programmes from the guide channel with the same `tvg-id`. When there is none, the channel's name is
+  compared with the guide channel's names, ignoring case, accents, a leading country code (`PL:`, `NL|`), quality words (`HD`, `FHD`, `4K`)
+  and punctuation, so `PL: TVP 1 HD` matches `TVP 1`.
+- An Xtream link ending in `.ts` (`…/live/<user>/<password>/<id>.ts`) is played as it is first. The provider's HLS (`.m3u8`) and a
+  `.ts` marked as HLS are tried after it, because on webOS 5 and 6 they can stall for 15 seconds before the next try starts.
 - When a playlist lists the same channel in several qualities (for example `HD` and `SD`), they are merged into one channel with
   several streams. If one does not start, the next is tried; a stream that stalls is reloaded once.
 - When a channel does not play, the screen says why: the server refused it, the stream is gone, it needs DRM, it is not video, or
