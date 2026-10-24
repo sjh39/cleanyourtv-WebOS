@@ -9,6 +9,7 @@ the output of **Share log** (see [Troubleshooting](troubleshooting.md#reporting-
 | Two models | 23.25.55 | | Reported working. |
 | OLED65C54LA | 43.21.77 | SDK 11.2.0 | Reported in [issue #3](https://github.com/lasharor/cleanyourtv-WebOS/issues/3): runs; app icons were drawn badly. A fix is available as a test build. |
 | 55UN7200PTF | 04.64.00 | webOS 5.6.2 (Node.js 8.12) | Reported in [issue #4](https://github.com/lasharor/cleanyourtv-WebOS/issues/4): works with the Home Style set to Basic and a few fixes that are available as a test build. |
+| 43UT7590PUA | 33.31.75 | webOS 25 (10.3.2) | Reported in [issue #10](https://github.com/lasharor/cleanyourtv-WebOS/issues/10): works. Setup with debloat and the Input key on, Home takeover, Input hook and service came up cleanly and survived several reboots (service 1.5.16, launcher 1.4.15). |
 | 65UT7000PUA | 33.31.75 | webOS 25 (10.3.2) | Reported in [issue #11](https://github.com/lasharor/cleanyourtv-WebOS/issues/11): setup completed and the home screen works. The Input key opens the Inputs list in under a second; the TV closed the hidden picker, so it starts on each press. |
 
 !!! note "What the status words mean"
