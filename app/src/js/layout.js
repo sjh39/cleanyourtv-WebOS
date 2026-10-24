@@ -88,6 +88,10 @@ function load() {
       if (liveOn()) apps.push({ id: '__live', title: t('Live TV') });
       store();
       rebuild();
+      if (!perfReady) {
+        perfReady = true;
+        perfMark('launcher ready ' + Math.round(performance.now()));
+      }
     })
     .catch(function () {
       toast(t('Helper not reachable, retrying...'));

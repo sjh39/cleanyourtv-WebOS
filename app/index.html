@@ -1630,6 +1630,15 @@ function api(p, body) {
     return x.json();
   });
 }
+/* a timing for tools/perf-tv.sh: one line in the service log ("perf launcher ready 412"); nothing waits for it */
+function perfMark(m) {
+  try {
+    var x = new XMLHttpRequest();
+    x.open('GET', API + '/api/log?m=' + encodeURIComponent('perf ' + m));
+    x.send();
+  } catch (e) {}
+}
+var perfReady = false;
 function launch(id, params) {
   if (id === '__live') return LIVE.enter();
   api('/api/launch', { id: id, params: params }).then(function (x) {
@@ -2559,6 +2568,10 @@ function load() {
       if (liveOn()) apps.push({ id: '__live', title: t('Live TV') });
       store();
       rebuild();
+      if (!perfReady) {
+        perfReady = true;
+        perfMark('launcher ready ' + Math.round(performance.now()));
+      }
     })
     .catch(function () {
       toast(t('Helper not reachable, retrying...'));
@@ -2784,6 +2797,7 @@ var LIVE = (function () {
     FP = { open: false, i: 0 },
     M = { open: false, i: 0, items: [] },
     o = { on: false };
+  var tuneAt = 0; /* when the channel was chosen, for the timing in perfMark */
   var START_MS = 15000,
     STALL_MS = 8000;
   function lesc(s) {
@@ -2878,6 +2892,7 @@ var LIVE = (function () {
       layer('lv-tune', false);
       if (!started) {
         started = true;
+        perfMark('live playing ' + (Date.now() - tuneAt) + ' variant ' + vi + (variants[vi] && variants[vi].type ? ' typed' : ' src'));
         clearTimeout(playedT);
         var c = byNum[cur];
         playedT = setTimeout(function () {
@@ -3033,6 +3048,7 @@ var LIVE = (function () {
     try {
       localStorage.setItem('live.last', String(num));
     } catch (e) {}
+    tuneAt = Date.now();
     streams = [{ url: c.url, q: c.q }].concat(c.alt);
     si = 0;
     reloads = 0;
@@ -3882,6 +3898,7 @@ try {
     usage = cached.usage || {};
     colors = cached.colors || {};
     rebuild();
+    perfMark('launcher cached ' + Math.round(performance.now()));
   }
 } catch (e) {}
 load();

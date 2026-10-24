@@ -63,6 +63,19 @@ go to a TV. The mock needs to answer `/api/apps`, `/api/live/*` and `/api/manage
     Playback of real streams, the TV's remote and pointer, the on-screen keyboard and anything that depends on LG's compositor
     need a TV.
 
+## Timings on a TV
+
+The launcher, the Inputs picker, the Input key and Live TV write short `perf` lines to the service log: how long the launcher takes to
+draw (from the saved layout, and with the service's answer), how long from the Input key to the picker on screen, and how long from
+choosing a channel to moving picture. After using the TV for a while,
+
+```sh
+sh tools/perf-tv.sh <tv-ip>
+```
+
+prints them (read-only, over SSH). `tools/oldchrome.js` prints the launcher's time in Chromium 68 and 79 on your computer, which is
+only a rough comparison: a TV is slower.
+
 ## Continuous integration
 
 | Workflow | When | What |

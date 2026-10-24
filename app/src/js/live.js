@@ -44,6 +44,7 @@ var LIVE = (function () {
     FP = { open: false, i: 0 },
     M = { open: false, i: 0, items: [] },
     o = { on: false };
+  var tuneAt = 0; /* when the channel was chosen, for the timing in perfMark */
   var START_MS = 15000,
     STALL_MS = 8000;
   function lesc(s) {
@@ -138,6 +139,7 @@ var LIVE = (function () {
       layer('lv-tune', false);
       if (!started) {
         started = true;
+        perfMark('live playing ' + (Date.now() - tuneAt) + ' variant ' + vi + (variants[vi] && variants[vi].type ? ' typed' : ' src'));
         clearTimeout(playedT);
         var c = byNum[cur];
         playedT = setTimeout(function () {
@@ -293,6 +295,7 @@ var LIVE = (function () {
     try {
       localStorage.setItem('live.last', String(num));
     } catch (e) {}
+    tuneAt = Date.now();
     streams = [{ url: c.url, q: c.q }].concat(c.alt);
     si = 0;
     reloads = 0;

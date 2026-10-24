@@ -8,6 +8,7 @@ try {
     usage = cached.usage || {};
     colors = cached.colors || {};
     rebuild();
+    perfMark('launcher cached ' + Math.round(performance.now()));
   }
 } catch (e) {}
 load();

@@ -99,6 +99,7 @@ const PAGES = [
   ['manager', 'manager/app/index.html', /class="row[ "]/g, 5],
   ['picker', 'picker/app/index.html', /class="chip[ "]/g, 2],
 ];
+const marks = []; // what the pages log (perf lines: tools/perf-tv.sh reads the same on a TV)
 function serve() {
   const srv = http.createServer((q, r) => {
     const u = q.url.split('?')[0];
@@ -129,6 +130,10 @@ function serve() {
         ],
       });
     if (u === '/api/manager/status') return json(golden['manager status'].body);
+    if (u === '/api/log') {
+      marks.push(decodeURIComponent(q.url.split('m=')[1] || ''));
+      return json({});
+    }
     const m = /^\/icon\/(app\.\d+)$/.exec(u);
     if (m) return r.writeHead(200, { 'content-type': 'image/svg+xml' }), r.end(icon(apps[+m[1].split('.')[1]]));
     json({ returnValue: true });
@@ -205,6 +210,10 @@ function run(bin, url, extra) {
                 '\n  browser: ' +
                 (r.stderr || '').slice(-600))
         );
+        const ready = marks.filter(m => /^perf launcher ready /.test(m)).pop();
+        if (p[0] === 'launcher' && ready)
+          console.log('     ' + e[0] + ': launcher ready ' + ready.split(' ').pop() + ' ms after the page load (this computer, not a TV)');
+        marks.length = 0;
         if (shots) await run(bin, url, ['--screenshot=' + path.join(shots, e[1] + '-' + p[0] + '.png')]);
       }
     }

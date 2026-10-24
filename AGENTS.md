@@ -81,6 +81,7 @@ node tools/theme-docs.js           # regenerates the settings table in docs/them
 node tools/theme-index.js          # writes themes/index.json
 node tools/theme-preview.mjs <id>  # renders a theme in headless Chrome (Node 22+)
 sh tools/diagnose.sh <tv-ip> > cytv-diagnose.txt   # read-only report from a TV over SSH
+sh tools/perf-tv.sh <tv-ip>        # read-only timings from a TV: launcher, Input key, Live TV
 ```
 
 ## Things that have gone wrong before (check these first)

@@ -467,6 +467,15 @@ function api(p, body) {
     return x.json();
   });
 }
+/* a timing for tools/perf-tv.sh: one line in the service log ("perf launcher ready 412"); nothing waits for it */
+function perfMark(m) {
+  try {
+    var x = new XMLHttpRequest();
+    x.open('GET', API + '/api/log?m=' + encodeURIComponent('perf ' + m));
+    x.send();
+  } catch (e) {}
+}
+var perfReady = false;
 function launch(id, params) {
   if (id === '__live') return LIVE.enter();
   api('/api/launch', { id: id, params: params }).then(function (x) {

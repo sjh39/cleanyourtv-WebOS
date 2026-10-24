@@ -14,16 +14,28 @@ const HOME = 'com.webos.app.home';
 function create(ctx) {
   const { config, luna } = ctx;
 
-  // ---- the installed apps, asked from the app manager at most every 5 seconds ----
+  // ---- the installed apps. The app manager takes a moment to answer (a luna-send each time), and Home is opened often: after the first
+  // answer the list is given at once from memory and asked again in the background when it is older than 5 seconds, so an app installed
+  // a moment ago shows up on the next opening of Home ----
   let appCache = null,
-    appCacheAt = 0;
+    appCacheAt = 0,
+    asking = null;
+  function askApps() {
+    if (!asking)
+      asking = luna('luna://com.webos.applicationManager/listApps', {}).then(r => {
+        asking = null;
+        if (!Array.isArray(r.apps)) return appCache || [];
+        appCache = r.apps
+          .filter(a => a.visible !== false && a.id !== HOME)
+          .map(a => ({ id: a.id, title: a.title, icon: a.largeIcon || a.icon, folder: a.folderPath, type: a.type }));
+        appCacheAt = Date.now();
+        return appCache;
+      });
+    return asking;
+  }
   async function apps() {
-    if (appCache && Date.now() - appCacheAt < 5000) return appCache;
-    const r = await luna('luna://com.webos.applicationManager/listApps', {});
-    appCache = (r.apps || [])
-      .filter(a => a.visible !== false && a.id !== HOME)
-      .map(a => ({ id: a.id, title: a.title, icon: a.largeIcon || a.icon, folder: a.folderPath, type: a.type }));
-    appCacheAt = Date.now();
+    if (!appCache) return askApps();
+    if (Date.now() - appCacheAt > 5000) askApps();
     return appCache;
   }
 
