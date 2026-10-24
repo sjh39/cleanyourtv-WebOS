@@ -28,6 +28,11 @@ echo; echo "===== Media pipelines (a managed one that is not foreground can mean
 luna-send -n 1 -w 4000 -f luna://com.webos.media/getActivePipelines '{}' </dev/null 2>&1 | grep -E '"type"|"sub_type"|"is_foreground"|"is_managed"|"app_id"|"resource"' | head -80
 echo; echo "===== Processes ====="
 ps 2>/dev/null | grep -E 'helper\.js|picker|hyperhdr|voiceconductor|node ' | grep -v grep
+echo; echo "===== The service: version, Node.js, which parts run (/api/service) and the TV profile (/api/tv) ====="
+curl -s -m 3 http://127.0.0.1:8765/api/service 2>&1; echo
+curl -s -m 3 http://127.0.0.1:8765/api/tv 2>&1; echo
+echo; echo "===== Settings changes in the service log (who changed an option or a key) ====="
+grep -E '^config: ' /tmp/cleanyourtv-helper.log 2>/dev/null | tail -20
 echo; echo "===== Input key mode (overlay, ondemand or launcher) and picker state ====="
 cat $D/picker-mode 2>&1
 echo; echo "===== config.json (secrets hidden) ====="

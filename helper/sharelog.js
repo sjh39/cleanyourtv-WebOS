@@ -125,6 +125,10 @@ function report() {
   sec('Setup log (' + SETUPLOG + ')', read(SETUPLOG, 150));
   sec('Service log saved at the last rollback', read(SETUPLOG + '.service', 80));
   sec('Last update error', read(D + '/last-error.txt'));
+  const changes = read(P.SERVICE_LOG)
+    .split('\n')
+    .filter(l => /^config: /.test(l));
+  sec('Settings changes (config: ...)', changes.length ? changes.slice(-20).join('\n') : '(none since the service started)');
   sec('Service log (last 80 lines)', read(P.SERVICE_LOG, 80));
   sec('Input hook (last 10 lines)', read(P.HOOK_LOG, 10));
   return redact(o.join('\n') + '\n').slice(0, 300000);
