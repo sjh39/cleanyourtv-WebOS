@@ -42,6 +42,29 @@ run(async () => {
     }
     ok(!err, 'the script of ' + path.relative(root, f) + ' is ES5' + (err ? ': ' + err : ''));
   }
+  // flex "gap" is ignored before Chromium 84, and the script that once added the spacing after each redraw made lists jump and left old
+  // text behind on webOS 5 (issues 4, 8, 13): flex children are spaced with sibling margins
+  const gapBad = [];
+  for (const f of pages) {
+    const t = fs.readFileSync(f, 'utf8'),
+      re = /([^{}]+)\{([^{}]*)\}/g;
+    let m;
+    while ((m = re.exec(t))) {
+      if (/display:\s*(inline-)?flex/.test(m[2]) && /(^|[;\s])(row-|column-)?gap\s*:/.test(m[2]))
+        gapBad.push(path.relative(root, f) + ': ' + m[1].trim().split('\n').pop());
+    }
+  }
+  ok(!gapBad.length, 'no flex container uses gap (a sibling margin instead)' + (gapBad.length ? ':\n  ' + gapBad.join('\n  ') : ''));
+  ok(
+    !fs.existsSync(path.join(root, 'shared', 'flexgap.js')) && !/flexgap/.test(fs.readFileSync(path.join(root, 'ipk', 'build.py'), 'utf8')),
+    'no script adds the spacing after a redraw'
+  );
+  ok(
+    !/\.tile\.f\s*\{[^}]*outline/.test(fs.readFileSync(path.join(root, 'app', 'index.html'), 'utf8')) &&
+      /\.tile\.f::before\s*\{[^}]*border-radius:/.test(fs.readFileSync(path.join(root, 'app', 'index.html'), 'utf8')) &&
+      /\.tile\.fill\.f\s*\{\s*box-shadow:\s*0 0 0 var\(--ring-w\)/.test(fs.readFileSync(path.join(root, 'app', 'index.html'), 'utf8')),
+    'the focus ring has its own rounded corners (an outline is a rectangle before Chromium 94), also on tiles that crop their picture'
+  );
   const built = require(path.join(root, 'tools', 'build-pages.js'));
   for (const p of built.PAGES)
     ok(

@@ -66,7 +66,9 @@ webOS 5 and 6 ship Node.js 8, and webOS 6 has Chromium 79.
 - `helper/netcompat.js` supplies `URL`, `URLSearchParams`, `crypto.randomInt`, `mkdir -p` and the `http(s).get(url, options)` form.
 - What differs between versions is decided in `helper/tvprofile.js`: the picker is started on demand and the notification window is an
   `overlay` before webOS 25 (SDK 10).
-- `shared/flexgap.js` is added to every page by the build; where flex `gap` is ignored it applies the spacing as margins.
+- The pages do not use flex `gap`, which Chromium before 84 ignores: spacing between flex children is a sibling margin
+  (`.row > * + * { margin-left: 22px; }`). Grid `gap` is fine from Chromium 66. The focus ring of a tile is a `::before` with its own
+  radius, because Chromium before 94 draws an `outline` as a rectangle.
 - The service accepts the `file://<appId>-webos` origin that webOS 6 apps send, for our own apps and the Home slot only.
 - `scripts/reload-home.sh` restarts `webapp-mgr` on webOS 6, where a relaunch alone keeps the old page.
 

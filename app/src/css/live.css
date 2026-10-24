@@ -41,11 +41,14 @@
   padding: 0 44px 0 36px;
   display: flex;
   align-items: center;
-  gap: 32px;
   background: rgba(12, 13, 17, 0.92);
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.1),
     0 30px 60px rgba(0, 0, 0, 0.5);
+}
+/* channel banner: a floating panel in the launcher's style */
+#lv-osd > * + * {
+  margin-left: 32px;
 }
 #lv-osd .logo {
   width: 150px;
@@ -125,8 +128,10 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  gap: 18px;
   font-size: 34px;
+}
+#lv-msg > * + * {
+  margin-top: 18px;
 }
 #lv-msg.on {
   background: rgba(0, 0, 0, 0.62);
@@ -224,9 +229,15 @@
 .bds {
   display: flex;
   align-items: center;
-  gap: 8px;
   margin-left: 16px;
   flex: none;
+}
+.bds > * + * {
+  margin-left: 8px;
+}
+/* the badges keep their own 16 px on top of the row's spacing */
+.crow > .bds {
+  margin-left: 38px;
 }
 .bd {
   font-size: 19px;
@@ -331,7 +342,9 @@ svg.st {
   height: 76px;
   display: flex;
   align-items: center;
-  gap: 36px;
+}
+#lv-gtop > * + * {
+  margin-left: 36px;
 }
 #lv-gtitle {
   font-size: 56px;
@@ -342,9 +355,11 @@ svg.st {
 #lv-gtabs {
   flex: 1;
   display: flex;
-  gap: 14px;
   overflow: hidden;
   align-items: center;
+}
+#lv-gtabs > * + * {
+  margin-left: 14px;
 }
 .ctab {
   height: 56px;
@@ -388,13 +403,15 @@ svg.st {
 .crow {
   display: flex;
   align-items: center;
-  gap: 22px;
   height: 104px;
   margin-bottom: 12px;
   padding: 0 28px 0 18px;
   border-radius: 30px;
   background: rgba(255, 255, 255, 0.07);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+}
+.crow > * + * {
+  margin-left: 22px;
 }
 .crow .lg {
   width: 72px;
@@ -524,11 +541,13 @@ svg.st {
 }
 #lv-detail .up {
   display: flex;
-  gap: 22px;
   font-size: 27px;
   height: 50px;
   align-items: center;
   white-space: nowrap;
+}
+#lv-detail .up > * + * {
+  margin-left: 22px;
 }
 #lv-detail .up .tm {
   width: 86px;

@@ -15,7 +15,9 @@
   width: 760px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+}
+#ov .panel > * + * {
+  margin-top: 12px;
 }
 #ov h2 {
   font-size: 46px;
@@ -29,7 +31,6 @@
 .row {
   display: flex;
   align-items: center;
-  gap: 22px;
   height: 84px;
   padding: 0 34px;
   border-radius: var(--row-r);
@@ -37,6 +38,9 @@
   font-weight: 500;
   background: var(--panel2);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+.row > * + * {
+  margin-left: 22px;
 }
 .row svg {
   width: 34px;

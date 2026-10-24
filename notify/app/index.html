@@ -2,8 +2,9 @@
 <html><head><meta charset="utf-8"><title>Notification</title>
 <style>
 html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:transparent;font-family:"LG Smart UI","Helvetica Neue",Helvetica,Arial,sans-serif;color:#f5f6f8}
-#card{box-sizing:border-box;position:absolute;display:flex;flex-direction:column;gap:20px;width:640px;padding:28px;border-radius:44px;background:rgba(12,13,17,.95);
+#card{box-sizing:border-box;position:absolute;display:flex;flex-direction:column;width:640px;padding:28px;border-radius:44px;background:rgba(12,13,17,.95);
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.12),0 30px 60px rgba(0,0,0,.55);opacity:0;transform:translateY(-24px);transition:opacity .35s ease-out,transform .35s ease-out}
+#card>*+*{margin-top:20px}
 #card.on{opacity:1;transform:none}
 #img{display:none;box-sizing:border-box;width:100%;max-height:400px;object-fit:contain;border-radius:28px;background:#1c1e24}
 #title{font-size:38px;font-weight:700;letter-spacing:-.01em;line-height:1.15}
@@ -13,7 +14,8 @@ html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:transpa
 #card.v{width:900px}
 #q{font-size:28px;line-height:1.3;color:rgba(245,246,248,.55)}
 #card.v #text{font-size:34px;line-height:1.35;color:#f5f6f8}
-#bars,#dots{display:none;gap:10px;height:44px;align-items:center}
+#bars,#dots{display:none;height:44px;align-items:center}
+#bars>*+*,#dots>*+*{margin-left:10px}
 .k-listening #bars,.k-thinking #dots{display:flex}
 #bars i{display:block;width:12px;height:44px;border-radius:6px;background:#f5f6f8;transform:scaleY(.25);animation:bar 1s ease-in-out infinite}
 #bars i:nth-child(2){animation-delay:.15s}#bars i:nth-child(3){animation-delay:.3s}#bars i:nth-child(4){animation-delay:.45s}#bars i:nth-child(5){animation-delay:.6s}

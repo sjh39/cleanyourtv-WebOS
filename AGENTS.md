@@ -57,7 +57,7 @@ disk, and a reboot without the boot scripts brings LG's Home back.
 3. **The service must run on Node.js 8.12** (webOS 5/6): no `??`, `?.`, `fs.rmSync`, `fs.cpSync`, `mkdirSync({recursive})`, `crypto.randomInt`,
    `fs.promises`, global `URL`, `http.get(url, options)`, and no `timeout` option on child processes (use `diag.execFile`). Use
    `helper/netcompat.js`. **The pages are written for Chromium 68 and up**: ES5 style, only transform and opacity animate (the GPU is weak),
-   no flex `gap` without the polyfill the build adds.
+   no flex `gap` (Chromium before 84 ignores it): space flex children with sibling margins.
 4. **A fix needs a test** in `tools/test/` (the file of that area) when it can be tested without a TV, and everything must pass:
    `sh tools/check.sh` (the tests under Node 8.12.0, downloaded once with a pinned checksum, and the current Node; the built pages).
    `tools/test/api.test.js` compares every API reply with a recorded one: a reply that changes needs a reason. Say plainly what was

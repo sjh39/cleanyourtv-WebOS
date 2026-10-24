@@ -12,7 +12,6 @@ reports from TVs that are not in the [tested list](../tested-tvs.md).
 | `themes/` | The [themes](../themes.md): one folder each (`theme.json`, `preview.jpg`, a wallpaper) and `index.json`. Read by the TVs from GitHub, not shipped with the service; [contribute one](../themes.md#contributing-a-theme). |
 | `helper/` | The root service (Node.js), one module per part: see [Internals](internals.md#the-service). |
 | `scripts/` | Boot, setup and restore scripts: `bootstrap.sh`, `10-cleanyourtv-home`, `stage-home.sh`, `undo-home.sh`, the debloat scripts. |
-| `shared/` | `flexgap.js`, added to every page by the build for older Chromium. |
 | `voice/` | Source of the small speech program `cytv-asr` and its build script. |
 | `third-party/` | The bundled inputhook files and the QR library. |
 | `tools/` | `check.sh`: every check (the tests in `tools/test` under Node 8.12.0 and the current Node, the built pages); `build-pages.js`: builds the launcher and manager pages from their sources; `theme-docs.js`: regenerates the table of theme settings in the docs; `theme-index.js`: writes `themes/index.json`; `theme-preview.mjs`: renders a theme in headless Chrome (and makes its screenshot). |
@@ -42,7 +41,7 @@ repository root.
 - **Support webOS 5.** The service must run on Node.js 8: no `crypto.randomInt`, no `fs.promises`, no `URL` as a global,
   no `mkdirSync({recursive})`, no `http.get(url, options)`. Use `helper/netcompat.js`. `sh tools/check.sh` catches regressions.
 - **The pages run in Chromium 68 and newer.** The launcher is written in ES5 without a framework, and only transform
-  and opacity are animated, because the TV's GPU is weak. No flex `gap` without the polyfill the build adds.
+  and opacity are animated, because the TV's GPU is weak. No flex `gap` (Chromium before 84 ignores it): space flex children with sibling margins.
 - **Do not store private data in the repository.** No playlist addresses, access keys, IP addresses or names.
 - **Documentation must match the code.** When a feature changes, change its page here and, if it is mentioned there, the README.
 - **Licence.** The project is MIT. Do not copy code from GPL projects into it; describe behaviour and write your own.
