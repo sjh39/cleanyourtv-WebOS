@@ -4,7 +4,8 @@
 # 1. the tests (tools/test.js) under Node.js 8.12.0, the version on webOS 5 and 6 (downloaded once from nodejs.org, checksum
 #    verified, cached in ~/.cache/cleanyourtv; on an Apple-silicon Mac the x64 build runs through Rosetta);
 # 2. the same tests under the Node.js of this computer, when it is a different version;
-# 3. the pages built from their sources are up to date (tools/build-pages.js --check).
+# 3. the pages built from their sources are up to date (tools/build-pages.js --check);
+# 4. with --chromium: the pages in Chromium 68 and 79, the engines of webOS 5 and 6 (tools/oldchrome.js, about 200 MB downloaded once).
 # Nothing is installed and nothing leaves this machine, apart from the one Node download.
 set -e
 cd "$(dirname "$0")/.."
@@ -32,5 +33,9 @@ fi
 if [ -f tools/build-pages.js ]; then
   echo; echo "== pages"
   "$N8" tools/build-pages.js --check
+fi
+if [ "$1" = "--chromium" ]; then
+  echo; echo "== pages in old Chromium"
+  "$N8" tools/oldchrome.js ${CYTV_SHOTS:+--shots "$CYTV_SHOTS"}
 fi
 echo; echo "all checks passed"

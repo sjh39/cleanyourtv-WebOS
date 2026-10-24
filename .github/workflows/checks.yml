@@ -15,7 +15,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Cache Node 8 and the old Chromium builds
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/cleanyourtv
+          key: cytv-engines-${{ runner.os }}-node8.12.0-chromium555668-706915
       - name: Checks
-        run: sh tools/check.sh
+        run: CYTV_SHOTS=$RUNNER_TEMP/shots sh tools/check.sh --chromium
+      - name: Screenshots of the pages in Chromium 68 and 79
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: old-chromium-screenshots
+          path: ${{ runner.temp }}/shots
+          if-no-files-found: ignore
       - name: The package builds
         run: python3 ipk/build.py

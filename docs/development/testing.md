@@ -13,7 +13,13 @@ runs everything a push or a release needs:
 2. the same tests under the Node.js of your computer, when it is another version;
 3. a check that the launcher and the manager pages are built from their sources (`node tools/build-pages.js --check`).
 
-Nothing leaves your machine apart from the one Node download. One area of tests on its own: `node tools/test.js live` (the names are
+With `--chromium` it also runs the launcher, the manager and the Inputs picker in **Chromium 68 and 79**, the browser engines of
+webOS 5 and 6 (`tools/oldchrome.js`, headless, against a stand-in service): a page that throws a script error there or does not draw
+its tiles, rows or inputs fails the check. The engines are Chromium snapshots from Google's storage, checked against pinned SHA-256
+sums (about 100 MB each, downloaded once). `CYTV_SHOTS=<folder>` keeps a screenshot of every page per engine; CI keeps them as an
+artifact of each run.
+
+Nothing leaves your machine apart from the downloads. One area of tests on its own: `node tools/test.js live` (the names are
 the files in `tools/test` without `.test.js`), or `node tools/test/live.test.js`.
 
 ## The tests
@@ -50,7 +56,8 @@ go to a TV. The mock needs to answer `/api/apps`, `/api/live/*` and `/api/manage
 
 | Workflow | When | What |
 |---|---|---|
-| `test-build.yml` | Every push to a branch other than `main` | Runs `tools/check.sh`, builds the package with the commit in a `BUILD` file and publishes it as the pre-release `test-<branch>` |
+| `test-build.yml` | Every push to a branch other than `main` | Runs `tools/check.sh --chromium`, builds the package with the commit in a `BUILD` file and publishes it as the pre-release `test-<branch>` |
+| `checks.yml` | Pull requests and pushes to `main` | Runs `tools/check.sh --chromium` and builds the package |
 | `docs.yml` | Pushes that touch the documentation | Builds this site; deploys it to GitHub Pages from `main` |
 
 A test build appears in the manager app's **Update channel** list; see [Test builds](../managing.md#test-builds).
