@@ -1131,7 +1131,7 @@ svg.st {
 <script>
 var API = 'http://127.0.0.1:8765',
   CACHE_KEY = 'cytv.cache.v4',
-  VERSION = '1.5.0';
+  VERSION = '1.5.1';
 var DEFAULTS = {
   dock: ['netflix', 'youtube.leanback.v4', 'amazon', 'com.disney.disneyplus-prod'],
   topbar: [
@@ -1166,6 +1166,12 @@ var LOC = (window.webOSSystem && webOSSystem.locale) || navigator.language || 'e
   LANG = LOC.slice(0, 2);
 var TX = {
   nl: {
+    'Running apps': 'Geopende apps',
+    'Close': 'Sluiten',
+    'Close all': 'Alles sluiten',
+    'No apps are running': 'Er zijn geen apps geopend',
+    'Could not close': 'Kan niet sluiten',
+    'Could not read the running apps': 'Kan de geopende apps niet lezen',
     'Inputs': 'Ingangen',
     'Settings': 'Instellingen',
     'Customise': 'Aanpassen',
@@ -1206,6 +1212,12 @@ var TX = {
     '12-hour': '12-uurs',
   },
   de: {
+    'Running apps': 'Geöffnete Apps',
+    'Close': 'Schließen',
+    'Close all': 'Alle schließen',
+    'No apps are running': 'Keine Apps geöffnet',
+    'Could not close': 'Konnte nicht geschlossen werden',
+    'Could not read the running apps': 'Geöffnete Apps konnten nicht gelesen werden',
     'Inputs': 'Eingänge',
     'Settings': 'Einstellungen',
     'Customise': 'Anpassen',
@@ -1246,6 +1258,12 @@ var TX = {
     '12-hour': '12 Stunden',
   },
   fr: {
+    'Running apps': 'Apps ouvertes',
+    'Close': 'Fermer',
+    'Close all': 'Tout fermer',
+    'No apps are running': 'Aucune app ouverte',
+    'Could not close': 'Impossible de fermer',
+    'Could not read the running apps': 'Impossible de lire les apps ouvertes',
     'Inputs': 'Entrées',
     'Settings': 'Paramètres',
     'Customise': 'Personnaliser',
@@ -1286,6 +1304,12 @@ var TX = {
     '12-hour': '12 heures',
   },
   es: {
+    'Running apps': 'Apps abiertas',
+    'Close': 'Cerrar',
+    'Close all': 'Cerrar todas',
+    'No apps are running': 'No hay apps abiertas',
+    'Could not close': 'No se pudo cerrar',
+    'Could not read the running apps': 'No se pudieron leer las apps abiertas',
     'Inputs': 'Entradas',
     'Settings': 'Ajustes',
     'Customise': 'Personalizar',
@@ -2248,6 +2272,74 @@ function menuKey(k) {
   return true;
 }
 
+/* Back on the home screen lists the running apps to close them, as LG's Home does with its Recents on a second Back (issue 16) */
+function runningMenu() {
+  api('/api/running').then(
+    function (x) {
+      if (x.error) return toast(t('Could not read the running apps'));
+      openMenu(t('Running apps'), runningItems(x.apps || []));
+      stack[stack.length - 1].running = true;
+    },
+    function () {
+      toast(t('Could not read the running apps'));
+    }
+  );
+}
+/* the list is only true for the moment it was read: it goes when Home is left, so it is never shown out of date */
+function closeRunningMenu() {
+  if (
+    stack.some(function (m) {
+      return m.running;
+    })
+  )
+    closeMenus();
+}
+function runningItems(list) {
+  if (!list.length) return [{ label: t('No apps are running'), dim: true }];
+  var items = list.map(function (a) {
+    return {
+      label: a.title,
+      sub: t('Close'),
+      stay: true,
+      fn: function () {
+        closeRunning(list, [a.id]);
+      },
+    };
+  });
+  if (list.length > 1)
+    items.push({
+      label: t('Close all'),
+      stay: true,
+      fn: function () {
+        closeRunning(
+          list,
+          list.map(function (a) {
+            return a.id;
+          })
+        );
+      },
+    });
+  return items;
+}
+/* the app manager's running list lags by seconds after a close, so the rows go at once instead of after a new reading */
+function closeRunning(list, ids) {
+  var m = stack[stack.length - 1],
+    left = list.filter(function (a) {
+      return ids.indexOf(a.id) < 0;
+    });
+  api('/api/running/close', ids.length > 1 ? { all: true } : { id: ids[0] }).then(
+    function (x) {
+      if (!x || x.returnValue !== true) toast(t('Could not close'));
+    },
+    function () {
+      toast(t('Could not close'));
+    }
+  );
+  m.items = runningItems(left);
+  m.idx = Math.min(m.idx, m.items.length - 1);
+  drawMenu();
+}
+
 function inputsMenu() {
   api('/api/inputs').then(function (x) {
     var items = (x.devices || [])
@@ -2658,6 +2750,11 @@ document.addEventListener('keydown', function (e) {
     e.preventDefault();
     return;
   } /* Back closes the grid overlay */
+  if (k === 461 || k === 27 || k === 8) {
+    runningMenu();
+    e.preventDefault();
+    return;
+  } /* Back on the home screen: the running apps */
   var len = rows[r].length;
   if (k >= 37 && k <= 40) {
     var tn = performance.now();
@@ -2737,6 +2834,7 @@ document.addEventListener('webOSRelaunch', function () {
 document.addEventListener('visibilitychange', function () {
   if (document.hidden) {
     if (LIVE.on) LIVE.exit();
+    closeRunningMenu();
   } else load();
 });
 

@@ -1405,6 +1405,10 @@ local network on request, and an optional notification endpoint is off by defaul
 (a random 192-bit token kept in <code>config.json</code>, readable by root only). It exposes only the notification call. Wrong tokens lock
 an address out for ten minutes, requests are limited to 20 a minute and 32 KB, and an optional <code>allow</code> list restricts addresses.
 It is plain HTTP: the token can be read by anyone who can watch the traffic on your network.</p>
+<p><strong>Show as QR code</strong> in the manager makes the same port serve one more page, <code>GET /t/&lt;24 random characters&gt;</code>, for ten minutes: it shows the address and the
+token so a phone can copy them. The address is created when the code is shown (96 bits of randomness), follows the same allow list, and stops
+working after ten minutes, when notifications are switched off or the service restarts. Anyone who sees the code on the screen, or can read
+the traffic, can read the token while it is open; <strong>New token</strong> replaces it.</p>
 <h2 id="themes">Themes<a class="headerlink" href="#themes" title="Permanent link">&para;</a></h2>
 <p>The manager downloads the theme list, screenshots, theme files and wallpapers from <code>raw.githubusercontent.com</code> (the <code>main</code> branch of this
 repository) over HTTPS, when you open <strong>Theme</strong> or choose a theme. They are data only: the service checks every value against its list,

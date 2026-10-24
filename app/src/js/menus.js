@@ -93,6 +93,74 @@ function menuKey(k) {
   return true;
 }
 
+/* Back on the home screen lists the running apps to close them, as LG's Home does with its Recents on a second Back (issue 16) */
+function runningMenu() {
+  api('/api/running').then(
+    function (x) {
+      if (x.error) return toast(t('Could not read the running apps'));
+      openMenu(t('Running apps'), runningItems(x.apps || []));
+      stack[stack.length - 1].running = true;
+    },
+    function () {
+      toast(t('Could not read the running apps'));
+    }
+  );
+}
+/* the list is only true for the moment it was read: it goes when Home is left, so it is never shown out of date */
+function closeRunningMenu() {
+  if (
+    stack.some(function (m) {
+      return m.running;
+    })
+  )
+    closeMenus();
+}
+function runningItems(list) {
+  if (!list.length) return [{ label: t('No apps are running'), dim: true }];
+  var items = list.map(function (a) {
+    return {
+      label: a.title,
+      sub: t('Close'),
+      stay: true,
+      fn: function () {
+        closeRunning(list, [a.id]);
+      },
+    };
+  });
+  if (list.length > 1)
+    items.push({
+      label: t('Close all'),
+      stay: true,
+      fn: function () {
+        closeRunning(
+          list,
+          list.map(function (a) {
+            return a.id;
+          })
+        );
+      },
+    });
+  return items;
+}
+/* the app manager's running list lags by seconds after a close, so the rows go at once instead of after a new reading */
+function closeRunning(list, ids) {
+  var m = stack[stack.length - 1],
+    left = list.filter(function (a) {
+      return ids.indexOf(a.id) < 0;
+    });
+  api('/api/running/close', ids.length > 1 ? { all: true } : { id: ids[0] }).then(
+    function (x) {
+      if (!x || x.returnValue !== true) toast(t('Could not close'));
+    },
+    function () {
+      toast(t('Could not close'));
+    }
+  );
+  m.items = runningItems(left);
+  m.idx = Math.min(m.idx, m.items.length - 1);
+  drawMenu();
+}
+
 function inputsMenu() {
   api('/api/inputs').then(function (x) {
     var items = (x.devices || [])
