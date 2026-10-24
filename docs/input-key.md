@@ -5,7 +5,8 @@ The remote's **Input** button opens an Inputs picker over the running app.
 ![Inputs picker on the Input key](screenshots/picker.jpg)
 
 The picker shows the dock apps in a row, the inputs below (each with its port and what is connected, and a green dot on the
-active one) and, when [Live TV](live-tv.md) is on, **Live TV**.
+active one) and, when [Live TV](live-tv.md) is on, **Live TV**. A device's name wraps onto a second line, with an ellipsis at
+the end of that line when it is longer still, so a long name (HDMI-CEC ones can be) never runs over the cards beside it.
 
 | Key | Action |
 |---|---|
