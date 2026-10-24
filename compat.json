@@ -6,6 +6,7 @@
     { "firmware": "33.23.05", "sdk": "10.2.2", "homeType": "flutter", "status": "tested", "note": "OLED65G26LA, webOS 25 (tested)" },
     { "firmware": "23.25.55", "homeType": "", "status": "reported", "note": "reported working on two models" },
     { "firmware": "04.64.00", "sdk": "5.6.2", "homeType": "native", "status": "reported", "note": "75UN85006LA and 55UN7200PTF, webOS 5.6.2 (issues 4 and 15)" },
-    { "firmware": "13.40.90", "sdk": "8.4.0", "homeType": "native", "status": "reported", "note": "43UR74006LB, webOS 23 (issue 17)" }
+    { "firmware": "13.40.90", "sdk": "8.4.0", "homeType": "native", "status": "reported", "note": "43UR74006LB, webOS 23 (issue 17)" },
+    { "firmware": "03.53.45", "sdk": "6.5.3", "homeType": "native", "status": "reported", "note": "OLED55G19LA and 65NANO753PR, webOS 6.5.3 (issues 5 and 18)" }
   ]
 }
