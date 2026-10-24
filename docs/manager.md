@@ -23,7 +23,9 @@
 ## When the service is not running
 
 The manager works without the service for two things: checking for a newer package and installing it, so a broken service can
-be repaired from the TV.
+be repaired from the TV. It follows the same **Update channel** as the service: on a test channel it offers that test build's package.
+**Set up now** starts from the options that are already saved (Input key, Debloat), so setting up again does not switch them back
+on.
 
 ## Share log
 
