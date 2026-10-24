@@ -1,7 +1,7 @@
-// Generates the table of theme settings for docs/themes.md from SCHEMA in helper/theme.js, so the two cannot drift apart.
+// Generates the table of theme settings for docs/themes.md from SCHEMA in helper/themeschema.js, so the two cannot drift apart.
 //   node tools/theme-docs.js          rewrites the table between the markers in docs/themes.md
 const fs = require('fs'), path = require('path');
-const { SCHEMA } = require('../helper/theme.js');
+const { SCHEMA } = require('../helper/themeschema.js');
 const show = v => v === null ? 'empty' : typeof v === 'string' && v === '' ? 'none' : '`' + v + '`';
 function table() {
   const rows = ['| Key | Values | Default | |', '|---|---|---|---|'];

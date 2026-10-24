@@ -26,7 +26,7 @@ disk, and a reboot without the boot scripts brings LG's Home back.
 | Live TV: playlist, guide, favourites | `helper/live.js` and `app/src/js/live.js` |
 | Picture notifications | `notify/app/`, `helper/notify.js`, `helper/notifyapi.js` |
 | Voice (Moonshine, OpenRouter, Home Assistant) | `helper/voice.js` (microphone, recogniser), `helper/answers.js` (Assist, OpenRouter, your server), `voice/` |
-| Themes | `helper/theme.js` (the schema), `themes/` (read from GitHub), `docs/themes.md` |
+| Themes | `helper/themeschema.js` (the schema), `helper/theme.js` (downloads), `themes/` (read from GitHub), `docs/themes.md` |
 | The report people attach to issues | `helper/sharelog.js` (`node sharelog.js --print` prints it) |
 | Node 8 compatibility helpers, diagnostics | `helper/netcompat.js`, `helper/diag.js` |
 | Build and checks | `ipk/build.py`, `tools/build-pages.js`, `tools/check.sh`, the tests in `tools/test/` |
@@ -74,7 +74,7 @@ sh tools/check.sh                  # every check: tests under Node 8.12.0 and th
 node tools/test.js live            # one area of tests (the files in tools/test)
 node tools/build-pages.js          # builds app/index.html and manager/app/index.html from app/src and manager/src
 python3 ipk/build.py               # writes dist/: the package and the launcher bundle with .sha256 files
-node tools/theme-docs.js           # regenerates the settings table in docs/themes.md from helper/theme.js
+node tools/theme-docs.js           # regenerates the settings table in docs/themes.md from helper/themeschema.js
 node tools/theme-index.js          # writes themes/index.json
 node tools/theme-preview.mjs <id>  # renders a theme in headless Chrome (Node 22+)
 sh tools/diagnose.sh <tv-ip> > cytv-diagnose.txt   # read-only report from a TV over SSH
@@ -96,4 +96,4 @@ sh tools/diagnose.sh <tv-ip> > cytv-diagnose.txt   # read-only report from a TV 
   every change of an option or key with its source.
 - A per-TV rule written in a module or a script drifts from the others: put it in `helper/tvprofile.js`.
 - Edit the pages in `app/src` and `manager/src`, then `node tools/build-pages.js`; the built files are what the TV loads.
-- Themes are data; a theme must never contain CSS or script. The schema in `helper/theme.js` is the only source of what a theme can set.
+- Themes are data; a theme must never contain CSS or script. The schema in `helper/themeschema.js` is the only source of what a theme can set.

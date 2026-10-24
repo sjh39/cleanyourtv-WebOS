@@ -57,7 +57,7 @@ Themes live in the repository, so a new one is a pull request:
    schema, that the screenshot is there, and that the index is up to date.
 6. Open the pull request. Once it is merged into `main`, every TV can download the theme; no release is needed.
 
-When you add a setting to the engine, add one row to `SCHEMA` in `helper/theme.js`, read its variable in `app/index.html`, and run
+When you add a setting to the engine, add one row to `SCHEMA` in `helper/themeschema.js`, read its variable in the launcher's CSS (`app/src/css/`, then `node tools/build-pages.js`), and run
 `node tools/theme-docs.js` to regenerate the table below.
 
 ## Making a theme with an AI assistant
@@ -66,7 +66,7 @@ An assistant such as Claude can write a theme from a description ("a calm blue t
 checkout of the repository (or these files) and the rules below.
 
 **What it needs to read**
-- The table of settings further down this page (or `SCHEMA` in `helper/theme.js`, the source of that table): every key, its range and its default.
+- The table of settings further down this page (or `SCHEMA` in `helper/themeschema.js`, the source of that table): every key, its range and its default.
 - `themes/classic/theme.json` and one existing theme that is close to the goal, for example `themes/bloom/theme.json`.
 - `themes/README.md` for the folder layout.
 
