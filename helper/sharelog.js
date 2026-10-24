@@ -5,24 +5,18 @@
 // Writes /tmp/cytv-sharelog.json {url, until}. Usage: node sharelog.js
 const http = require('http'),
   fs = require('fs'),
-  os = require('os'),
-  cp = require('child_process'),
   crypto = require('crypto');
-const D = '/media/developer/cleanyourtv',
-  SVC = '/media/developer/apps/usr/palm/services/com.cleanyourtv.manager.service';
-const SETUPLOG = '/media/developer/cytv-setup.log';
+const P = require('./paths'),
+  exec = require('./exec'),
+  web = require('./web');
+const D = P.D,
+  SVC = P.SERVICE_DIR,
+  SETUPLOG = P.SETUP_LOG;
 const STATE = '/tmp/cytv-sharelog.json',
   PIDF = '/tmp/cytv-sharelog.pid',
   LIFE = 10 * 60 * 1000;
-const ENV = Object.assign({}, process.env, { PATH: '/usr/bin:/usr/sbin:/bin:/sbin:' + (process.env.PATH || '') });
 
-const sh = (cmd, ms) => {
-  try {
-    return cp.execSync(cmd, { env: ENV, timeout: ms || 8000, stdio: ['ignore', 'pipe', 'pipe'] }).toString();
-  } catch (e) {
-    return (e.stdout ? e.stdout.toString() : '') + (e.stderr ? e.stderr.toString() : '') || '(failed: ' + e.message.split('\n')[0] + ')';
-  }
-};
+const sh = (cmd, ms) => exec.shSync(cmd, ms);
 const read = (f, tail) => {
   try {
     const t = fs.readFileSync(f, 'utf8');
@@ -66,8 +60,9 @@ function report() {
       '\nlauncher: ' +
       read(D + '/app/version.json').replace(/\s+/g, ' ')
   );
+  sec('TV profile (tvprofile.js)', read(P.TV).replace(/\s+/g, ' '));
   let home = read(D + '/backup/home-appinfo.orig.json');
-  if (home === '(not present)') home = read('/usr/palm/applications/com.webos.app.home/appinfo.json');
+  if (home === '(not present)') home = read(P.HOME_APP + '/appinfo.json');
   try {
     const h = JSON.parse(home);
     sec(
@@ -83,7 +78,7 @@ function report() {
   }
   sec(
     'Mounts and boot scripts',
-    sh("grep -E 'com.webos.app.home|InputPicker' /proc/mounts | cut -c1-120 | head -5") + '\n' + sh('ls /var/lib/webosbrew/init.d 2>&1')
+    sh("grep -E 'com.webos.app.home|InputPicker' /proc/mounts | cut -c1-120 | head -5") + '\n' + sh('ls ' + P.INITD + ' 2>&1')
   );
   let apps = '';
   for (const id of ['com.cleanyourtv.manager', 'com.cleanyourtv.picker', 'com.cleanyourtv.notify', 'com.webos.app.home'])
@@ -106,7 +101,7 @@ function report() {
   try {
     keys = JSON.stringify(JSON.parse(read(D + '/config.json')).keys || {});
   } catch (_) {}
-  const hl = read('/tmp/lginput-hook-lginput2.log');
+  const hl = read(P.HOOK_LOG);
   const codes = {};
   (hl.match(/uinput_code=\d+/g) || []).forEach(c => {
     codes[c] = (codes[c] || 0) + 1;
@@ -130,17 +125,13 @@ function report() {
   sec('Setup log (' + SETUPLOG + ')', read(SETUPLOG, 150));
   sec('Service log saved at the last rollback', read(SETUPLOG + '.service', 80));
   sec('Last update error', read(D + '/last-error.txt'));
-  sec('Service log (last 80 lines)', read('/tmp/cleanyourtv-helper.log', 80));
-  sec('Input hook (last 10 lines)', read('/tmp/lginput-hook-lginput2.log', 10));
+  sec('Service log (last 80 lines)', read(P.SERVICE_LOG, 80));
+  sec('Input hook (last 10 lines)', read(P.HOOK_LOG, 10));
   return redact(o.join('\n') + '\n').slice(0, 300000);
 }
 
 // ---- server ----
-function lanIp() {
-  const n = os.networkInterfaces();
-  for (const k of Object.keys(n)) for (const a of n[k]) if (a.family === 'IPv4' && !a.internal) return a.address;
-  return '127.0.0.1';
-}
+const lanIp = () => web.lanIp() || '127.0.0.1';
 const page = text =>
   '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CleanYourTV report</title>' +
   '<style>body{margin:0;padding:16px;font:16px/1.4 -apple-system,Helvetica,Arial,sans-serif;background:#111;color:#eee}h1{font-size:20px;margin:0 0 8px}p{margin:0 0 12px;color:#bbb}' +
@@ -201,5 +192,8 @@ function main() {
   });
   srv.listen(port, '0.0.0.0');
 }
-if (process.argv[2] === '--print') process.stdout.write(report());
-else main();
+if (require.main === module) {
+  if (process.argv[2] === '--print') process.stdout.write(report());
+  else main();
+}
+module.exports = { report, redact };

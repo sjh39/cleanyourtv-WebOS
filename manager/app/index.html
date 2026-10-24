@@ -391,7 +391,16 @@ function load(keep){
     if(!keep)banner('');
     build();if(idx>=rows.length)idx=0;draw();
     if(s.checking)setTimeout(function(){load(true)},2000)
-  },function(){offline=true;build();idx=setupIdx;draw();banner('');if(!checkedOffline){checkedOffline=true;offlineCheck()}})}
+  },function(){offline=true;build();idx=setupIdx;draw();banner('');if(!checkedOffline){checkedOffline=true;setupDefaults();offlineCheck()}})}
+/* setting up again (after an update by script, or when the service stopped) starts from the choices already saved, not from the defaults
+   (issues 6 and 7: the Input key came back on) */
+function setupDefaults(){
+  rootExec('cat /media/developer/cleanyourtv/config.json 2>/dev/null').then(function(m){
+    var o=null;try{o=JSON.parse(execOut(m).out).options}catch(x){}
+    if(!o)return;
+    if(o.debloat===false)setup.debloat=false;
+    if(o.inputKey===false)setup.inputKey=false;
+    if(offline){build();draw()}})}
 /* before the setup (or when it failed) the service is not running: update the package through the root service instead */
 function execOut(m){var o={};try{o=JSON.parse(m)}catch(e){}return {ok:o.returnValue!==false,out:String(o.stdoutString||''),err:String(o.stderrString||o.errorText||'')}}
 function offlineCheck(){

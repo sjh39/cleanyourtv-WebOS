@@ -5,7 +5,7 @@
 // the callback runs once, so no handle is closed twice.
 const fs = require('fs'),
   cp = require('child_process');
-const FILE = process.env.CYTV_RUNFILE || '/tmp/cytv-run.json',
+const FILE = require('./paths').RUNFILE,
   KEEP = 25;
 let ops = [],
   timer = null,

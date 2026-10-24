@@ -15,8 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Service checks under Node 8.12.0 (what webOS 5 ships)
-        run: sh tools/node8-check.sh
+      - name: Checks (tests under Node 8.12.0, what webOS 5 and 6 ship, and the current Node; pages up to date)
+        run: sh tools/check.sh
       - name: Build the package
         run: CYTV_BUILD="${GITHUB_SHA::7}" python3 ipk/build.py
       - name: Publish the test build

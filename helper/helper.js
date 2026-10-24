@@ -1,389 +1,83 @@
-// Root service of CleanYourTV: bridges the launcher web app to luna, serves app icons, runs Live TV and picture
-// notifications, keeps the Input-key picker alive and hosts the manager API. Listens on 127.0.0.1 only.
-const http = require('http'),
-  fs = require('fs'),
-  path = require('path'),
-  cp = require('child_process');
+// Root service of CleanYourTV: the launcher's bridge to the TV (apps, inputs, launching), Live TV, picture notifications, voice,
+// themes, the Input key and the manager's API (updates, options). Listens on 127.0.0.1:8765 only.
+// This file only wires the parts together. Each part is a feature module with create(ctx) -> { name, paths/prefix, handle, start };
+// ctx carries what they share (config, the TV profile, luna). A part that fails to load is left out and reported at /api/service;
+// the rest keeps working. AGENTS.md has the map of the files.
 const VERSION = '1.5.16';
-const PORT = 8765,
-  DIR = '/media/developer/cleanyourtv',
-  CONF = DIR + '/config.json',
-  USAGE = DIR + '/usage.json';
-const ENV = Object.assign({}, process.env, { PATH: '/usr/bin:/usr/sbin:/bin:/sbin:' + (process.env.PATH || '') });
-
-const diag = require('./diag');
+const fs = require('fs');
+const P = require('./paths'),
+  diag = require('./diag');
 diag.start();
-function luna(uri, payload) {
-  return new Promise(res => {
-    const sh = 'luna-send -n 1 -w 5000 -f "$1" "$2" </dev/null';
-    diag.execFile(
-      '/bin/sh',
-      ['-c', sh, 'sh', uri, JSON.stringify(payload || {})],
-      { env: ENV, timeout: 8000, maxBuffer: 8 << 20 },
-      (e, out) => {
-        try {
-          res(JSON.parse(out));
-        } catch (_) {
-          res({ returnValue: false, errorText: String(e || 'bad json') });
-        }
-      }
-    );
-  });
-}
-const readConf = () => {
+const luna = require('./luna'),
+  web = require('./web'),
+  config = require('./config').main(),
+  tvprofile = require('./tvprofile');
+
+const PORT = 8765;
+const loaded = [],
+  failed = {};
+const ctx = {
+  version: VERSION,
+  config,
+  luna,
+  profile: tvprofile.create({ luna }),
+  feature: name => loaded.filter(f => f.name === name)[0] || null,
+};
+function load(name, make) {
   try {
-    return JSON.parse(fs.readFileSync(CONF, 'utf8'));
-  } catch (_) {
-    return {};
+    const f = make();
+    if (f) loaded.push(f);
+    return f;
+  } catch (e) {
+    failed[name] = String(e.message || e);
+    console.error(name + ' module failed: ' + ((e && e.stack) || e));
+    return null;
   }
-};
-const writeConf = c => {
-  fs.writeFileSync(CONF + '.tmp', JSON.stringify(c, null, 2), { mode: 0o600 });
-  fs.renameSync(CONF + '.tmp', CONF);
-};
-let appCache = null,
-  appCacheAt = 0;
-async function apps() {
-  if (appCache && Date.now() - appCacheAt < 5000) return appCache;
-  const r = await luna('luna://com.webos.applicationManager/listApps', {});
-  appCache = (r.apps || [])
-    .filter(a => a.visible !== false && a.id !== 'com.webos.app.home')
-    .map(a => ({ id: a.id, title: a.title, icon: a.largeIcon || a.icon, folder: a.folderPath, type: a.type }));
-  appCacheAt = Date.now();
-  return appCache;
 }
 
-// ---- usage: count which apps get used (foreground changes), with a 30-day half-life ----
-const HALF_LIFE = 30 * 24 * 3600 * 1000;
-let usage = {};
-try {
-  usage = JSON.parse(fs.readFileSync(USAGE, 'utf8'));
-} catch (_) {}
-const decayed = (u, now) => u.s * Math.pow(0.5, (now - u.t) / HALF_LIFE);
-function usageScores() {
-  const now = Date.now(),
-    out = {};
-  for (const id in usage) out[id] = Math.round(decayed(usage[id], now) * 1000) / 1000;
-  return out;
-}
-let saveTimer = null;
-function bump(id) {
-  const now = Date.now(),
-    u = usage[id];
-  usage[id] = { s: (u ? decayed(u, now) : 0) + 1, t: now };
-  if (!saveTimer)
-    saveTimer = setTimeout(() => {
-      saveTimer = null;
-      try {
-        fs.writeFileSync(USAGE + '.tmp', JSON.stringify(usage));
-        fs.renameSync(USAGE + '.tmp', USAGE);
-      } catch (_) {}
-    }, 15000);
-}
-// An app counts as "used" once it has stayed in the foreground for two polls in a row; going back to Home re-arms it.
-let cand = null,
-  streak = 0,
-  counted = null;
-async function onForeground(id) {
-  if (id === 'com.webos.app.home') {
-    counted = null;
-    cand = id;
-    streak = 1;
-    return;
-  }
-  if (!id) return;
-  if (id === cand) streak++;
-  else {
-    cand = id;
-    streak = 1;
-  }
-  if (streak >= 2 && id !== counted) {
-    counted = id;
-    if ((await apps()).some(a => a.id === id)) bump(id);
-  }
-}
-// Poll the foreground app every few seconds (a subscription's output is block-buffered by luna-send, so it would arrive late).
-function pollForeground() {
-  diag.execFile(
-    'luna-send',
-    ['-n', '1', '-w', '3000', '-f', 'luna://com.webos.applicationManager/getForegroundAppInfo', '{}'],
-    { env: ENV, timeout: 6000 },
-    (e, out) => {
-      try {
-        const o = JSON.parse(out);
-        if (o.returnValue !== false) onForeground(o.appId || '');
-      } catch (_) {}
-    }
-  );
-}
-let notify = null;
-try {
-  notify = require('./notify');
-} catch (e) {
-  console.error('notify module failed:', e.message);
-}
-let live = null;
-try {
-  live = require('./live');
-} catch (e) {
-  console.error('live module failed:', e.message);
-}
-let inputhook = {
-  ensure() {},
-  status() {
-    return {};
+// the service itself: its version, the TV profile and which parts are running
+const core = {
+  name: 'core',
+  paths: ['/api/version', '/api/tv', '/api/service'],
+  handle(req, res, u) {
+    if (u === '/api/version') return web.json(res, { version: VERSION });
+    if (u === '/api/tv') return web.json(res, ctx.profile.get());
+    web.json(res, { version: VERSION, node: process.version, features: loaded.map(f => f.name), failed });
   },
 };
-try {
-  inputhook = require('./inputhook');
-} catch (e) {
-  console.error('inputhook module failed:', e.message);
-}
-const options = () => Object.assign({ debloat: true, inputKey: true, liveTv: true }, readConf().options || {});
-const keyCode = () => String((readConf().keys || {}).input || '241');
-const voiceKey = () => {
-  const v = readConf().voice || {};
-  return v.enabled && voice && voice.installed() ? String((readConf().keys || {}).voice || '') : '';
-};
-const guideKey = () => (options().liveTv !== false ? String((readConf().keys || {}).guide || '') : ''); // the Guide button belongs to LG unless Live TV is on and a button was learned
-let pickerShownAt = 0;
-// The on-demand picker asks to be closed when it is dismissed. Closing from the page does nothing on some builds, so the app manager does
-// it: closeByAppId is the call that works on webOS 6, plain close the fallback.
-async function closePicker() {
-  const id = 'com.cleanyourtv.picker',
-    a = await luna('luna://com.webos.applicationManager/closeByAppId', { id });
-  if (a.returnValue === true) return;
-  const b = await luna('luna://com.webos.applicationManager/close', { id });
-  if (b.returnValue !== true)
-    console.error('picker: could not close it (' + (a.errorText || 'closeByAppId failed') + '; ' + (b.errorText || 'close failed') + ')');
-}
-// the Input key shows the Inputs over the running app (the picker app, tested on webOS 25) or opens the launcher's Inputs list; older webOS
-// defaults to the launcher (see picker.js). scripts/inputkey.sh reads the result from picker-mode.
-let sdkMajor = 0;
-const pickerMode = () => require('./picker').modeOf(readConf().picker || {}, sdkMajor);
-// With the launcher's list as the Input key's target, CleanYourTV has to be the Home: otherwise the key stays with LG
-const inputKeyOn = () => options().inputKey && !(pickerMode() === 'launcher' && fs.existsSync(DIR + '/DISABLE'));
-const syncPickerMode = () => {
-  try {
-    fs.writeFileSync(DIR + '/picker-mode', pickerMode() + '\n');
-  } catch (_) {}
-};
-luna('luna://com.webos.service.tv.systemproperty/getSystemInfo', { keys: ['sdkVersion'] }).then(r => {
-  sdkMajor = parseInt(String(r.sdkVersion || '').split('.')[0], 10) || 0;
-  syncPickerMode();
-});
-let voice = null;
-try {
-  if (notify) voice = require('./voice').create({ notify, readConf, writeConf });
-} catch (e) {
-  console.error('voice module failed:', e.message);
-}
-inputhook.setVoiceKey(voiceKey);
-let theme = null;
-try {
-  theme = require('./theme').create({
-    readConf,
-    writeConf,
-    slug: () => {
-      try {
-        const x = fs
-          .readFileSync(DIR + '/source', 'utf8')
-          .trim()
-          .split(/\s+/)[0];
-        if (/^[\w.-]+\/[\w.-]+$/.test(x)) return x;
-      } catch (_) {}
-      return 'lasharor/cleanyourtv-WebOS';
-    },
-    // the branch of the themes folder: main, unless D/source names another one after the repository (only to try a theme before it is merged)
-    ref: () => {
-      try {
-        const x = fs
-          .readFileSync(DIR + '/source', 'utf8')
-          .trim()
-          .split(/\s+/)[1];
-        if (/^[\w.\/-]{1,60}$/.test(x || '')) return x;
-      } catch (_) {}
-      return 'main';
-    },
-  });
-} catch (e) {
-  console.error('theme module failed:', e.message);
-}
-inputhook.setGuideKey && inputhook.setGuideKey(guideKey);
-let notifyApi = null;
-try {
-  if (notify) notifyApi = require('./notifyapi').create({ notify, readConf, writeConf });
-} catch (e) {
-  console.error('notification api module failed:', e.message);
-}
-let manager = null;
-try {
-  manager = require('./manager').create({
-    luna,
-    readConf,
-    writeConf,
-    inputhook,
-    VERSION,
-    notifyApi,
-    voice,
-    pickerShown: () => pickerShownAt,
-    pickerMode,
-    syncPickerMode,
-    inputKeyOn,
-  });
-} catch (e) {
-  console.error('manager module failed:', e.message);
-}
-const body = req =>
-  new Promise(r => {
-    let b = '';
-    req.on('data', c => (b += c));
-    req.on('end', () => {
-      try {
-        r(JSON.parse(b || '{}'));
-      } catch (_) {
-        r({});
-      }
-    });
-  });
+loaded.push(core);
 
-http
-  .createServer(async (req, res) => {
-    // Our apps are local files (their requests carry Origin "null"); curl and scripts send no Origin. A web page opened in the
-    // TV's browser has an http(s) origin and is refused, so it cannot drive this root service.
-    let origin = req.headers.origin;
-    const rawOrigin = origin;
-    // webOS 6 sends "file://<appId>-webos" for local apps instead of "null": accept that for our own apps and the Home slot only
-    if (/^file:\/\/(com\.webos\.app\.home|com\.cleanyourtv\.(manager|picker|notify|live))-webos$/.test(origin || '')) origin = 'null';
-    if (origin !== undefined && origin !== 'null') {
-      console.log('refused origin ' + origin + ' ' + req.method + ' ' + req.url.slice(0, 60));
-      res.writeHead(403, { 'content-type': 'application/json' });
-      return res.end('{"error":"origin not allowed"}');
-    }
-    // Chromium 79 (webOS 6) compares the answer with its own serialisation of a file origin, so for those origins echoing fails CORS: answer * there.
-    // Only origins accepted above get this far.
-    if (origin === 'null') {
-      res.setHeader('Access-Control-Allow-Origin', rawOrigin === 'null' ? 'null' : '*');
-      res.setHeader('Vary', 'Origin');
-    }
-    res.setHeader('Access-Control-Allow-Headers', 'content-type');
-    if (req.method === 'OPTIONS') {
-      res.writeHead(204);
-      return res.end();
-    }
-    const json = (o, c) => {
-      res.writeHead(c || 200, { 'content-type': 'application/json' });
-      res.end(JSON.stringify(o));
-    };
-    const u = req.url.split('?')[0];
-    try {
-      if (notify && u.startsWith('/api/notify')) return notify.handle(req, res, u, body);
-      if (voice && u.startsWith('/api/voice/')) return voice.handle(req, res, u, body);
-      if (live && u.startsWith('/api/live/')) return live.handle(req, res, u, body);
-      if (theme && u.startsWith('/api/theme/')) return theme.handle(req, res, u, body);
-      if (u === '/api/log') {
-        const lm = decodeURIComponent(req.url.split('m=')[1] || '');
-        if (/picker show/.test(lm)) pickerShownAt = Date.now();
-        if (/picker close/.test(lm)) setTimeout(closePicker, 400);
-        console.log(
-          fs.readFileSync('/proc/uptime', 'utf8').split(' ')[0] + ' ' + decodeURIComponent(req.url.split('m=')[1] || '').slice(0, 300)
-        );
-        return json({});
-      } // small diagnostics from the overlay apps
-      if (manager && u.startsWith('/api/manager/')) return manager.handle(req, res, u, body);
-      if (u === '/api/frontend-ok' && req.method === 'POST') {
-        const b = await body(req);
-        if (manager) manager.frontendLoaded(String(b.version || ''));
-        return json({ returnValue: true });
-      }
-      if (u === '/api/version') return json({ version: VERSION });
-      if (u === '/api/apps')
-        return json({
-          apps: await apps(),
-          config: Object.assign((({ voice, notifyApi, theme: _t, ...rest }) => rest)(readConf()), theme ? { theme: theme.resolved() } : {}),
-          usage: usageScores(),
-          version: VERSION,
-        });
-      if (u === '/api/inputs') return json(await luna('luna://com.webos.service.eim/getAllInputStatus', {}));
-      if (u === '/api/foreground') return json(await luna('luna://com.webos.applicationManager/getForegroundAppInfo', {}));
-      if (u === '/api/launch' && req.method === 'POST') {
-        const b = await body(req);
-        if (!/^[\w.\-]+$/.test(b.id || '')) return json({ error: 'bad id' }, 400);
-        return json(await luna('luna://com.webos.applicationManager/launch', { id: b.id, params: b.params || {} }));
-      }
-      if (u === '/api/config' && req.method === 'POST') {
-        const b = await body(req),
-          strs = v => (Array.isArray(v) ? v.filter(x => typeof x === 'string').slice(0, 200) : undefined);
-        const out = {};
-        if (strs(b.dock)) out.dock = strs(b.dock).slice(0, 8);
-        if (strs(b.hidden)) out.hidden = strs(b.hidden);
-        if (b.sort === 'usage' || b.sort === 'alpha') out.sort = b.sort;
-        if (['auto', '24', '12'].includes(b.clock)) out.clock = b.clock;
-        if (Array.isArray(b.topbar))
-          out.topbar = b.topbar
-            .slice(0, 12)
-            .filter(o => o && typeof o.label === 'string')
-            .map(o => {
-              const t = { label: o.label.slice(0, 40), icon: String(o.icon || 'grid').slice(0, 20) };
-              if (typeof o.action === 'string') t.action = o.action;
-              if (typeof o.app === 'string') t.app = o.app;
-              if (o.params && typeof o.params === 'object') t.params = o.params;
-              return t;
-            });
-        const old = readConf(); // settings the launcher does not own (options, updates source) stay as they are
-        for (const k of Object.keys(old)) if (!(k in out) && !['dock', 'hidden', 'sort', 'clock', 'topbar'].includes(k)) out[k] = old[k];
-        writeConf(out);
-        return json({ returnValue: true });
-      }
-      if (u === '/api/undo' && req.method === 'POST') {
-        // LG's Home, kept until switched back on in the manager; restarts the TV
-        if (manager) manager.useLgHome();
-        return json({ returnValue: true });
-      }
-      const m = u.match(/^\/icon\/([\w.\-]+)$/);
-      if (m) {
-        const a = (await apps()).find(x => x.id === m[1]);
-        const f = a && a.icon && path.join(a.folder, a.icon);
-        if (!f || !path.resolve(f).startsWith(path.resolve(a.folder)) || !fs.existsSync(f)) {
-          res.writeHead(404);
-          return res.end();
-        }
-        res.writeHead(200, { 'content-type': 'image/png', 'cache-control': 'max-age=3600' });
-        return fs.createReadStream(f).pipe(res);
-      }
-      res.writeHead(404);
-      res.end();
-    } catch (e) {
-      json({ error: String(e) }, 500);
-    }
-  })
+// the order matters where one part uses another: voice and the notification port show cards through notify
+const notify = load('notify', () => require('./notify').create(ctx));
+if (notify) load('voice', () => require('./voice').create(ctx));
+load('live', () => require('./live').create(ctx));
+load('theme', () => require('./theme').create(ctx));
+const inputkey = load('inputkey', () => require('./inputkey').create(ctx));
+if (notify) load('notifyapi', () => require('./notifyapi').create(ctx));
+const manager = load('manager', () => require('./manager').create(ctx));
+load('apps', () => require('./apps').create(ctx));
+
+require('./server')
+  .create({ features: () => loaded })
   .listen(PORT, '127.0.0.1', () => {
-    try {
-      fs.chmodSync(DIR + '/live', 0o700);
-    } catch (_) {}
-    try {
-      fs.chmodSync(CONF, 0o600);
-    } catch (_) {}
-    try {
-      fs.chmodSync(USAGE, 0o600);
-    } catch (_) {}
-    if (notifyApi) notifyApi.sync();
-    setInterval(pollForeground, 4000);
-    // Input key: bind it and keep the hook in LG's input processes (they restart now and then)
-    setTimeout(() => inputhook.ensure(inputKeyOn(), keyCode()), 500);
-    setInterval(() => inputhook.ensure(inputKeyOn(), keyCode()), 30000);
-    try {
-      require('./picker').start(luna, () => options().inputKey && pickerMode() === 'overlay', {
-        get: () => readConf().picker || {},
-        set: v => {
-          const c = readConf();
-          c.picker = v;
-          writeConf(c);
-          syncPickerMode();
-        },
-      });
-    } catch (e) {
-      console.error('picker module failed:', e.message);
+    // the files that hold addresses and keys are for root only
+    for (const [f, mode] of [
+      [P.LIVE, 0o700],
+      [P.CONF, 0o600],
+      [P.USAGE, 0o600],
+    ]) {
+      try {
+        fs.chmodSync(f, mode);
+      } catch (_) {}
     }
+    for (const f of loaded) {
+      try {
+        if (f.start) f.start();
+      } catch (e) {
+        console.error(f.name + ' failed to start: ' + e.message);
+      }
+    }
+    // what this TV is (webOS version, firmware): the Input key's default follows it
+    ctx.profile.refresh().then(() => inputkey && inputkey.syncMode());
     if (manager) setTimeout(() => manager.check(), 60000);
   });

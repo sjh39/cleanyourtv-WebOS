@@ -2,25 +2,29 @@
 // Input button (id 241) to scripts/inputkey.sh, which opens the Inputs picker overlay. Removing our bind gives the key
 // back to LG's own picker. Other binds in keybinds.json are left alone.
 const fs = require('fs'),
-  cp = require('child_process'),
-  nc = require('./netcompat');
-const D = '/media/developer/cleanyourtv',
-  HOOK = D + '/inputhook',
-  CFGDIR = '/home/root/.config/lginputhook',
+  nc = require('./netcompat'),
+  exec = require('./exec'),
+  P = require('./paths');
+const D = P.D,
+  HOOK = P.HOOK,
+  CFGDIR = P.HOOK_CFG,
   BINDS = CFGDIR + '/keybinds.json';
 const TARGETS = ['RELEASE', 'lginput2', 'micomservice', 'tvservice', 'testapp'];
 const DEFAULT_KEY = '241',
   COMMAND = 'sh ' + D + '/inputkey.sh',
   VOICE_COMMAND = 'sh ' + D + '/voicekey.sh',
   GUIDE_COMMAND = 'sh ' + D + '/guidekey.sh'; // 241: the Input button on the remote this was written with; learned in the setup
-const ENV = Object.assign({}, process.env, { PATH: '/usr/bin:/usr/sbin:/bin:/sbin:' + (process.env.PATH || '') });
 
 function procs() {
   const out = [];
-  for (const p of fs.readdirSync('/proc')) {
+  let all = [];
+  try {
+    all = fs.readdirSync(P.PROC);
+  } catch (_) {}
+  for (const p of all) {
     if (!/^\d+$/.test(p)) continue;
     try {
-      const n = fs.readFileSync('/proc/' + p + '/comm', 'utf8').trim();
+      const n = fs.readFileSync(P.PROC + '/' + p + '/comm', 'utf8').trim();
       if (TARGETS.includes(n)) out.push({ pid: p, name: n });
     } catch (_) {}
   }
@@ -28,7 +32,7 @@ function procs() {
 }
 const hooked = pid => {
   try {
-    return fs.readFileSync('/proc/' + pid + '/maps', 'utf8').includes('libinputhookpp');
+    return fs.readFileSync(P.PROC + '/' + pid + '/maps', 'utf8').includes('libinputhookpp');
   } catch (_) {
     return false;
   }
@@ -88,13 +92,13 @@ function ensure(enabled, key) {
     try {
       fs.writeFileSync(log, '');
     } catch (_) {}
-    require('./diag').execFile(HOOK + '/ezinject', ['-l', log, p.pid, HOOK + '/libinputhookpp.so'], { env: ENV, timeout: 20000 }, e => {
+    exec.execFile(HOOK + '/ezinject', ['-l', log, p.pid, HOOK + '/libinputhookpp.so'], { timeout: 20000 }, e => {
       if (e) console.error('inputhook: inject ' + p.name + ':', e.message);
       if (--left === 0) busy = false;
     });
   }
 }
-const HOOKLOG = '/tmp/lginput-hook-lginput2.log';
+const HOOKLOG = P.HOOK_LOG;
 // What the hook reports about itself: did it find LG's input function and install?
 function hookInfo() {
   let t = '';

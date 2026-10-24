@@ -9,13 +9,14 @@ const PICKER = 'com.cleanyourtv.picker';
 //   'ondemand' = the same app, started when the key is pressed and closed after use: nothing hidden is left running that could keep the
 //                remote (what other overlay apps for rooted TVs do);
 //   'launcher' = the launcher's own Inputs list (needs CleanYourTV as Home).
-// On older webOS (6.5 reports) the hidden picker kept the remote and showed a loading circle, so there the default is 'ondemand'; a saved
-// choice (manager) wins.
 const MODES = ['overlay', 'ondemand', 'launcher'];
-function modeOf(conf, sdkMajor) {
+// The default for this TV comes from tvprofile.js; a saved choice (manager) wins.
+// fallback: the profile's pickerMode, or (older callers, tests) the webOS SDK major version
+function modeOf(conf, fallback) {
   const m = conf && conf.mode;
   if (MODES.indexOf(m) >= 0) return m;
-  return sdkMajor >= 10 ? 'overlay' : 'ondemand';
+  if (MODES.indexOf(fallback) >= 0) return fallback;
+  return require('./tvprofile').decide({ sdk: String(fallback || 0) }).pickerMode;
 }
 const CHECK_MS = 20000,
   WINDOW_MS = 10 * 60 * 1000,

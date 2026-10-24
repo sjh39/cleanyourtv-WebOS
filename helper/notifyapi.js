@@ -2,31 +2,28 @@
 // (default 8767). Off until switched on in the manager app. It exposes the notification call only, nothing else of the
 // service. Wrong tokens lock an address out for ten minutes; an optional "allow" list in config.json restricts addresses.
 const http = require('http'),
-  crypto = require('crypto'),
-  os = require('os');
+  crypto = require('crypto');
+const web = require('./web');
 const DEFAULTS = { enabled: false, port: 8767, token: '', allow: [] };
 const MAX_BODY = 32 * 1024,
   PER_MINUTE = 20;
 const pageMs = () => +process.env.CYTV_NOTIFY_PAGE_MS || 10 * 60 * 1000; // how long the page behind the QR code works
-const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const esc = web.esc,
+  lanIp = web.lanIp;
 
 function create(ctx) {
-  const { notify, readConf, writeConf } = ctx;
+  const { config } = ctx;
+  const notify = ctx.notify || ctx.feature('notify');
   let srv = null,
     port = 0,
     tokenPage = null; // tokenPage: { path, until }, a page that shows the token, for a phone that scans the QR code in the manager
   const fails = new Map(),
     hits = new Map();
-  const cfg = () => Object.assign({}, DEFAULTS, readConf().notifyApi || {});
-  const save = n => {
-    const c = readConf();
-    c.notifyApi = n;
-    writeConf(c);
-  };
-  function lanIp() {
-    for (const l of Object.values(os.networkInterfaces())) for (const i of l) if (i.family === 'IPv4' && !i.internal) return i.address;
-    return '';
-  }
+  const cfg = () => Object.assign({}, DEFAULTS, config.get().notifyApi || {});
+  const save = n =>
+    config.update('notifications', c => {
+      c.notifyApi = n;
+    });
   const ipOk = (ip, allow) =>
     allow.some(a => {
       // exact address or a /8, /16, /24 prefix such as 192.168.1.0/24
@@ -163,6 +160,6 @@ label{display:block;margin-top:16px;font-weight:600}</style>
     }
     return info();
   }
-  return { sync, info, set };
+  return { name: 'notifyapi', start: sync, sync, info, set };
 }
 module.exports = { create };

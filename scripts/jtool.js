@@ -19,21 +19,6 @@ if (cmd === 'kind') {
   // kind <appinfo.json>  ->  "<id> <type>"
   var o = rj(a[1], {});
   console.log((o.id || '') + ' ' + (o.type || ''));
-} else if (cmd === 'compat') {
-  // compat <firmware> <sdk> <compat.json>...  ->  the note of the matching entry
-  var fw = a[1],
-    sdk = a[2],
-    done = false;
-  a.slice(3).forEach(function (f) {
-    if (done) return;
-    (rj(f, {}).entries || []).forEach(function (e) {
-      var w = e.firmware || '';
-      if (!done && w && (fw === w || sdk === w || (w.charAt(w.length - 1) === '*' && fw.indexOf(w.slice(0, -1)) === 0))) {
-        console.log(e.note || 'listed');
-        done = true;
-      }
-    });
-  });
 } else if (cmd === 'newer') {
   // newer <a.json> <b.json>  ->  exit 0 when a's version is higher
   var v = function (f) {
@@ -59,9 +44,13 @@ if (cmd === 'kind') {
     op = (c.options = c.options || {});
   if (op.debloat === undefined) op.debloat = true;
   if (op.inputKey === undefined) op.inputKey = true;
+  var was = JSON.stringify({ debloat: op.debloat, inputKey: op.inputKey });
   if (a[2] !== '' && a[2] !== undefined) op.debloat = a[2] === '1';
   if (a[3] !== '' && a[3] !== undefined) op.inputKey = a[3] === '1';
   wj(a[1], c);
+  // the setup log shows what the options are and whether this run changed them (an update passes no values and keeps them)
+  var now = JSON.stringify({ debloat: op.debloat, inputKey: op.inputKey });
+  console.log('[cleanyourtv] options: ' + now + (now === was ? ' (kept)' : ' (were ' + was + ')'));
 } else if (cmd === 'opt') {
   // opt <config.json> <name>  ->  1 or 0
   var oo = rj(a[1], {}).options || {};
@@ -101,6 +90,6 @@ if (cmd === 'kind') {
     fs.writeFileSync(p, JSON.stringify(b));
   }
 } else {
-  console.error('usage: jtool.js kind|compat|newer|options|opt|stage|wintype|rmbind');
+  console.error('usage: jtool.js kind|newer|options|opt|stage|wintype|rmbind');
   process.exit(2);
 }

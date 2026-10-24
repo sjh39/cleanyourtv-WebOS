@@ -7,19 +7,21 @@ const fs = require('fs'),
   path = require('path'),
   cp = require('child_process'),
   crypto = require('crypto'),
-  https = require('https'),
-  http = require('http'),
   zlib = require('zlib'),
   net = require('net');
 const nc = require('./netcompat'),
   { URL, URLSearchParams } = nc;
-const D = '/media/developer/cleanyourtv',
+const P = require('./paths'),
+  exec = require('./exec'),
+  fetch = require('./fetch'),
+  web = require('./web');
+const D = P.D,
   V = D + '/voice',
   LIB = V + '/lib',
   MODEL = V + '/model',
   TMP = V + '/tmp';
-const SERVICE_DIR = '/media/developer/apps/usr/palm/services/com.cleanyourtv.manager.service';
-const ENV = Object.assign({}, process.env, { PATH: '/usr/bin:/usr/sbin:/bin:/sbin:' + (process.env.PATH || '') });
+const SERVICE_DIR = P.SERVICE_DIR,
+  ENV = P.ENV;
 const SOCKET = '/tmp/voiceinput_remote1.soc',
   RATE = 16000;
 
@@ -64,7 +66,7 @@ let ctx = null;
 const setJob = (state, message) => {
   job = { state, message, at: Date.now() };
 };
-const cfg = () => Object.assign({}, DEFAULTS, ctx.readConf().voice || {});
+const cfg = () => Object.assign({}, DEFAULTS, ctx.config.get().voice || {});
 const installed = () => fs.existsSync(V + '/installed') && fs.existsSync(V + '/cytv-asr');
 const dirSize = d => {
   let n = 0;
@@ -84,33 +86,15 @@ const rmrf = p => {
 };
 
 // ---- downloading ----
-function download(url, file, sha256, hops) {
-  return new Promise((resolve, reject) => {
-    if ((hops || 0) > 6) return reject(new Error('too many redirects'));
-    if (!url.startsWith('https:')) return reject(new Error('refusing a download over plain http'));
-    const req = nc.get(https, url, { headers: { 'User-Agent': 'cleanyourtv-voice' }, timeout: 30000 }, res => {
-      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-        res.resume();
-        return resolve(download(new URL(res.headers.location, url).toString(), file, sha256, (hops || 0) + 1));
-      }
-      if (res.statusCode !== 200) {
-        res.resume();
-        return reject(new Error('HTTP ' + res.statusCode + ' from ' + new URL(url).host));
-      }
-      const h = crypto.createHash('sha256'),
-        w = fs.createWriteStream(file);
-      res.on('data', c => h.update(c));
-      res.pipe(w);
-      w.on('finish', () => {
-        const got = h.digest('hex');
-        got === sha256 ? resolve() : reject(new Error('checksum mismatch for ' + path.basename(file) + '; nothing was installed'));
-      });
-      w.on('error', reject);
-      res.on('error', reject);
-    });
-    req.on('timeout', () => req.destroy(new Error('download timed out')));
-    req.on('error', reject);
+async function download(url, file, sha256) {
+  const r = await fetch.toFile(url, file, {
+    headers: { 'User-Agent': 'cleanyourtv-voice' },
+    allowHttp: false,
+    redirects: 6,
+    idleMs: 30000,
+    statusText: st => 'HTTP ' + st + ' from ' + new URL(url).host,
   });
+  if (r.sha256 !== sha256) throw new Error('checksum mismatch for ' + path.basename(file) + '; nothing was installed');
 }
 // the few files we need out of a .whl (a zip)
 function unzip(file, want) {
@@ -138,20 +122,16 @@ function unzip(file, want) {
   return out;
 }
 const run = (cmd, args, ms) =>
-  new Promise((res, rej) =>
-    cp.execFile(cmd, args, { env: ENV, timeout: ms || 120000, maxBuffer: 4 << 20 }, (e, o, er) =>
-      e
-        ? rej(
-            new Error(
-              String(er || e.message)
-                .trim()
-                .split('\n')
-                .pop()
-            )
-          )
-        : res(o)
-    )
-  );
+  exec.run(cmd, args, { timeout: ms || 120000, maxBuffer: 4 << 20 }).then(r => {
+    if (!r.ok)
+      throw new Error(
+        String(r.err || r.error)
+          .trim()
+          .split('\n')
+          .pop()
+      );
+    return r.out;
+  });
 
 async function doInstall() {
   rmrf(V);
@@ -205,11 +185,9 @@ function uninstall() {
   if (job.state === 'working') return;
   rmrf(V);
   setJob('idle', '');
-  const c = ctx.readConf();
-  if (c.voice) {
-    c.voice.enabled = false;
-    ctx.writeConf(c);
-  }
+  ctx.config.update('voice', c => {
+    if (c.voice) c.voice.enabled = false;
+  });
   syncLg();
 }
 
@@ -332,46 +310,33 @@ function capture() {
   });
 }
 
-const show = o => (ctx.notify && ctx.notify.show ? ctx.notify.show(o, true).catch(() => {}) : Promise.resolve());
+// cards go through the notification part (notify.js)
+const show = o => {
+  const n = ctx.notify || (ctx.feature && ctx.feature('notify'));
+  return n && n.show ? n.show(o, true).catch(() => {}) : Promise.resolve();
+};
 const readSeconds = t => Math.min(60, Math.max(8, 6 + String(t || '').length / 12)); // time to read an answer on screen
 // POST JSON; resolves {status, text}. Redirects are not followed.
 function request(url, headers, payload, ms, extra) {
-  return new Promise((resolve, reject) => {
-    let u;
-    try {
-      u = new URL(url);
-    } catch (_) {
-      return reject(new Error('the address is not valid'));
-    }
-    if (u.protocol !== 'http:' && u.protocol !== 'https:') return reject(new Error('the address must start with http:// or https://'));
-    const data = payload === undefined ? null : Buffer.from(JSON.stringify(payload)),
-      lib = u.protocol === 'https:' ? https : http; // no payload: a GET
-    const req = nc.request(
-      lib,
-      u,
-      Object.assign(
-        {
-          method: data ? 'POST' : 'GET',
-          headers: Object.assign(data ? { 'content-type': 'application/json', 'content-length': data.length } : {}, headers),
-          timeout: ms || 30000,
-        },
-        extra
-      ),
-      res => {
-        const b = [];
-        let n = 0;
-        res.on('data', c => {
-          n += c.length;
-          if (n > 1 << 20) req.destroy(new Error('the answer is too large'));
-          else b.push(c);
-        });
-        res.on('end', () => resolve({ status: res.statusCode, text: Buffer.concat(b).toString('utf8') }));
-      }
-    );
-    req.on('timeout', () => req.destroy(new Error('no answer in time')));
-    req.on('error', reject);
-    req.end(data || undefined);
-  });
+  return fetch
+    .read(url, {
+      method: payload === undefined ? 'GET' : 'POST', // no payload: a GET
+      headers,
+      body: payload === undefined ? undefined : JSON.stringify(payload),
+      idleMs: ms || 30000,
+      redirects: 0,
+      anyStatus: true,
+      maxBytes: 1 << 20,
+      bigText: 'the answer is too large',
+      insecure: !!(extra && extra.rejectUnauthorized === false),
+    })
+    .then(r => ({ status: r.status, text: r.body.toString('utf8') }))
+    .catch(e => {
+      if (e.code === 'timeout') throw new Error('no answer in time');
+      if (e.code === 'url')
+        throw new Error(/http/.test(e.message) ? 'the address must start with http:// or https://' : 'the address is not valid');
+      throw e;
+    });
 }
 // a server of yours: POST {"text": ...}; the answer may be JSON ({"text", "title", "image", "seconds"}) or plain text
 async function toServer(c, payload) {
@@ -634,10 +599,10 @@ async function listen() {
 function lgPids() {
   const out = [];
   try {
-    for (const p of fs.readdirSync('/proc'))
+    for (const p of fs.readdirSync(P.PROC))
       if (/^\d+$/.test(p)) {
         try {
-          if (fs.readFileSync('/proc/' + p + '/comm', 'utf8').trim() === 'voiceconductor') out.push(+p);
+          if (fs.readFileSync(P.PROC + '/' + p + '/comm', 'utf8').trim() === 'voiceconductor') out.push(+p);
         } catch (_) {}
       }
   } catch (_) {}
@@ -656,7 +621,7 @@ function syncLg() {
 const lgPaused = () =>
   lgPids().some(pid => {
     try {
-      return /^State:\s+T/m.test(fs.readFileSync('/proc/' + pid + '/status', 'utf8'));
+      return /^State:\s+T/m.test(fs.readFileSync(P.PROC + '/' + pid + '/status', 'utf8'));
     } catch (_) {
       return false;
     }
@@ -710,9 +675,9 @@ function applySet(b) {
     if (b.ha.url !== undefined || b.ha.agent !== undefined || b.ha.clear) haConv = null;
     v.ha = h;
   }
-  const conf = ctx.readConf();
-  conf.voice = v;
-  ctx.writeConf(conf);
+  ctx.config.update('voice', c => {
+    c.voice = v;
+  });
   syncLg();
   return '';
 }
@@ -722,59 +687,49 @@ let modelCache = null;
 const MAJOR = ['anthropic', 'openai', 'google', 'meta-llama', 'mistralai', 'deepseek', 'qwen', 'x-ai'];
 function models() {
   if (modelCache && Date.now() - modelCache.at < 3600000) return Promise.resolve(modelCache);
-  return new Promise((resolve, reject) => {
-    const req = nc.get(
-      https,
-      'https://openrouter.ai/api/v1/models',
-      { headers: { 'User-Agent': 'cleanyourtv-voice' }, timeout: 15000 },
-      res => {
-        if (res.statusCode !== 200) {
-          res.resume();
-          return reject(new Error('OpenRouter answered ' + res.statusCode));
-        }
-        const b = [];
-        let n = 0;
-        res.on('data', c => {
-          n += c.length;
-          if (n > 8 << 20) req.destroy(new Error('the model list is too large'));
-          else b.push(c);
-        });
-        res.on('end', () => {
-          try {
-            const all = JSON.parse(Buffer.concat(b).toString('utf8'))
-              .data.filter(
-                m =>
-                  m &&
-                  /^[\w.\-:\/~]{1,100}$/.test(m.id || '') &&
-                  !(
-                    m.architecture &&
-                    Array.isArray(m.architecture.output_modalities) &&
-                    m.architecture.output_modalities.some(x => x !== 'text')
-                  )
+  return fetch
+    .read(orApi() + '/models', {
+      headers: { 'User-Agent': 'cleanyourtv-voice' },
+      idleMs: 15000,
+      maxBytes: 8 << 20,
+      bigText: 'the model list is too large',
+      statusText: st => 'OpenRouter answered ' + st,
+    })
+    .catch(e => {
+      throw e.code === 'timeout' ? new Error('OpenRouter did not answer') : e;
+    })
+    .then(r => {
+      let all;
+      try {
+        all = JSON.parse(r.body.toString('utf8'))
+          .data.filter(
+            m =>
+              m &&
+              /^[\w.\-:\/~]{1,100}$/.test(m.id || '') &&
+              !(
+                m.architecture &&
+                Array.isArray(m.architecture.output_modalities) &&
+                m.architecture.output_modalities.some(x => x !== 'text')
               )
-              .map(m => ({
-                id: m.id,
-                name: String(m.name || m.id).slice(0, 80),
-                created: m.created || 0,
-                price: m.pricing && +m.pricing.prompt >= 0 ? Math.round(+m.pricing.prompt * 1e8) / 100 : null,
-              })); // dollars per million input tokens
-            const picks = [],
-              seen = {};
-            for (const m of all.slice().sort((a, b) => b.created - a.created)) {
-              const prov = m.id.split('/')[0];
-              if (m.id.includes(':') || !MAJOR.includes(prov)) continue;
-              if ((seen[prov] = (seen[prov] || 0) + 1) <= 3) picks.push(m);
-            }
-            resolve((modelCache = { at: Date.now(), all: all.sort((a, b) => a.id.localeCompare(b.id)), picks }));
-          } catch (e) {
-            reject(new Error('the model list could not be read'));
-          }
-        });
+          )
+          .map(m => ({
+            id: m.id,
+            name: String(m.name || m.id).slice(0, 80),
+            created: m.created || 0,
+            price: m.pricing && +m.pricing.prompt >= 0 ? Math.round(+m.pricing.prompt * 1e8) / 100 : null, // dollars per million input tokens
+          }));
+      } catch (e) {
+        throw new Error('the model list could not be read');
       }
-    );
-    req.on('timeout', () => req.destroy(new Error('OpenRouter did not answer')));
-    req.on('error', reject);
-  });
+      const picks = [],
+        seen = {};
+      for (const m of all.slice().sort((a, b) => b.created - a.created)) {
+        const prov = m.id.split('/')[0];
+        if (m.id.includes(':') || !MAJOR.includes(prov)) continue;
+        if ((seen[prov] = (seen[prov] || 0) + 1) <= 3) picks.push(m);
+      }
+      return (modelCache = { at: Date.now(), all: all.sort((a, b) => a.id.localeCompare(b.id)), picks });
+    });
 }
 
 // ---- setting up from a phone: a short-lived page on the local network, opened by scanning a QR code on the TV ----
@@ -782,12 +737,8 @@ const PAIR_PORT = 8769,
   PAIR_MS = 10 * 60 * 1000;
 let pair = null,
   pairedAt = 0;
-const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
-function lanIp() {
-  for (const l of Object.values(require('os').networkInterfaces()))
-    for (const i of l) if (i.family === 'IPv4' && !i.internal) return i.address;
-  return '';
-}
+const esc = web.esc,
+  lanIp = web.lanIp;
 function pairPage(msg, done, list, token) {
   const l = llmCfg(),
     c = cfg(),
@@ -914,9 +865,12 @@ const status = () => {
 
 function create(c) {
   ctx = c;
-  setInterval(syncLg, 20000);
-  setTimeout(syncLg, 5000);
-  return { handle, status, installed, listen, syncLg };
+  // the voice key of LG's own remote handling follows our setting (syncLg); checked now and then
+  const start = () => {
+    setInterval(syncLg, 20000);
+    setTimeout(syncLg, 5000);
+  };
+  return { name: 'voice', prefix: '/api/voice/', handle, start, status, installed, listen, syncLg };
 }
 async function handle(req, res, u, body) {
   const json = (o, code) => {

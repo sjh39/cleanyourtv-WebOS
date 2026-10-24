@@ -1,10 +1,3 @@
-// Themes for the launcher's home screen. A theme is a data file (themes/<id>.json in the repository) that sets values from the table SCHEMA below:
-// colours, surfaces, text, and the position and size of every part of the screen (clock, buttons, app name, dock, grid), plus effects
-// and a wallpaper. There is no CSS or script in a theme. Every value is checked against SCHEMA and clamped, a value that is missing or
-// invalid keeps the value of the theme it extends (or the default, the original look), and unknown keys are ignored, so a theme can change
-// how Home looks but nothing else. A new setting is one row in SCHEMA plus the CSS that reads its variable; docs/themes.md is generated
-// from SCHEMA (tools/theme-docs.js).
-// API (loopback only): GET /api/theme/list, POST /api/theme/set {id, accent}, POST /api/theme/revert, GET /api/theme/wallpaper/<file>.
 // Themes for the launcher's home screen. A theme is a folder in the themes/ folder of the GitHub repository (theme.json, a screenshot and
 // optionally a wallpaper). Nothing is shipped with the service: the TV reads themes/index.json from GitHub, shows the list with the
 // screenshots and downloads a theme (and its wallpaper) when it is chosen; downloaded themes stay on the TV. Classic is built in. A theme sets
@@ -16,11 +9,9 @@
 // API (loopback only): GET /api/theme/list, POST /api/theme/set {id, accent}, POST /api/theme/revert, GET /api/theme/preview/<id>,
 // GET /api/theme/wallpaper/<id>/<file>.
 const fs = require('fs'),
-  path = require('path'),
-  https = require('https'),
-  http = require('http');
+  path = require('path');
 const nc = require('./netcompat'),
-  { URL } = nc;
+  fetch = require('./fetch');
 // where downloaded themes are kept: themes/<id>/ next to this file (D/themes on the TV)
 const dir = () => process.env.CYTV_THEMES || path.join(__dirname, 'themes');
 const DEFAULT_ID = 'classic',
@@ -276,65 +267,19 @@ function load() {
 function baseUrl(slug, ref) {
   return process.env.CYTV_THEMES_URL || 'https://raw.githubusercontent.com/' + slug + '/' + (ref || 'main') + '/themes';
 }
-function fetchBuf(url, max, ms, hops) {
-  return new Promise((resolve, reject) => {
-    if ((hops || 0) > 3) return reject(new Error('too many redirects'));
-    let u;
-    try {
-      u = new URL(url);
-    } catch (_) {
-      return reject(new Error('bad address'));
-    }
-    if (u.protocol !== 'https:' && !(u.protocol === 'http:' && process.env.CYTV_THEMES_URL))
-      return reject(new Error('refusing a download over plain http'));
-    let done = false,
-      req = null;
-    const fin = (e, v) => {
-      if (done) return;
-      done = true;
-      clearTimeout(hard);
-      e ? reject(e) : resolve(v);
-    };
-    const hard = setTimeout(() => {
-      try {
-        req && req.destroy();
-      } catch (_) {}
-      fin(new Error('timed out'));
-    }, ms || 15000);
-    req = nc.get(u.protocol === 'https:' ? https : http, u, { headers: { 'User-Agent': 'cleanyourtv-themes' }, timeout: 10000 }, res => {
-      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-        res.resume();
-        clearTimeout(hard);
-        done = true;
-        return resolve(fetchBuf(new URL(res.headers.location, u).toString(), max, ms, (hops || 0) + 1));
-      }
-      if (res.statusCode !== 200) {
-        res.resume();
-        return fin(new Error(res.statusCode === 404 ? 'not found on GitHub' : 'GitHub answered ' + res.statusCode));
-      }
-      const b = [];
-      let n = 0,
-        ended = false;
-      res.on('data', c => {
-        n += c.length;
-        if (n > max) {
-          fin(new Error('the file is too large'));
-          res.destroy();
-        } else b.push(c);
-      });
-      res.on('end', () => {
-        ended = true;
-        fin(null, Buffer.concat(b));
-      });
-      res.on('aborted', () => fin(new Error('the connection was lost')));
-      res.on('error', fin);
-      res.on('close', () => {
-        if (!ended) fin(new Error('the connection was closed'));
-      });
-    });
-    req.on('timeout', () => req.destroy(new Error('timed out')));
-    req.on('error', fin);
-  });
+// a file from GitHub, at most `max` bytes and `ms` milliseconds
+function fetchBuf(url, max, ms) {
+  return fetch
+    .read(url, {
+      headers: { 'User-Agent': 'cleanyourtv-themes' },
+      maxBytes: max,
+      totalMs: ms || 15000,
+      idleMs: 10000,
+      redirects: 3,
+      allowHttp: () => !!process.env.CYTV_THEMES_URL,
+      statusText: st => (st === 404 ? 'not found on GitHub' : 'GitHub answered ' + st),
+    })
+    .then(r => r.body);
 }
 const writeAtomic = (f, data) => {
   fs.writeFileSync(f + '.tmp', data);
@@ -494,10 +439,20 @@ function resolve(t, accent) {
 }
 
 function create(ctx) {
-  const slug = () => (ctx.slug && ctx.slug()) || 'lasharor/cleanyourtv-WebOS';
-  const base = () => baseUrl(slug(), ctx.ref && ctx.ref());
+  // the repository and branch the themes come from: this project's main branch, unless D/source names another (to try a theme)
+  const slug = () => (ctx.slug && ctx.slug()) || require('./updates').repo();
+  const ref = () => {
+    if (ctx.ref) return ctx.ref();
+    let x = '';
+    try {
+      x = fs.readFileSync(require('./paths').SOURCE, 'utf8').trim().split(/\s+/)[1];
+    } catch (_) {}
+    return /^[\w.\/-]{1,60}$/.test(x || '') ? x : 'main';
+  };
+  const conf = () => ctx.config.get();
+  const base = () => baseUrl(slug(), ref());
   const cur = () => {
-    const c = ctx.readConf().theme || {};
+    const c = conf().theme || {};
     const all = load();
     return {
       id: all[c.id] ? c.id : DEFAULT_ID,
@@ -509,11 +464,10 @@ function create(ctx) {
     const c = cur();
     return resolve(load()[c.id], c.accent);
   };
-  const save = o => {
-    const conf = ctx.readConf();
-    conf.theme = o;
-    ctx.writeConf(conf);
-  };
+  const save = o =>
+    ctx.config.update('theme', c => {
+      c.theme = o;
+    });
 
   // the catalogue: themes/index.json from GitHub, kept in memory for ten minutes
   let cat = { at: 0, themes: [], error: '' },
@@ -715,13 +669,13 @@ function create(ctx) {
     rmrf(path.join(dir(), 'wallpapers'));
   } catch (_) {}
   const startup = () => {
-    const c = ctx.readConf().theme || {};
+    const c = conf().theme || {};
     if (c.id && c.id !== DEFAULT_ID && ID.test(c.id) && !load()[c.id]) install(c.id).catch(() => {});
   };
   if (!ctx.noStartup) {
     const t = setTimeout(startup, 8000);
     if (t.unref) t.unref();
   }
-  return { handle, resolved, list, install, refreshCatalogue, preview };
+  return { name: 'theme', prefix: '/api/theme/', handle, resolved, list, install, refreshCatalogue, preview };
 }
 module.exports = { create, normalize, SCHEMA, DEFAULTS, imageOk, ID };
