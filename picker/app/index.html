@@ -5,19 +5,23 @@
 :root{--ink:#f5f6f8;--ink2:rgba(245,246,248,.62);--font:"LG Smart UI","Helvetica Neue",Helvetica,Arial,sans-serif}
 html,body{width:1920px;height:1080px;overflow:hidden;background:transparent;color:var(--ink);font-family:var(--font)}
 #dim{position:absolute;left:0;top:0;width:1920px;height:1080px;background:rgba(5,6,9,.78);opacity:0;transition:opacity .12s linear}
-#wrap{position:absolute;left:96px;right:96px;top:0;bottom:0;display:flex;flex-direction:column;justify-content:center;gap:72px;opacity:0;transition:opacity .12s linear}
+#wrap{position:absolute;left:96px;right:96px;top:0;bottom:0;display:flex;flex-direction:column;justify-content:center;opacity:0;transition:opacity .12s linear}
 .on #dim,.on #wrap{opacity:1}
 .cap{font-size:30px;font-weight:600;color:var(--ink2);margin-bottom:20px;letter-spacing:.01em}
-.row{display:flex;gap:32px}
-#inputs{gap:24px}
+.row{display:flex}
+.row>*+*{margin-left:32px}
+#wrap>*+*{margin-top:72px}
+#inputs>*+*{margin-left:24px}
 .tile{position:relative;flex:1 1 0;min-width:0;height:180px;border-radius:50px;overflow:hidden;background:#1a1c22;display:flex;align-items:center;justify-content:center;
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);transform:scale(.96);transition:transform .15s ease-out}
 .tile img{max-width:58%;max-height:58%;object-fit:contain}
 .tile.f{transform:translateY(-10px) scale(1.06);box-shadow:0 0 0 5px var(--ink),0 26px 44px rgba(0,0,0,.5)}
-.chip{position:relative;flex:1 1 auto;min-width:max(200px,fit-content);max-width:340px;height:180px;padding:0 32px;border-radius:50px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:rgba(245,246,248,.92);color:#0b0c10;
+.chip{position:relative;flex:1 1 auto;min-width:max(200px,fit-content);max-width:340px;height:180px;padding:0 32px;border-radius:50px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(245,246,248,.92);color:#0b0c10;
   transform:scale(.96);transition:transform .15s ease-out}
+.chip>*+*{margin-top:8px}
 .chip svg{width:48px;height:48px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-.chip .tx{display:flex;flex-direction:column;align-items:center;gap:2px;max-width:100%}
+.chip .tx{display:flex;flex-direction:column;align-items:center;max-width:100%}
+.chip .tx>*+*{margin-top:2px}
 .chip .lb{font-size:36px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .chip .st{font-size:25px;font-weight:500;opacity:.7;white-space:nowrap}
 .chip.dim{opacity:.7}

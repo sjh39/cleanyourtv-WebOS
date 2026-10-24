@@ -21,7 +21,7 @@ if (id !== 'classic') fs.cpSync(path.join(ROOT, 'themes', id), path.join(store, 
 let base = null; const baseId = id !== 'classic' ? (JSON.parse(fs.readFileSync(path.join(ROOT, 'themes', id, 'theme.json'), 'utf8')).extends || '') : '';
 if (baseId && baseId !== 'classic' && fs.existsSync(path.join(ROOT, 'themes', baseId))) fs.cpSync(path.join(ROOT, 'themes', baseId), path.join(store, baseId), { recursive: true });
 process.env.CYTV_THEMES = store;
-const theme = require(path.join(ROOT, 'helper', 'theme.js')).create({ readConf: () => ({ theme: { id } }), writeConf() {}, noStartup: true });
+const theme = require(path.join(ROOT, 'helper', 'theme.js')).create({ config: require(path.join(ROOT, 'helper', 'config.js')).memory({ theme: { id } }), noStartup: true });
 
 // made-up apps with plain coloured icons
 const NAMES = ['Streaming', 'Video', 'Music', 'Photos', 'Games', 'Browser', 'News', 'Weather', 'Sports', 'Movies', 'Kids', 'Radio', 'Podcasts', 'Maps', 'Cooking', 'Fitness', 'Calendar', 'Notes', 'Files', 'Camera', 'Settings', 'Store'];

@@ -4,7 +4,7 @@
 
 ## How it was checked
 
-- [ ] `sh tools/node8-check.sh` passes (Node 8.12.0)
+- [ ] `sh tools/check.sh` passes (tests under Node 8.12.0 and the current Node, built pages)
 - [ ] A test for the bug or feature was added (or: it cannot be tested without a TV, because ...)
 - [ ] `python3 ipk/build.py` builds
 - [ ] The documentation was changed where behaviour changed

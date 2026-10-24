@@ -140,7 +140,7 @@ Troubleshooting and fixing with an AI assistant (Claude, ChatGPT, a local model)
 
 Reports from other TVs are the most useful contribution: open an [issue](https://github.com/lasharor/cleanyourtv-WebOS/issues)
 with the output of **Share log** in the manager app. For code, see [Contributing](https://lasharor.github.io/cleanyourtv-WebOS/development/):
-the service runs on Node.js 8 (webOS 5), `tools/node8-check.sh` checks that, and every branch push publishes a test build.
+the service runs on Node.js 8 (webOS 5), `sh tools/check.sh` runs every check, and every branch push publishes a test build.
 
 ---
 
