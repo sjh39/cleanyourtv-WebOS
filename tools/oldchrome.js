@@ -94,10 +94,11 @@ const PROBE =
   '<script>window.onerror=function(m,s,l){var h=document.documentElement;h.setAttribute("data-errors",(h.getAttribute("data-errors")||"")+m+" (line "+l+"); ")};' +
   'window.webOSSystem={launchParams:"{}",locale:"en-GB",hide:function(){},activate:function(){},platformBack:function(){},setInputRegion:function(){},setKeyMask:function(){}};</script>';
 const page = f => fs.readFileSync(path.join(ROOT, f), 'utf8').replace('<script>', PROBE + '<script>');
+// [name, file, what it draws, how many at least, milliseconds of page time to wait]
 const PAGES = [
-  ['launcher', 'app/index.html', /class="tile[ "]/g, 8],
-  ['manager', 'manager/app/index.html', /class="row[ "]/g, 5],
-  ['picker', 'picker/app/index.html', /class="chip[ "]/g, 2],
+  ['launcher', 'app/index.html', /class="tile[ "]/g, 8, 8000],
+  ['manager', 'manager/app/index.html', /class="row[ "]/g, 5, 8000],
+  ['picker', 'picker/app/index.html', /class="chip[ "]/g, 2, 3000],
 ];
 const marks = []; // what the pages log (perf lines: tools/perf-tv.sh reads the same on a TV)
 function serve() {
@@ -145,7 +146,7 @@ function serve() {
 }
 
 // asynchronous on purpose: the stand-in service runs in this process and must keep answering while the browser loads the page
-function run(bin, url, extra) {
+function run(bin, url, extra, budget) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cytv-chromium-'));
   const argv = [
     '--headless',
@@ -154,7 +155,7 @@ function run(bin, url, extra) {
     '--hide-scrollbars',
     '--user-data-dir=' + dir,
     '--window-size=1920,1080',
-    '--virtual-time-budget=8000',
+    '--virtual-time-budget=' + (budget || 8000),
   ];
   return new Promise(resolve => {
     cp.execFile(bin, argv.concat(extra, [url]), { encoding: 'utf8', timeout: 45000, maxBuffer: 32 << 20 }, (e, stdout, stderr) => {
@@ -181,8 +182,8 @@ function run(bin, url, extra) {
         const url = 'http://127.0.0.1:8765/' + p[0] + '.html';
         // headless Chromium 79 on Linux now and then fails to hand over the page ("Failed to serialize document") or hangs: try again
         let r = null;
-        for (let tries = 0; tries < 3; tries++) {
-          r = await run(bin, url, ['--dump-dom']);
+        for (let tries = 0; tries < 5; tries++) {
+          r = await run(bin, url, ['--dump-dom'], p[4]);
           if (r.status === 0 && (r.stdout || '').indexOf('<body') >= 0) break;
         }
         const dom = r.stdout || '';
@@ -214,7 +215,7 @@ function run(bin, url, extra) {
         if (p[0] === 'launcher' && ready)
           console.log('     ' + e[0] + ': launcher ready ' + ready.split(' ').pop() + ' ms after the page load (this computer, not a TV)');
         marks.length = 0;
-        if (shots) await run(bin, url, ['--screenshot=' + path.join(shots, e[1] + '-' + p[0] + '.png')]);
+        if (shots) await run(bin, url, ['--screenshot=' + path.join(shots, e[1] + '-' + p[0] + '.png')], p[4]);
       }
     }
   } catch (err) {
