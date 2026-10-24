@@ -8,6 +8,9 @@ const fs = require('fs');
 const P = require('./paths'),
   diag = require('./diag');
 diag.start();
+// A promise that fails without a handler ends the process on Node 15 and newer (webOS 22 and later ship Node 16): log it and keep the
+// service running; the launcher depends on it.
+process.on('unhandledRejection', e => console.error('unhandled: ' + ((e && e.stack) || e)));
 const luna = require('./luna'),
   web = require('./web'),
   config = require('./config').main(),
