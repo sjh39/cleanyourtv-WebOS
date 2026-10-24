@@ -168,9 +168,10 @@ function create(ctx) {
   const stale = () => !checking && Date.now() - releaseAt > 300000;
 
   // ---- the launcher: D/app is replaced, the old one kept as D/app.prev; a launcher that does not report back is rolled back ----
+  // reload-home.sh closes the Home page and launches it again; on webOS 6, where WebAppMgr keeps the old page and there is no
+  // renderer process to stop, it restarts webapp-mgr (issue 9: the new launcher never started there and the update rolled back)
   async function reloadHome() {
-    await exec.sh('pkill -f "[a]pp-id=com.webos.app.home"; sleep 2');
-    await luna('luna://com.webos.applicationManager/launch', { id: 'com.webos.app.home' });
+    await exec.sh('sh ' + D + '/reload-home.sh', 90000);
   }
   const swapIn = src =>
     exec.sh(

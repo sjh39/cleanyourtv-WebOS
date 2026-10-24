@@ -6,7 +6,7 @@ Run from anywhere: python3 ipk/build.py"""
 import hashlib, io, json, os, re, shutil, sys, tarfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DIST = os.path.join(ROOT, 'dist')
+DIST = os.environ.get('CYTV_DIST') or os.path.join(ROOT, 'dist')   # CYTV_DIST: the tests build elsewhere
 P = lambda *a: os.path.join(ROOT, *a)
 PKG = 'com.cleanyourtv.manager'
 SERVICE = PKG + '.service'
@@ -25,8 +25,9 @@ if BUILD and not re.fullmatch(r'[0-9a-f]{7,40}', BUILD):
 def add(files, arc, data, mode=0o644):
     files.append((arc, data, mode))
 
-def add_dir(files, arc_root, src, mode_for=None, skip=()):
-    for root, _, names in os.walk(src):
+def add_dir(files, arc_root, src, mode_for=None, skip=(), skip_dirs=()):
+    for root, dirs, names in os.walk(src):
+        dirs[:] = [d for d in dirs if d not in skip_dirs]   # e.g. app/src: the launcher's sources, built into app/index.html
         for n in sorted(names):
             if n in skip or n.startswith('.'):
                 continue
@@ -60,7 +61,7 @@ shutil.rmtree(DIST, ignore_errors=True); os.makedirs(DIST)
 
 # ---- the launcher alone ----
 fl = []
-add_dir(fl, 'app', P('app'))
+add_dir(fl, 'app', P('app'), skip_dirs=('src',))
 if BUILD: add(fl, 'app/BUILD', (BUILD + '\n').encode())
 write('frontend-%s.tgz' % fe, tgz(fl))
 
@@ -90,7 +91,7 @@ add(data, s + '/licenses/THIRD-PARTY.md', open(P('THIRD-PARTY.md'), 'rb').read()
 add(data, s + '/licenses/LICENSE', open(P('LICENSE'), 'rb').read())
 add(data, s + '/compat.json', open(P('compat.json'), 'rb').read())
 add(data, s + '/config.example.json', open(P('config.example.json'), 'rb').read())
-add_dir(data, s + '/payload/app', P('app'))
+add_dir(data, s + '/payload/app', P('app'), skip_dirs=('src',))
 if BUILD:
     add(data, s + '/BUILD', (BUILD + '\n').encode())
     add(data, s + '/payload/app/BUILD', (BUILD + '\n').encode())
