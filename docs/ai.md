@@ -59,11 +59,11 @@ Codex, Cursor, Copilot agent mode and similar). The project's rules are in `AGEN
 
 1. **Fork and clone**, and make a branch: `git checkout -b fix-short-description`.
 2. **Reproduce the bug.** From the report, then from the code. Many bugs can be reproduced without a TV: the service runs under
-   `sh tools/node8-check.sh` (Node 8.12.0, as on webOS 5 and 6), and the launcher page runs in Chrome against a stand-in service (see
+   `sh tools/check.sh` (the tests under Node 8.12.0, as on webOS 5 and 6, and the current Node), and the launcher page runs in Chrome against a stand-in service (see
    `tools/theme-preview.mjs` for the idea).
-3. **Write a test that fails**, then fix the code until it passes. A test in `tools/node8-check.js` is expected whenever the bug can be
+3. **Write a test that fails**, then fix the code until it passes. A test in `tools/test/` is expected whenever the bug can be
    tested without a TV. Keep to the compatibility rules (Node 8.12 for the service, ES5 style for the pages).
-4. **Run everything:** `sh tools/node8-check.sh`, and `python3 ipk/build.py` to check that the package builds.
+4. **Run everything:** `sh tools/check.sh`, and `python3 ipk/build.py` to check that the package builds.
 5. **Try it on a TV** if you can: push the branch and every push publishes a test build (a pre-release named `test-<branch>`); in the manager
    app **Update channel** installs it, and **Update channel** > **Stable releases** goes back. Say in the pull request what you checked on a
    TV and what you did not.
@@ -77,9 +77,9 @@ saying which AI tools helped. It is reviewed like any other pull request.
 
 **Fix a bug**
 
-> Read AGENTS.md. Issue: *paste the issue text and the masked report*. Reproduce the problem (a failing test in `tools/node8-check.js` if it can
+> Read AGENTS.md. Issue: *paste the issue text and the masked report*. Reproduce the problem (a failing test in `tools/test/` if it can
 > be tested without a TV), find the cause, and make the smallest fix that follows the rules in AGENTS.md (Node 8.12 for the service, ES5 style
-> for the pages, no private data). Run `sh tools/node8-check.sh` and `python3 ipk/build.py`. Update the documentation if behaviour changes.
+> for the pages, no private data). Run `sh tools/check.sh` and `python3 ipk/build.py`. Update the documentation if behaviour changes.
 > Do not commit to main, do not release. Tell me what is verified and what only a real TV can verify.
 
 **Review a change**

@@ -11,7 +11,8 @@ About a minute after every boot, the debloat:
 - **prevents** `acr2`, `admanager`, `sportsalarm` and `adoverlay-service` from starting, by mounting a do-nothing stub over each
   program (in RAM; the real files are not changed);
 - **adds** `eic.ads.lgtvcommon.com`, `nl.ad.lgsmartad.com` and `nl.info.lgsmartad.com` to `/etc/hosts`, pointing at `127.0.0.1`
-  and `::1` and marked `# cleanyourtv-debloat` (other entries are untouched).
+  and `::1` and marked `# cleanyourtv-debloat` (other entries are untouched). Where `/etc/hosts` is on the read-only system partition, a copy
+  with these lines is kept in RAM (`/tmp/cleanyourtv-hosts`) and mounted over it until the next restart.
 
 Nothing is uninstalled. It applies only while the launcher is Home, because LG's own Home needs some of those services to start;
 switching back to LG's Home lifts the debloat first.

@@ -1,6 +1,6 @@
 var API = 'http://127.0.0.1:8765',
   CACHE_KEY = 'cytv.cache.v4',
-  VERSION = '1.4.15';
+  VERSION = '1.5.0';
 var DEFAULTS = {
   dock: ['netflix', 'youtube.leanback.v4', 'amazon', 'com.disney.disneyplus-prod'],
   topbar: [

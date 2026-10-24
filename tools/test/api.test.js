@@ -92,13 +92,13 @@ fs.writeFileSync(
 
 // GitHub: the latest release and the list of releases (test builds)
 const release = {
-  tag_name: 'v1.5.16',
-  body: 'Service 1.5.16, launcher 1.4.15.',
+  tag_name: 'v99.1.0',
+  body: 'Release notes.',
   assets: [
-    'frontend-1.4.16.tgz',
-    'frontend-1.4.16.tgz.sha256',
-    'com.cleanyourtv.manager_1.5.17_all.ipk',
-    'com.cleanyourtv.manager_1.5.17_all.ipk.sha256',
+    'frontend-99.1.0.tgz',
+    'frontend-99.1.0.tgz.sha256',
+    'com.cleanyourtv.manager_99.1.0_all.ipk',
+    'com.cleanyourtv.manager_99.1.0_all.ipk.sha256',
   ].map(n => ({ name: n, browser_download_url: 'http://127.0.0.1:1/' + n })),
 };
 const gh = http.createServer((q, r) => {
@@ -261,7 +261,23 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
       continue;
     }
     failed++;
-    console.log('FAIL api: ' + k + '\n  expected ' + (a || 'nothing').slice(0, 600) + '\n  got      ' + (b || 'nothing').slice(0, 600));
+    // show where the two first differ
+    let d = 0;
+    while (a && b && d < a.length && a[d] === b[d]) d++;
+    const at = Math.max(0, d - 120);
+    console.log('FAIL api: ' + k + '\n  expected …' + (a || 'nothing').slice(at, d + 200) + '\n  got      …' + (b || 'nothing').slice(at, d + 200));
+  }
+  // routes added after 1.5.16 (not in the golden file): the TV profile and which parts of the service run
+  if (!/^1\.5\./.test(version)) {
+    const tv = JSON.parse((await request('GET', '/api/tv', undefined, 'null')).body);
+    const sv = JSON.parse((await request('GET', '/api/service', undefined, 'null')).body);
+    const want = ['core', 'notify', 'voice', 'live', 'theme', 'inputkey', 'notifyapi', 'manager', 'apps'];
+    const okTv = tv.sdk === '10.2.2' && tv.pickerMode === 'overlay' && tv.notifyWindow === 'topui';
+    const okSv = JSON.stringify(sv.features) === JSON.stringify(want) && !Object.keys(sv.failed).length;
+    console.log((okTv ? 'ok   ' : 'FAIL ') + 'api: /api/tv gives the TV profile');
+    console.log((okSv ? 'ok   ' : 'FAIL ') + 'api: /api/service lists every part as running: ' + JSON.stringify(sv));
+    if (!okTv) failed++;
+    if (!okSv) failed++;
   }
   console.log(failed ? failed + ' API contract check(s) failed' : 'the API answers as recorded');
   finish(failed ? 1 : 0);

@@ -7,15 +7,15 @@ reports from TVs that are not in the [tested list](../tested-tvs.md).
 
 | Folder or file | What it is |
 |---|---|
-| `app/` | The launcher: one HTML file of plain JavaScript, with `version.json`. |
-| `manager/`, `picker/`, `notify/` | The three apps of the package (manager, Inputs picker, picture notification card). |
+| `app/` | The launcher: `src/` (its CSS and script files), the built `index.html` and `version.json`. |
+| `manager/`, `picker/`, `notify/` | The three apps of the package (manager, Inputs picker, picture notification card); the manager is built from `manager/src`. |
 | `themes/` | The [themes](../themes.md): one folder each (`theme.json`, `preview.jpg`, a wallpaper) and `index.json`. Read by the TVs from GitHub, not shipped with the service; [contribute one](../themes.md#contributing-a-theme). |
-| `helper/` | The root service (Node.js): API, Live TV, notifications, voice, manager, input hook, share log, self-update. |
+| `helper/` | The root service (Node.js), one module per part: see [Internals](internals.md#the-service). |
 | `scripts/` | Boot, setup and restore scripts: `bootstrap.sh`, `10-cleanyourtv-home`, `stage-home.sh`, `undo-home.sh`, the debloat scripts. |
 | `shared/` | `flexgap.js`, added to every page by the build for older Chromium. |
 | `voice/` | Source of the small speech program `cytv-asr` and its build script. |
 | `third-party/` | The bundled inputhook files and the QR library. |
-| `tools/` | `node8-check.sh`: service and theme checks under Node 8.12.0; `theme-docs.js`: regenerates the table of theme settings in the docs; `theme-index.js`: writes `themes/index.json`; `theme-preview.mjs`: renders a theme in headless Chrome (and makes its screenshot). |
+| `tools/` | `check.sh`: every check (the tests in `tools/test` under Node 8.12.0 and the current Node, the built pages); `build-pages.js`: builds the launcher and manager pages from their sources; `theme-docs.js`: regenerates the table of theme settings in the docs; `theme-index.js`: writes `themes/index.json`; `theme-preview.mjs`: renders a theme in headless Chrome (and makes its screenshot). |
 | `ipk/build.py` | Builds the release files. |
 | `compat.json` | The list of tested firmware the setup reads. |
 | `install.sh`, `uninstall.sh` | The installer and uninstaller. |
@@ -29,16 +29,19 @@ python3 ipk/build.py
 
 writes the release files to `dist/`: `com.cleanyourtv.manager_<version>_all.ipk`, `frontend-<version>.tgz` and a `.sha256` file for
 each. Attach them to a GitHub release tagged `v<version>`. The **service** version is `VERSION` in `helper/helper.js`; the
-**launcher** version is `app/version.json` and `VERSION` in `app/index.html` (the build refuses to run when they differ).
+**launcher** version is `app/version.json` and `VERSION` in `app/src/js/core.js` (the build refuses to run when they differ). Run
+`node tools/build-pages.js` after changing a page's sources.
 
 Using an AI assistant to find or fix a bug is welcome: see [Working on problems with an AI assistant](../ai.md) and `AGENTS.md` in the
 repository root.
 
 ## Rules of the road
 
+- **Per-TV differences go in `helper/tvprofile.js`**, with a case in `tools/test/tvprofile.test.js`; settings are changed only through
+  `config.update` (`helper/config.js`).
 - **Support webOS 5.** The service must run on Node.js 8: no `crypto.randomInt`, no `fs.promises`, no `URL` as a global,
-  no `mkdirSync({recursive})`, no `http.get(url, options)`. Use `helper/netcompat.js`. `tools/node8-check.sh` catches regressions.
-- **The pages run in Chromium 79 and newer.** The launcher is written in plain ES5 style without a framework, and only transform
+  no `mkdirSync({recursive})`, no `http.get(url, options)`. Use `helper/netcompat.js`. `sh tools/check.sh` catches regressions.
+- **The pages run in Chromium 68 and newer.** The launcher is written in ES5 without a framework, and only transform
   and opacity are animated, because the TV's GPU is weak. No flex `gap` without the polyfill the build adds.
 - **Do not store private data in the repository.** No playlist addresses, access keys, IP addresses or names.
 - **Documentation must match the code.** When a feature changes, change its page here and, if it is mentioned there, the README.

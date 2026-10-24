@@ -374,7 +374,7 @@
    "frontend": {
     "build": "",
     "previous": null,
-    "updateTo": "1.4.16",
+    "updateTo": "99.1.0",
     "version": "1.4.15"
    },
    "home": {
@@ -419,16 +419,16 @@
    },
    "release": {
     "build": "",
-    "frontend": "1.4.16",
-    "notes": "Service <version>, launcher 1.4.15.",
-    "service": "1.5.17",
+    "frontend": "99.1.0",
+    "notes": "Release notes.",
+    "service": "99.1.0",
     "test": false,
-    "version": "<version>"
+    "version": "99.1.0"
    },
    "repo": "lasharor/cleanyourtv-WebOS",
    "service": {
     "build": "",
-    "updateTo": "1.5.17",
+    "updateTo": "99.1.0",
     "version": "<version>"
    },
    "voice": {
@@ -449,7 +449,7 @@
    "frontend": {
     "build": "",
     "previous": null,
-    "updateTo": "1.4.16",
+    "updateTo": "99.1.0",
     "version": "1.4.15"
    },
    "home": {
@@ -494,16 +494,16 @@
    },
    "release": {
     "build": "",
-    "frontend": "1.4.16",
-    "notes": "Service <version>, launcher 1.4.15.",
-    "service": "1.5.17",
+    "frontend": "99.1.0",
+    "notes": "Release notes.",
+    "service": "99.1.0",
     "test": false,
-    "version": "<version>"
+    "version": "99.1.0"
    },
    "repo": "lasharor/cleanyourtv-WebOS",
    "service": {
     "build": "",
-    "updateTo": "1.5.17",
+    "updateTo": "99.1.0",
     "version": "<version>"
    },
    "voice": {
@@ -542,7 +542,7 @@
    "frontend": {
     "build": "",
     "previous": null,
-    "updateTo": "1.4.16",
+    "updateTo": "99.1.0",
     "version": "1.4.15"
    },
    "home": {
@@ -587,16 +587,16 @@
    },
    "release": {
     "build": "",
-    "frontend": "1.4.16",
-    "notes": "Service <version>, launcher 1.4.15.",
-    "service": "1.5.17",
+    "frontend": "99.1.0",
+    "notes": "Release notes.",
+    "service": "99.1.0",
     "test": false,
-    "version": "<version>"
+    "version": "99.1.0"
    },
    "repo": "lasharor/cleanyourtv-WebOS",
    "service": {
     "build": "",
-    "updateTo": "1.5.17",
+    "updateTo": "99.1.0",
     "version": "<version>"
    },
    "voice": {

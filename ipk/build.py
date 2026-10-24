@@ -13,7 +13,7 @@ SERVICE = PKG + '.service'
 
 version = re.search(r"const VERSION = '([^']+)'", open(P('helper', 'helper.js')).read()).group(1)
 fe = json.load(open(P('app', 'version.json')))['version']
-if not re.search(r"VERSION='%s'" % re.escape(fe), open(P('app', 'index.html')).read()):
+if not re.search(r"VERSION\s*=\s*'%s'" % re.escape(fe), open(P('app', 'index.html')).read()):
     sys.exit('app/version.json (%s) and VERSION in app/index.html do not match' % fe)
 
 FLEXGAP = open(os.path.join(ROOT, 'shared', 'flexgap.js'), 'rb').read()

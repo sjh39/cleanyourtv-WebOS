@@ -53,7 +53,7 @@ Themes live in the repository, so a new one is a pull request:
    theme list.
 4. If it uses a wallpaper, add the image to the same folder (`.jpg`, `.png` or `.webp`, at most 1.5 MB, 1920 x 1080) and name it in
    `effects.wallpaper`. A wallpaper must be your own work or under a licence that allows redistribution; say which in the pull request.
-5. Run `node tools/theme-index.js` to update `themes/index.json`, then `node tools/node8-check.js`: it checks every theme folder against the
+5. Run `node tools/theme-index.js` to update `themes/index.json`, then `node tools/test.js theme`: it checks every theme folder against the
    schema, that the screenshot is there, and that the index is up to date.
 6. Open the pull request. Once it is merged into `main`, every TV can download the theme; no release is needed.
 
@@ -91,7 +91,7 @@ checkout of the repository (or these files) and the rules below.
    `rest.png` (home), `grid.png` (the focus moved down into the apps) and `menu.png` (a menu). It needs Node.js 22 or newer and Chrome. Open
    the images, fix what looks wrong (overlapping parts, unreadable text, clipped tiles) and render again.
 3. When it looks right, `node tools/theme-preview.mjs <id> --write` also writes `themes/<id>/preview.jpg` (needs `ffmpeg`), the screenshot the TV shows.
-4. `node tools/theme-index.js` updates `themes/index.json`; `node tools/node8-check.js` checks every theme folder, the screenshot and the index.
+4. `node tools/theme-index.js` updates `themes/index.json`; `node tools/test.js theme` checks every theme folder, the screenshot and the index.
 5. Commit and open a pull request; say where the wallpaper comes from.
 
 **A prompt to start with**
@@ -100,7 +100,7 @@ checkout of the repository (or these files) and the rules below.
 > The theme: *describe the look and the layout you want*. Write `themes/<id>/theme.json` using only keys from the table (data only; ranges
 > are enforced), generate an original wallpaper if it needs one (1920 x 1080, under 1.5 MB, saved in the theme's folder), render it with
 > `node tools/theme-preview.mjs <id> --out /tmp/preview`, look at `rest.png`, `grid.png` and `menu.png`, fix problems and render again, then
-> run `node tools/theme-preview.mjs <id> --write`, `node tools/theme-index.js` and `node tools/node8-check.js`. Keep text readable and the
+> run `node tools/theme-preview.mjs <id> --write`, `node tools/theme-index.js` and `node tools/test.js theme`. Keep text readable and the
 > wallpaper my own work.
 
 ## Theme files

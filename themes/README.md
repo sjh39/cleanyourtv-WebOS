@@ -24,7 +24,7 @@ A step-by-step guide, including how to make one with an AI assistant, is on the 
 2. Change only what you want to change in `theme.json`. A missing value keeps the default, or the value of the theme named in `"extends"`.
 3. Put a screenshot of the result in `preview.jpg` (16:9, about 800 px wide, at most 600 KB). `node tools/theme-preview.mjs <id> --write` makes it.
 4. If it uses a wallpaper, put a `.jpg`, `.png` or `.webp` (at most 1.5 MB, 1920 x 1080) in the folder and name it in `effects.wallpaper`.
-5. Run `node tools/theme-index.js`, then `node tools/node8-check.js`.
+5. Run `node tools/theme-index.js`, then `node tools/test.js theme`.
 6. Open a pull request. A wallpaper must be your own work or under a licence that allows redistribution; say which.
 
 ## The themes
