@@ -24,7 +24,8 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:transparent;colo
 .chip .tx{display:flex;flex-direction:column;align-items:center;width:100%;min-width:0;max-width:100%}
 .chip .tx>*+*{margin-top:2px}
 .chip .lb{font-size:36px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-.chip .st{font-size:25px;font-weight:500;opacity:.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.chip .st{font-size:25px;font-weight:500;opacity:.7;text-align:center;line-height:1.2;max-width:100%;min-height:2.4em;
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
 .chip.dim{opacity:.7}
 .chip.act::after{content:"";position:absolute;right:26px;top:24px;width:16px;height:16px;border-radius:8px;background:#1fbf5a;box-shadow:0 0 0 3px rgba(11,12,16,.9)}
 .chip.f{opacity:1;background:#fff;transform:translateY(-10px) scale(1.08);box-shadow:inset 0 0 0 5px #0b0c10,0 0 0 6px #fff,0 26px 44px rgba(0,0,0,.5)}
