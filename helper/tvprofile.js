@@ -2,8 +2,9 @@
 // What differs between TVs, in one place. The facts about a TV (model, firmware, webOS SDK version, LG's Home app, Node.js version)
 // go in, the decisions every other part follows come out:
 //   pickerMode     how the Input key shows the Inputs by default: 'overlay' (the picker over the running app, kept ready) on webOS 25
-//                  and newer, where it was tested; 'ondemand' (started on the key, closed after use) on older webOS, where a hidden
-//                  overlay app can keep the remote and show a loading circle (issues 5 and 6). A choice in the manager wins.
+//                  (SDK 10), the only version where that was tried; 'ondemand' (started on the key, closed after use) everywhere else: on
+//                  webOS 6.5 a hidden overlay app kept the remote and showed a loading circle (issues 5 and 6), and SDK 11 (webOS 26) has
+//                  not been tried. A choice in the manager wins.
 //   notifyWindow   the window type of the notification app: 'topui' (above every app, the remote stays with the app) from SDK 10 on;
 //                  older TVs refuse to start an app of that type and get 'overlay', also when the SDK version is unknown.
 //   homeSupported  LG's Home is the flutter or web app the launcher was written for; other kinds need "Set up anyway" (--force).
@@ -45,7 +46,7 @@ function decide(facts, compat) {
     sdkMajor: major,
     home: homeKind,
     node: f.node || process.version,
-    pickerMode: major >= 10 ? 'overlay' : 'ondemand',
+    pickerMode: major === 10 ? 'overlay' : 'ondemand',
     notifyWindow: major >= 10 ? 'topui' : 'overlay',
     homeSupported: homeKind === 'com.webos.app.home flutter' || homeKind === 'com.webos.app.home web',
     tested: !!testedNote,

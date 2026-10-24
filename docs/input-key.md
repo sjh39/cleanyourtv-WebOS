@@ -23,12 +23,12 @@ that row goes to the next one.
 
 | Choice | What happens | Default |
 |---|---|---|
-| Over the running app, ready in the background | A small app, `com.cleanyourtv.picker`, is started hidden after boot and the key only wakes it: instant. | webOS 25 and newer |
-| Over the running app, started when pressed | The same app is started by the key and closes itself after use (Back, a choice, or ten idle seconds). Nothing runs hidden, so it cannot keep the remote. The first moment takes longer. | webOS before 10 |
+| Over the running app, ready in the background | A small app, `com.cleanyourtv.picker`, is started hidden after boot and the key only wakes it: instant. | webOS 25 (SDK 10) |
+| Over the running app, started when pressed | The same app is started by the key and closes itself after use (Back, a choice, or ten idle seconds). Nothing runs hidden, so it cannot keep the remote. The first moment takes longer. | every other webOS version (5, 6, and 26 until the background app has been tried there) |
 | The launcher's Inputs list | The TV goes to Home with the Inputs list open. Needs CleanYourTV as Home; when LG's Home is selected the key stays with LG. | none |
 
 On webOS 6.5 (reports) the hidden background app kept the remote and showed a loading circle, which is why older webOS starts it on
-demand. If the TV closes the background app three times in ten minutes, the service switches to *started when pressed* by itself
+demand. The background app is only kept while the hook attached: without the hook the key cannot open it. If the TV closes the background app three times in ten minutes, the service switches to *started when pressed* by itself
 (`picker.mode: ondemand` in `config.json`). Other overlay projects for rooted TVs also start their overlay on demand and close it after
 use.
 

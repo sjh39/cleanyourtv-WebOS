@@ -88,16 +88,17 @@ run(async () => {
   ok(saved.mode === 'ondemand' && saved.prewarm === false, 'when the system keeps closing the picker it is started when pressed instead');
 
   ok(
-    picker.modeOf({}, 10) === 'overlay' &&
-      picker.modeOf({}, 25) === 'overlay' &&
-      picker.modeOf({}, 6) === 'ondemand' &&
-      picker.modeOf({}, 0) === 'ondemand',
-    'by SDK version: kept ready on webOS 10 and newer, started when pressed before that'
+    picker.modeOf({}, 10) === 'overlay' && picker.modeOf({}, 6) === 'ondemand' && picker.modeOf({}, 0) === 'ondemand',
+    'by SDK version: kept ready on webOS 25 (SDK 10), started when pressed before that'
+  );
+  ok(
+    picker.modeOf({}, 11) === 'ondemand' && picker.modeOf({}, 12) === 'ondemand',
+    'SDK 11 and newer, where the hidden picker has not been tried, start it when pressed (issue 6)'
   );
   ok(picker.modeOf({}, 'ondemand') === 'ondemand' && picker.modeOf({}, 'overlay') === 'overlay', "the TV profile's default is used");
   ok(
     picker.modeOf({ mode: 'overlay' }, 6) === 'overlay' &&
-      picker.modeOf({ mode: 'launcher' }, 25) === 'launcher' &&
+      picker.modeOf({ mode: 'launcher' }, 10) === 'launcher' &&
       picker.modeOf({ mode: 'ondemand' }, 'overlay') === 'ondemand' &&
       picker.modeOf({ mode: 'x' }, 6) === 'ondemand',
     'a saved choice wins over the default'

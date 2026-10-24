@@ -43,7 +43,11 @@ run(async () => {
     ok(!err, 'the script of ' + path.relative(root, f) + ' is ES5' + (err ? ': ' + err : ''));
   }
   const built = require(path.join(root, 'tools', 'build-pages.js'));
-  for (const p of built.PAGES) ok(built.build(p[0]) === fs.readFileSync(path.join(root, p[1]), 'utf8'), p[1] + ' is built from ' + p[0] + ' (run: node tools/build-pages.js)');
+  for (const p of built.PAGES)
+    ok(
+      built.build(p[0]) === fs.readFileSync(path.join(root, p[1]), 'utf8'),
+      p[1] + ' is built from ' + p[0] + ' (run: node tools/build-pages.js)'
+    );
   // the favourite star and the menus' right-hand text both had the class st: the star's width squeezed the menu text into a column
   const launcher = fs.readFileSync(path.join(root, 'app', 'index.html'), 'utf8');
   ok(

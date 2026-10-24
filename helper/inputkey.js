@@ -61,7 +61,15 @@ function create(ctx) {
     // bind the key and keep the hook in LG's input processes (they restart now and then)
     setTimeout(ensure, 500);
     setInterval(ensure, 30000);
-    picker.start(luna, () => config.options().inputKey && mode() === 'overlay', {
+    // a hidden picker is only kept while the hook attached: without it the key cannot open the picker, which would only hold the remote
+    const hookAttached = () => {
+      try {
+        return !!(inputhook.hookInfo && inputhook.hookInfo().attached);
+      } catch (_) {
+        return false;
+      }
+    };
+    picker.start(luna, () => config.options().inputKey && mode() === 'overlay' && hookAttached(), {
       get: () => config.get().picker || {},
       set: v => {
         config.update('picker', c => {

@@ -265,7 +265,9 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     let d = 0;
     while (a && b && d < a.length && a[d] === b[d]) d++;
     const at = Math.max(0, d - 120);
-    console.log('FAIL api: ' + k + '\n  expected …' + (a || 'nothing').slice(at, d + 200) + '\n  got      …' + (b || 'nothing').slice(at, d + 200));
+    console.log(
+      'FAIL api: ' + k + '\n  expected …' + (a || 'nothing').slice(at, d + 200) + '\n  got      …' + (b || 'nothing').slice(at, d + 200)
+    );
   }
   // routes added after 1.5.16 (not in the golden file): the TV profile and which parts of the service run
   if (!/^1\.5\./.test(version)) {

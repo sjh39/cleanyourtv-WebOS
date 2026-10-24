@@ -19,9 +19,9 @@ run(async () => {
       { pickerMode: 'overlay', notifyWindow: 'topui', homeSupported: true, tested: true, legacyNode: false },
     ],
     [
-      'webOS 26 (SDK 11)',
+      'webOS 26 (SDK 11): the hidden picker was not tried there (issue 6)',
       { sdk: '11.2.0', firmware: '43.21.77', home: 'com.webos.app.home web', node: 'v16.20.2' },
-      { pickerMode: 'overlay', notifyWindow: 'topui', homeSupported: true, tested: false },
+      { pickerMode: 'ondemand', notifyWindow: 'topui', homeSupported: true, tested: false },
     ],
     [
       'webOS 6.5 (issue 5)',
