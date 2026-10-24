@@ -152,7 +152,7 @@ function run(bin, url, extra) {
     '--virtual-time-budget=8000',
   ];
   return new Promise(resolve => {
-    cp.execFile(bin, argv.concat(extra, [url]), { encoding: 'utf8', timeout: 90000, maxBuffer: 32 << 20 }, (e, stdout, stderr) => {
+    cp.execFile(bin, argv.concat(extra, [url]), { encoding: 'utf8', timeout: 45000, maxBuffer: 32 << 20 }, (e, stdout, stderr) => {
       cp.spawnSync('rm', ['-rf', dir]);
       resolve({ status: e ? e.code || 1 : 0, error: e && e.killed ? 'timed out' : '', stdout: stdout || '', stderr: stderr || '' });
     });
@@ -174,7 +174,12 @@ function run(bin, url, extra) {
       const bin = engine(e[1], e[2]);
       for (const p of PAGES) {
         const url = 'http://127.0.0.1:8765/' + p[0] + '.html';
-        const r = await run(bin, url, ['--dump-dom']);
+        // headless Chromium 79 on Linux now and then fails to hand over the page ("Failed to serialize document") or hangs: try again
+        let r = null;
+        for (let tries = 0; tries < 3; tries++) {
+          r = await run(bin, url, ['--dump-dom']);
+          if (r.status === 0 && (r.stdout || '').indexOf('<body') >= 0) break;
+        }
         const dom = r.stdout || '';
         const errs = (/data-errors="([^"]*)"/.exec(dom) || [])[1] || '';
         const n = (dom.match(p[2]) || []).length;
