@@ -21,8 +21,8 @@ sets up, updates and removes everything.
 
 * **webOS**: 5 and newer (2020 models and later). webOS 4 and older have no systemd and an old Node.js; the setup stops before it
   changes anything. LG names its versions two ways: [webOS version numbers](https://lasharor.github.io/cleanyourtv-WebOS/tested-tvs/#webos-version-numbers) gives both.
-* **Access**: a TV rooted with the [Homebrew Channel](https://webosbrew.org) ([rootmy.tv](https://rootmy.tv)), SSH as `root` for
-  the install command, and internet access on the TV for the download.
+* **Access**: a TV rooted with the [Homebrew Channel](https://webosbrew.org) ([rootmy.tv](https://rootmy.tv)) and internet access
+  on the TV for the download. Install from the Homebrew Channel, or with one command over SSH as `root`.
 * **Tested hardware**: LG OLED65G26LA on webOS 25. Other TVs are reported in
   [Tested TVs](https://lasharor.github.io/cleanyourtv-WebOS/tested-tvs/); an unlisted firmware is set up when LG's Home is of the
   flutter or web kind, and otherwise the setup stops and offers **Set up anyway**.
@@ -34,11 +34,19 @@ sets up, updates and removes everything.
 ## Quick start
 
 1. Root the TV and install the [Homebrew Channel](https://webosbrew.org).
-2. From your computer, with your TV's IP address, install the manager app:
+2. Install the manager app, one of two ways:
+   - **From the Homebrew Channel.** Open the Homebrew Channel, the gear at the top, **Add repository**, and enter
 
-   ```sh
-   ssh root@192.168.1.50 'curl -fsSL https://raw.githubusercontent.com/lasharor/cleanyourtv-WebOS/main/install.sh | sh'
-   ```
+     ```text
+     https://github.com/lasharor/cleanyourtv-WebOS/releases/latest/download/apps.json
+     ```
+
+     **CleanYourTV** then shows in the channel's list: open it and choose **Install**. New releases show there as updates.
+   - **From your computer**, with your TV's IP address:
+
+     ```sh
+     ssh root@192.168.1.50 'curl -fsSL https://raw.githubusercontent.com/lasharor/cleanyourtv-WebOS/main/install.sh | sh'
+     ```
 
 3. On the TV, open **CleanYourTV**, choose the options and **Set up now**. It takes about a minute and the screen blinks once.
 
@@ -82,7 +90,7 @@ Pick how Home looks in the manager app: colours, the position and size of the cl
 speed. The themes are in [`themes/`](themes/) of this repository: the TV reads them from GitHub and downloads one when you choose it,
 so a new theme needs a pull request and no release ([how](https://lasharor.github.io/cleanyourtv-WebOS/themes/#contributing-a-theme)).
 
-<p align="center"><a href="themes/"><img src="docs/screenshots/themes-readme.jpg" alt="Classic, Midnight, Warm and Bloom themes" width="800"></a></p>
+<p align="center"><a href="themes/"><img src="docs/screenshots/themes-readme.jpg" alt="Classic, Midnight, Pixel and Bloom themes" width="800"></a></p>
 
 ---
 

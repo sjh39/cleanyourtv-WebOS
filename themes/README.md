@@ -5,7 +5,7 @@ dock and grid, text, effects and a wallpaper. In the manager app, **Theme** list
 from GitHub (the `main` branch) and downloads a theme when you choose it. A new theme is available to every TV as soon as it is merged,
 without a release.
 
-[![Classic, Midnight, Warm and Bloom](../docs/screenshots/themes-readme.jpg)](../docs/screenshots/themes-readme.jpg)
+[![Classic, Midnight, Pixel and Bloom](../docs/screenshots/themes-readme.jpg)](../docs/screenshots/themes-readme.jpg)
 
 | File | What it is |
 |---|---|
