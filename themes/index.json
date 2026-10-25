@@ -51,6 +51,13 @@
    "preview": "oled/preview.jpg"
   },
   {
+   "id": "pixel",
+   "name": "Pixel",
+   "author": "CleanYourTV",
+   "description": "Pixel art: a blocky typeface, square tiles and buttons, a yellow focus box and a sunset over a lake drawn in big pixels. Moves without animation, like an old console.",
+   "preview": "pixel/preview.jpg"
+  },
+  {
    "id": "still",
    "name": "Still",
    "author": "CleanYourTV",

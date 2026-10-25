@@ -2124,6 +2124,16 @@ function applyTheme(t) {
     st.setProperty(k, t.vars[k]);
     themeKeys.push(k);
   }
+  /* a theme's own typeface, served from its folder; the family name is in --font */
+  var fs = $('tfont'),
+    f = t.font,
+    css = f ? '@font-face{font-family:"CYTV Theme Font";src:url("' + API + '/api/theme/font/' + f.id + '/' + f.file + '")}' : '';
+  if (!fs) {
+    fs = document.createElement('style');
+    fs.id = 'tfont';
+    document.head.appendChild(fs);
+  }
+  if (fs.textContent !== css) fs.textContent = css;
   var w = t.wallpaper;
   if (w) {
     var d = 'rgba(' + t.nightRgb + ',' + w.dim + ')';

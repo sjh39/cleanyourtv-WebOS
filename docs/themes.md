@@ -34,6 +34,7 @@ folder of the GitHub repository (the `main` branch):
 | Still | No animation and a quiet glow. |
 | Bloom | A flower wallpaper with the dock in a glass panel at the bottom. Down moves the dock up and the apps appear below it, centred. |
 | Horizon | A row of seven square apps along the bottom of a dusk landscape, the clock on the left and the buttons on the right at the top. Down moves the row up and shows all apps below it. |
+| Pixel | Pixel art: a blocky typeface, square tiles and buttons, a yellow focus box and a sunset over a lake drawn in big pixels. Moves without animation, like an old console. |
 
 ![Classic, Compact, Large print and Midnight](screenshots/themes-1.jpg)
 
@@ -42,6 +43,8 @@ folder of the GitHub repository (the `main` branch):
 ![Bloom: the home screen and the app grid opened with Down](screenshots/themes-3.jpg)
 
 ![Horizon: the home screen and all apps shown with Down](screenshots/themes-4.jpg)
+
+![Pixel: the home screen and the Customise menu](screenshots/themes-5.jpg)
 
 The pictures are the launcher page rendered in a browser with each theme.
 
@@ -55,7 +58,8 @@ Themes live in the repository, so a new one is a pull request:
 3. Add `preview.jpg`: a screenshot of the home screen with your theme (16:9, about 800 px wide, at most 600 KB). The TV shows it in the
    theme list.
 4. If it uses a wallpaper, add the image to the same folder (`.jpg`, `.png` or `.webp`, at most 1.5 MB, 1920 x 1080) and name it in
-   `effects.wallpaper`. A wallpaper must be your own work or under a licence that allows redistribution; say which in the pull request.
+   `effects.wallpaper`. A typeface goes in the folder too, named in `type.fontFile`, with its licence file. A wallpaper or typeface
+   must be your own work or under a licence that allows redistribution; say which in the pull request.
 5. Run `node tools/theme-index.js` to update `themes/index.json`, then `node tools/test.js theme`: it checks every theme folder against the
    schema, that the screenshot is there, and that the index is up to date.
 6. Open the pull request. Once it is merged into `main`, every TV can download the theme; no release is needed.
@@ -148,6 +152,7 @@ when the focus moves down into it (Back or Up closes it); a dock at the top leav
 | `surface.rowRadius` | 0 to 50 | `30` | Corner radius of menu rows. |
 | **type** | | | |
 | `type.font` | `default`, `serif`, `mono` | `default` | The typeface: the TV's own, a serif or a monospace. |
+| `type.fontFile` | a file name | none | A typeface of the theme: a file in the theme's folder, `.woff2`, `.woff`, `.ttf` or `.otf`, at most 400 KB, used for all text. Characters it lacks come from `type.font`. Its licence must allow redistribution; put the licence file in the folder too. |
 | `type.scale` | 0.8 to 1.3 | `1` | Scale of the text of buttons, menus and tiles. |
 | **clock** | | | |
 | `clock.show` | `true` or `false` | `true` | Show the clock. |

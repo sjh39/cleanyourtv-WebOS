@@ -8,11 +8,13 @@ const fs = require('fs'),
 const dir = () => process.env.CYTV_THEMES || path.join(__dirname, 'themes');
 const DEFAULT_ID = 'classic',
   MAX_WALLPAPER = 1.5 * 1024 * 1024,
+  MAX_FONT = 400 * 1024,
   MAX_PREVIEW = 600 * 1024,
   MAX_THEME = 32 * 1024,
   MAX_INDEX = 128 * 1024;
 const HEX = /^#[0-9a-f]{6}$/i,
   FILE = /^[\w-]{1,40}\.(?:jpg|png|webp)$/,
+  FONT_FILE = /^[\w-]{1,40}\.(?:woff2|woff|ttf|otf)$/,
   ID = /^[a-z0-9-]{1,30}$/,
   PREVIEW_PATH = /^([a-z0-9-]{1,30})\/preview\.(?:jpg|png|webp)$/;
 const ACCENTS = [
@@ -31,7 +33,8 @@ const POS = ['left', 'center', 'right'],
   TOPBOT = ['top', 'bottom'];
 
 // [key, type, range or choices, default, what it does]. Types: color (#rrggbb), color? (a colour, or null for "the accent"), num, int
-// (range [lo, hi]), enum (choices), bool, auto (an int range, or null for "worked out from the other values"), file (a wallpaper file name).
+// (range [lo, hi]), enum (choices), bool, auto (an int range, or null for "worked out from the other values"), file (a wallpaper or font
+// file name, checked apart from the rest).
 const SCHEMA = [
   ['colors.night', 'color', null, '#07080b', 'Page background.'],
   ['colors.panel', 'color', null, '#14161b', 'Toast background; menu rows are a lighter mix of it.'],
@@ -51,6 +54,13 @@ const SCHEMA = [
   ['surface.menuAlpha', 'num', [0.5, 1], 0.97, 'Opacity of the dark layer behind menus.'],
   ['surface.rowRadius', 'int', [0, 50], 30, 'Corner radius of menu rows.'],
   ['type.font', 'enum', ['default', 'serif', 'mono'], 'default', "The typeface: the TV's own, a serif or a monospace."],
+  [
+    'type.fontFile',
+    'file',
+    null,
+    '',
+    "A typeface of the theme: a file in the theme's folder, `.woff2`, `.woff`, `.ttf` or `.otf`, at most 400 KB, used for all text. Characters it lacks come from `type.font`. Its licence must allow redistribution; put the licence file in the folder too.",
+  ],
   ['type.scale', 'num', [0.8, 1.3], 1, 'Scale of the text of buttons, menus and tiles.'],
   ['clock.show', 'bool', null, true, 'Show the clock.'],
   ['clock.date', 'bool', null, true, 'Show the date beside or under the time.'],
@@ -182,6 +192,17 @@ function imageOk(b, name, max) {
     (/\.webp$/.test(name) && b.slice(0, 4).toString() === 'RIFF' && b.slice(8, 12).toString() === 'WEBP')
   );
 }
+// is this buffer a font of a kind its file name says (WOFF2, WOFF, TrueType or OpenType)?
+function fontOk(b, name) {
+  if (!b || b.length < 12 || b.length > MAX_FONT) return false;
+  const m = b.slice(0, 4).toString('latin1');
+  return (
+    (/\.woff2$/.test(name) && m === 'wOF2') ||
+    (/\.woff$/.test(name) && m === 'wOFF') ||
+    (/\.(?:ttf|otf)$/.test(name) && (m === '\u0000\u0001\u0000\u0000' || m === 'true' || m === 'OTTO'))
+  );
+}
+const fontType = n => (/\.woff2$/.test(n) ? 'font/woff2' : /\.woff$/.test(n) ? 'font/woff' : /\.otf$/.test(n) ? 'font/otf' : 'font/ttf');
 const imageType = n => (/\.jpg$/.test(n) ? 'image/jpeg' : /\.png$/.test(n) ? 'image/png' : 'image/webp');
 const sniff = b =>
   b.length > 12 && b[0] === 0xff && b[1] === 0xd8
@@ -209,6 +230,16 @@ function normalize(raw, id, base, wallDir) {
       if (imageOk(b, w, MAX_WALLPAPER)) v['effects.wallpaper'] = w;
     } catch (_) {}
   } else if (w === '') v['effects.wallpaper'] = '';
+  // a typeface: kept with the id of the theme whose folder holds it, so a theme that extends this one uses the same file
+  const f = getPath(raw, 'type.fontFile');
+  if (typeof f === 'string' && FONT_FILE.test(f)) {
+    try {
+      if (fontOk(fs.readFileSync(path.join(wallDir || path.join(dir(), id), f)), f)) {
+        v['type.fontFile'] = f;
+        v.fontTheme = id;
+      }
+    } catch (_) {}
+  } else if (f === '') v['type.fontFile'] = '';
   return {
     id,
     name: String(raw.name || id).slice(0, 40),
@@ -272,7 +303,7 @@ function resolve(t, accent) {
     '--acc': A,
     '--acc-ink': lum(A) > 0.35 ? '#0b0c10' : '#ffffff',
     '--focus': v['colors.focus'] || A,
-    '--font': FONT[v['type.font']],
+    '--font': (v['type.fontFile'] ? '"CYTV Theme Font",' : '') + FONT[v['type.font']],
     '--fs': String(v['type.scale']),
     '--pill-bg': 'rgba(' + pill.join(',') + ',' + v['surface.pillAlpha'] + ')',
     '--pill-ring': 'rgba(' + pill.join(',') + ',' + v['surface.pillRing'] + ')',
@@ -335,7 +366,7 @@ function resolve(t, accent) {
     '--spd': String(v['effects.speed']),
   };
   const w = v['effects.wallpaper'];
-  return {
+  const out = {
     id: t.id,
     name: t.name,
     vars,
@@ -353,6 +384,9 @@ function resolve(t, accent) {
     nightRgb: night.join(','),
     wallpaper: w ? { id: t.id, file: w, dim: v['effects.wallpaperDim'] } : null,
   };
+  // only a theme with a typeface has this key, so the replies for the other themes stay as they were
+  if (v['type.fontFile']) out.font = { id: v.fontTheme || t.id, file: v['type.fontFile'] };
+  return out;
 }
 
 module.exports = {
@@ -360,8 +394,10 @@ module.exports = {
   DEFAULTS,
   DEFAULT_ID,
   FILE,
+  FONT_FILE,
   HEX,
   ID,
+  MAX_FONT,
   MAX_INDEX,
   MAX_PREVIEW,
   MAX_THEME,
@@ -372,6 +408,8 @@ module.exports = {
   TOPBOT,
   check,
   dir,
+  fontOk,
+  fontType,
   getPath,
   hex,
   imageOk,

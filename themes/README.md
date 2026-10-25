@@ -13,6 +13,7 @@ without a release.
 | `<id>/theme.json` | The theme: colours, positions, sizes, effects. Every key is optional. |
 | `<id>/preview.jpg` | The screenshot shown in the manager. |
 | `<id>/<wallpaper>` | The wallpaper, if the theme uses one. |
+| `<id>/<typeface>` | A typeface (`type.fontFile`), if the theme uses one, with its licence file. |
 
 Every setting, with its range and default, is in the [Themes page of the documentation](https://lasharor.github.io/cleanyourtv-WebOS/themes/).
 
@@ -25,7 +26,8 @@ A step-by-step guide, including how to make one with an AI assistant, is on the 
 3. Put a screenshot of the result in `preview.jpg` (16:9, about 800 px wide, at most 600 KB). `node tools/theme-preview.mjs <id> --write` makes it.
 4. If it uses a wallpaper, put a `.jpg`, `.png` or `.webp` (at most 1.5 MB, 1920 x 1080) in the folder and name it in `effects.wallpaper`.
 5. Run `node tools/theme-index.js`, then `node tools/test.js theme`.
-6. Open a pull request. A wallpaper must be your own work or under a licence that allows redistribution; say which.
+6. Open a pull request. A wallpaper or typeface must be your own work or under a licence that allows redistribution; say which,
+   and put a typeface's licence file in the folder.
 
 ## The themes
 
@@ -52,6 +54,17 @@ A row of seven square apps along the bottom of a dusk landscape, the clock on th
 [![Horizon](horizon/preview.jpg)](horizon/preview.jpg)
 
 Folder: [`horizon/`](horizon/)
+
+### Pixel
+
+Pixel art: a blocky typeface, square tiles and buttons, a yellow focus box and a sunset over a lake drawn in big pixels. Moves without animation, like an old console.
+
+The typeface is Pixelify Sans (weight 500, Latin, unmodified), in the folder as `pixel.woff2` under the SIL Open Font License 1.1
+(`OFL.txt`); the wallpaper was drawn for this theme.
+
+[![Pixel](pixel/preview.jpg)](pixel/preview.jpg)
+
+Folder: [`pixel/`](pixel/)
 
 ### Compact
 

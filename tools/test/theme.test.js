@@ -107,6 +107,8 @@ run(async () => {
     huge: JSON.stringify({ name: 'x'.repeat(40000) }),
     badwall: JSON.stringify({ name: 'Bad wallpaper', effects: { wallpaper: 'w.jpg' } }),
     orphan: JSON.stringify({ name: 'Orphan', extends: 'missing-base' }),
+    pixkid: JSON.stringify({ name: 'Pixel kid', extends: 'pixel', dock: { count: 4 } }),
+    badfont: JSON.stringify({ name: 'Bad typeface', type: { fontFile: 'f.woff2' } }),
   };
   let ghUp = true;
   const ghHits = [];
@@ -121,6 +123,7 @@ run(async () => {
     let m = /^\/themes\/([a-z0-9-]+)\/theme\.json$/.exec(u);
     if (m && tWrong[m[1]]) return send(200, tWrong[m[1]]);
     if (/^\/themes\/badwall\/w\.jpg$/.test(u)) return send(200, Buffer.from('this is not a jpeg at all, just text'));
+    if (/^\/themes\/badfont\/f\.woff2$/.test(u)) return send(200, Buffer.from('this is not a font file, only some text'));
     const f = path.join(root, u);
     if (!f.startsWith(tdir + path.sep) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) return send(404, 'no');
     send(200, fs.readFileSync(f));
@@ -194,6 +197,35 @@ run(async () => {
   ok(r.code === 404, 'a file the theme does not name is not served');
   r = await tcall('wallpaper/..%2f..%2fpasswd', null, 'GET');
   ok(r.code === 404, 'a path is not served as a wallpaper');
+  // a theme's own typeface: downloaded with the theme, served from its folder, named first in --font
+  ok(
+    themeMod.fontOk(Buffer.from('wOF2' + 'x'.repeat(40)), 'a.woff2') &&
+      !themeMod.fontOk(Buffer.from('wOF2' + 'x'.repeat(40)), 'a.ttf') &&
+      !themeMod.fontOk(Buffer.from('<html>' + 'x'.repeat(40)), 'a.woff2'),
+    'a typeface file is checked by its first bytes against its name'
+  );
+  r = await tcall('set', { id: 'pixel' });
+  const px = th.resolved();
+  ok(
+    r.code === 200 &&
+      fs.existsSync(path.join(tlocal, 'pixel', 'pixel.woff2')) &&
+      px.font &&
+      px.font.id === 'pixel' &&
+      px.font.file === 'pixel.woff2' &&
+      /^"CYTV Theme Font",/.test(px.vars['--font']),
+    "a theme's typeface is downloaded with it and named first in the font"
+  );
+  r = await tcall('font/pixel/pixel.woff2', null, 'GET');
+  ok(r.code === 200, 'the typeface is served');
+  r = await tcall('font/pixel/other.woff2', null, 'GET');
+  ok(r.code === 404, 'a typeface the theme does not name is not served');
+  r = await tcall('set', { id: 'pixkid' });
+  ok(
+    r.code === 200 && th.resolved().font && th.resolved().font.id === 'pixel' && th.resolved().dockN === 4,
+    'a theme that extends one with a typeface uses that file from its folder'
+  );
+  r = await tcall('set', { id: 'badfont' });
+  ok(r.code !== 200 && !fs.existsSync(path.join(tlocal, 'badfont')), 'a typeface that is not a font is refused and nothing is kept');
   r = await tcall('set', { id: 'kid' });
   ok(
     r.code === 200 &&
