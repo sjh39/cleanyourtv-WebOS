@@ -1,0 +1,62 @@
+{
+ "name": "Pixel",
+ "author": "CleanYourTV",
+ "description": "Pixel art: a blocky typeface, square tiles and buttons, a yellow focus box and a sunset over a lake drawn in big pixels. Moves without animation, like an old console.",
+ "colors": {
+  "night": "#120e22",
+  "panel": "#241c3a",
+  "ink": "#f6eedd",
+  "accent": "#ffcf5a",
+  "pill": "#f6eedd"
+ },
+ "surface": {
+  "pillAlpha": 0.12,
+  "pillRing": 0.35,
+  "pillRadius": 0,
+  "menuAlpha": 0.97,
+  "rowRadius": 0
+ },
+ "type": {
+  "font": "pixel",
+  "scale": 1.05
+ },
+ "clock": {
+  "layout": "inline",
+  "scale": 1.05
+ },
+ "bar": {
+  "style": "pill",
+  "size": 62,
+  "gap": 14
+ },
+ "shelf": {
+  "show": true,
+  "scale": 0.9
+ },
+ "dock": {
+  "count": 5,
+  "w": 326,
+  "h": 200,
+  "gap": 24,
+  "radius": 0,
+  "lift": 8,
+  "focusScale": 1.04
+ },
+ "grid": {
+  "radius": 0,
+  "gapX": 20,
+  "gapY": 20,
+  "focusScale": 1.08
+ },
+ "tile": {
+  "border": 0.22,
+  "ringWidth": 6,
+  "ringOffset": 4
+ },
+ "effects": {
+  "glow": 0,
+  "speed": 0,
+  "wallpaper": "pixel.png",
+  "wallpaperDim": 0.3
+ }
+}

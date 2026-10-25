@@ -43,6 +43,14 @@ Kazuhiko Arase, unmodified (npm package `qrcode-generator@1.4.4`, SHA-256 of the
 `18ae399f81182bc9de916e9c77b195df20cc58d6f2d55a62b085a299f1bf1780`), licensed under the MIT license (the notice is in
 the file header). The manager app loads it to draw the QR code.
 
+## Pixelify Sans (the `pixel` typeface of themes)
+
+`third-party/pixelify-sans/` holds Pixelify Sans by The Pixelify Sans Project Authors
+([eifetx/Pixelify-Sans](https://github.com/eifetx/Pixelify-Sans)), weight 500, the Latin and Latin Extended subsets unmodified as
+Google Fonts serves them (SHA-256 in `SHA256SUMS`), under the SIL Open Font License 1.1 (`OFL.txt`, shipped as
+`licenses/OFL-PixelifySans.txt`). The launcher page embeds both files (`app/src/css/fonts.css`); a theme uses them with
+`type.font: pixel`.
+
 ## Design
 
 The home-screen design follows the Android TV project [CleanYourTV](https://github.com/Gathin23/cleanyourtv) (MIT).

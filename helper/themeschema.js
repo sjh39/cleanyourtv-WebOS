@@ -50,7 +50,13 @@ const SCHEMA = [
   ['surface.pillRadius', 'int', [0, 60], 32, 'Corner radius of the top buttons (pill style only).'],
   ['surface.menuAlpha', 'num', [0.5, 1], 0.97, 'Opacity of the dark layer behind menus.'],
   ['surface.rowRadius', 'int', [0, 50], 30, 'Corner radius of menu rows.'],
-  ['type.font', 'enum', ['default', 'serif', 'mono'], 'default', "The typeface: the TV's own, a serif or a monospace."],
+  [
+    'type.font',
+    'enum',
+    ['default', 'serif', 'mono', 'pixel'],
+    'default',
+    "The typeface: the TV's own, a serif, a monospace or `pixel` (Pixelify Sans, built into the launcher).",
+  ],
   ['type.scale', 'num', [0.8, 1.3], 1, 'Scale of the text of buttons, menus and tiles.'],
   ['clock.show', 'bool', null, true, 'Show the clock.'],
   ['clock.date', 'bool', null, true, 'Show the date beside or under the time.'],
@@ -261,6 +267,7 @@ function resolve(t, accent) {
     default: '"LG Smart UI","Helvetica Neue",Helvetica,Arial,sans-serif',
     serif: 'Georgia,"Times New Roman",Times,serif',
     mono: 'Menlo,Consolas,"DejaVu Sans Mono",monospace',
+    pixel: '"CYTV Pixel","LG Smart UI","Helvetica Neue",Helvetica,Arial,sans-serif',
   };
   const vars = {
     '--night': v['colors.night'],

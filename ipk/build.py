@@ -87,6 +87,7 @@ add(data, s + '/inputhook/libinputhookpp.so', open(P('third-party', 'inputhook',
 for n in sorted(os.listdir(P('third-party', 'inputhook'))):
     if n.startswith('LICENSE') or n == 'SHA256SUMS':
         add(data, s + '/licenses/' + n, open(P('third-party', 'inputhook', n), 'rb').read())
+add(data, s + '/licenses/OFL-PixelifySans.txt', open(P('third-party', 'pixelify-sans', 'OFL.txt'), 'rb').read())
 add(data, s + '/licenses/THIRD-PARTY.md', open(P('THIRD-PARTY.md'), 'rb').read())
 add(data, s + '/licenses/LICENSE', open(P('LICENSE'), 'rb').read())
 add(data, s + '/compat.json', open(P('compat.json'), 'rb').read())

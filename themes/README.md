@@ -53,6 +53,17 @@ A row of seven square apps along the bottom of a dusk landscape, the clock on th
 
 Folder: [`horizon/`](horizon/)
 
+### Pixel
+
+Pixel art: a blocky typeface, square tiles and buttons, a yellow focus box and a sunset over a lake drawn in big pixels. Moves without animation, like an old console.
+
+The typeface is Pixelify Sans (SIL Open Font License 1.1), built into the launcher as `type.font: pixel`; the wallpaper was drawn for
+this theme.
+
+[![Pixel](pixel/preview.jpg)](pixel/preview.jpg)
+
+Folder: [`pixel/`](pixel/)
+
 ### Compact
 
 Twelve columns of smaller tiles: more apps on screen.

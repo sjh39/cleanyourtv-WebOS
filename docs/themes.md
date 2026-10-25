@@ -34,6 +34,7 @@ folder of the GitHub repository (the `main` branch):
 | Still | No animation and a quiet glow. |
 | Bloom | A flower wallpaper with the dock in a glass panel at the bottom. Down moves the dock up and the apps appear below it, centred. |
 | Horizon | A row of seven square apps along the bottom of a dusk landscape, the clock on the left and the buttons on the right at the top. Down moves the row up and shows all apps below it. |
+| Pixel | Pixel art: a blocky typeface, square tiles and buttons, a yellow focus box and a sunset over a lake drawn in big pixels. Moves without animation, like an old console. |
 
 ![Classic, Compact, Large print and Midnight](screenshots/themes-1.jpg)
 
@@ -42,6 +43,8 @@ folder of the GitHub repository (the `main` branch):
 ![Bloom: the home screen and the app grid opened with Down](screenshots/themes-3.jpg)
 
 ![Horizon: the home screen and all apps shown with Down](screenshots/themes-4.jpg)
+
+![Pixel: the home screen and the Customise menu](screenshots/themes-5.jpg)
 
 The pictures are the launcher page rendered in a browser with each theme.
 
@@ -147,7 +150,7 @@ when the focus moves down into it (Back or Up closes it); a dock at the top leav
 | `surface.menuAlpha` | 0.5 to 1 | `0.97` | Opacity of the dark layer behind menus. |
 | `surface.rowRadius` | 0 to 50 | `30` | Corner radius of menu rows. |
 | **type** | | | |
-| `type.font` | `default`, `serif`, `mono` | `default` | The typeface: the TV's own, a serif or a monospace. |
+| `type.font` | `default`, `serif`, `mono`, `pixel` | `default` | The typeface: the TV's own, a serif, a monospace or `pixel` (Pixelify Sans, built into the launcher). |
 | `type.scale` | 0.8 to 1.3 | `1` | Scale of the text of buttons, menus and tiles. |
 | **clock** | | | |
 | `clock.show` | `true` or `false` | `true` | Show the clock. |
