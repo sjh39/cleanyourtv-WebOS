@@ -328,7 +328,9 @@ const decode = s =>
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
-    .replace(/&apos;|&#39;/g, "'");
+    .replace(/&apos;|&#39;/g, "'")
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCharCode(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (_, d) => String.fromCharCode(+d));
 function xmltvTime(s) {
   const m = s.match(/^(\d{4})(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)\s*([+-]\d{4})?/);
   if (!m) return 0;
@@ -357,9 +359,14 @@ const attr = (tag, name) => {
   const m = tag.match(new RegExp('\\b' + name + '\\s*=\\s*(?:"([^"]*)"|\'([^\']*)\')'));
   return m ? (m[1] !== undefined ? m[1] : m[2]) : null;
 };
-async function loadEpg(url, channels) {
-  const stream = await get(url, true),
-    byId = {},
+const textOf = (block, name) => {
+  const m = block.match(new RegExp('<' + name + '(?:\\s[^>]*)?>([\\s\\S]*?)</' + name + '>'));
+  return m ? decode(m[1].replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')).trim() : '';
+};
+// The guide is cut into <channel> and <programme> blocks wherever they sit in the stream: generators differ in their line breaks
+// (Tunarr sends the whole file on a few lines, with newlines inside the descriptions) and in the order of the attributes.
+async function parseEpg(stream, channels) {
+  const byId = {},
     map = {};
   const want = new Set(channels.map(c => c.id).filter(Boolean)),
     byName = {};
@@ -372,58 +379,72 @@ async function loadEpg(url, channels) {
     from = now - 3600,
     to = now + 36 * 3600;
   let buf = '',
-    cur = null,
-    chan = null,
     count = 0;
-  const closeChannel = () => {
-    // a guide channel that is none of the playlist's ids may still have the name of one
-    if (!chan) return;
-    if (!want.has(chan.id))
-      for (const n of chan.names)
-        for (const c of byName[nameKey(n)] || []) {
-          map[c.key] = chan.id;
-          keep.add(chan.id);
-        }
-    chan = null;
-  };
-  const handle = line => {
-    let m;
-    if (line.indexOf('<channel') >= 0 && (m = line.match(/<channel\b[^>]*>/)) && attr(m[0], 'id') !== null) {
-      closeChannel();
-      chan = { id: attr(m[0], 'id'), names: [] };
-    }
-    if (chan && line.indexOf('<display-name') >= 0)
-      line.replace(/<display-name[^>]*>([^<]*)<\/display-name>/g, (_, n) => {
-        chan.names.push(decode(n));
+  const handle = (tag, block) => {
+    const open = block.slice(0, block.indexOf('>') + 1),
+      id = attr(open, tag === 'programme' ? 'channel' : 'id');
+    if (id === null) return;
+    if (tag === 'channel') {
+      // a guide channel that is none of the playlist's ids may still have the name of one
+      if (want.has(id)) return;
+      const names = [];
+      block.replace(/<display-name[^>]*>([^<]*)<\/display-name>/g, (_, n) => {
+        names.push(decode(n));
         return '';
       });
-    if (chan && line.indexOf('</channel>') >= 0) closeChannel();
-    if ((m = line.match(/<programme\b[^>]*>/))) {
-      closeChannel();
-      const id = attr(m[0], 'channel'),
-        st = attr(m[0], 'start'),
-        sp = attr(m[0], 'stop');
-      cur = id !== null && st && sp && keep.has(id) ? { id, s: xmltvTime(st), e: xmltvTime(sp), t: '', d: '' } : null;
+      for (const n of names)
+        for (const c of byName[nameKey(n)] || []) {
+          map[c.key] = id;
+          keep.add(id);
+        }
+      return;
     }
-    if (cur && !cur.t && (m = line.match(/<title[^>]*>([^<]*)<\/title>/))) cur.t = decode(m[1]);
-    if (cur && !cur.d && (m = line.match(/<desc[^>]*>([^<]*)<\/desc>/))) cur.d = decode(m[1]).slice(0, 220);
-    if (cur && line.includes('</programme>')) {
-      if (cur.e > from && cur.s < to && !/^no data$/i.test(cur.t.trim())) {
-        (byId[cur.id] = byId[cur.id] || []).push(cur.d ? [cur.s, cur.e, cur.t, cur.d] : [cur.s, cur.e, cur.t]);
-        count++;
+    const st = attr(open, 'start'),
+      sp = attr(open, 'stop');
+    if (!st || !sp || !keep.has(id)) return;
+    const s = xmltvTime(st),
+      e = xmltvTime(sp),
+      t = textOf(block, 'title');
+    if (!(e > from && s < to) || /^no data$/i.test(t)) return;
+    const d = textOf(block, 'desc').slice(0, 220);
+    (byId[id] = byId[id] || []).push(d ? [s, e, t, d] : [s, e, t]);
+    count++;
+  };
+  const drain = () => {
+    for (;;) {
+      const m = /<(channel|programme)\b/.exec(buf);
+      if (!m) {
+        buf = buf.slice(-10); // the header is not kept; a tag cut in two stays in the last characters
+        return;
       }
-      cur = null;
+      const a = m.index,
+        tag = m[1],
+        te = buf.indexOf('>', a);
+      if (te < 0) {
+        buf = buf.slice(a);
+        return;
+      }
+      if (buf.charAt(te - 1) === '/') {
+        // <channel id="x"/> and <programme .../> have no content
+        handle(tag, buf.slice(a, te + 1));
+        buf = buf.slice(te + 1);
+        continue;
+      }
+      const b = buf.indexOf('</' + tag + '>', te);
+      if (b < 0) {
+        buf = buf.slice(a);
+        return;
+      }
+      handle(tag, buf.slice(a, b));
+      buf = buf.slice(b + tag.length + 3);
     }
   };
   await new Promise((resolve, reject) => {
     let n = 0;
+    stream.setEncoding('utf8'); // a character cut between two chunks is kept whole
     stream.on('data', chunk => {
       buf += chunk;
-      let i;
-      while ((i = buf.indexOf('\n')) >= 0) {
-        handle(buf.slice(0, i));
-        buf = buf.slice(i + 1);
-      }
+      drain();
       if (++n % 40 === 0) {
         stream.pause();
         setImmediate(() => stream.resume());
@@ -443,7 +464,10 @@ async function loadEpg(url, channels) {
   });
   for (const id in byId) byId[id].sort((a, b) => a[0] - b[0]);
   for (const k in map) if (!byId[map[k]]) delete map[k];
-  return { v: 4, fetchedAt: Date.now(), count, byId, map };
+  return { v: 5, fetchedAt: Date.now(), count, byId, map };
+}
+async function loadEpg(url, channels) {
+  return parseEpg(await get(url, true), channels);
 }
 // An Xtream playlist (…/get.php?username=…&password=…) has its guide at xmltv.php on the same server.
 function derivedEpgUrl(playlistUrl) {
@@ -479,7 +503,7 @@ async function refresh(force) {
     }
     status = { state: 'idle', error: '' };
     const epgUrl = settings.epgUrl || playlist.epgUrl || derivedEpgUrl(settings.playlistUrl);
-    if (epgUrl && (force || !epg || epg.v !== 4 || Date.now() - epg.fetchedAt > REFRESH_MS)) {
+    if (epgUrl && (force || !epg || epg.v !== 5 || Date.now() - epg.fetchedAt > REFRESH_MS)) {
       status = { state: 'loading guide', error: '' };
       try {
         epg = await loadEpg(epgUrl, playlist.channels);
@@ -677,4 +701,4 @@ function start() {
 // ctx is not needed: this part keeps its own state
 const create = (/** @type {any} */ _ctx) => ({ name: 'live', prefix: '/api/live/', handle, start });
 
-module.exports = { create, handle, parseM3U, probe, derivedEpgUrl, nameKey };
+module.exports = { create, handle, parseM3U, parseEpg, probe, derivedEpgUrl, nameKey };

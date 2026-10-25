@@ -212,6 +212,10 @@ run(async () => {
         r.writeHead(200, { 'content-type': 'text/xml' });
         return r.end(xml);
       }
+      if (q.url === '/guide-oneline.xml') {
+        r.writeHead(200, { 'content-type': 'application/xml' });
+        return r.end(xml.replace(/\n\s*/g, '')); // Tunarr's layout: the whole guide on one line
+      }
       if (q.url === '/guide.xml.gz') {
         r.writeHead(200, { 'content-type': 'application/gzip' });
         return r.end(require('zlib').gzipSync(Buffer.from(xml)));
@@ -249,6 +253,7 @@ run(async () => {
     for (const [label, guideUrl] of [
       ['standard attribute order', base + '/guide.xml'],
       ['a .gz file without Content-Encoding', base + '/guide.xml.gz'],
+      ['the whole guide on one line (Tunarr)', base + '/guide-oneline.xml'],
     ]) {
       await lcall('/api/live/reset', 'POST');
       await lcall('/api/live/settings', 'POST', { playlistUrl: base + '/pl.m3u', epgUrl: guideUrl });
@@ -265,6 +270,43 @@ run(async () => {
         'guide, ' + label + ': a channel without tvg-id is found by name; a programme on one line works'
       );
       ok(!g.epg.Other && !g.epg['Nobody watches this'], 'guide, ' + label + ': channels nobody lists are left out');
+    }
+    {
+      // text cut between two chunks, entities, a description with a line break, a programme without content, a channel on its own
+      const feed = text => {
+        const pt = new (require('stream').PassThrough)(),
+          b = Buffer.from(text, 'utf8');
+        for (let i = 0; i < b.length; i += 7) pt.write(b.slice(i, i + 7));
+        pt.end();
+        return pt;
+      };
+      const at = m => stamp(nowS + m);
+      const g = await lv.parseEpg(
+        feed(
+          '<tv><channel id="A.tv"><display-name>A</display-name></channel><channel id="B.tv"/>' +
+            '<programme start="' +
+            at(-30) +
+            '" stop="' +
+            at(30) +
+            '" channel="A.tv"><title>Caf\u00e9 &amp; Co &#233;</title><desc>It&#39;s\nthe news</desc></programme>' +
+            '<programme start="' +
+            at(30) +
+            '" stop="' +
+            at(60) +
+            '" channel="B.tv"/>' +
+            '<programme start="' +
+            at(-9000) +
+            '" stop="' +
+            at(-8000) +
+            '" channel="A.tv"><title>Old</title></programme></tv>'
+        ),
+        [{ id: 'A.tv', name: 'A', key: 'a' }]
+      );
+      const a = g.byId['A.tv'] || [];
+      ok(
+        g.count === 1 && a[0][2] === 'Caf\u00e9 & Co \u00e9' && a[0][3] === "It's\nthe news",
+        'guide: text cut between chunks, entities and a line break in a description are kept; empty and old programmes are left out'
+      );
     }
     ok(
       lv.nameKey('PL: TVP 1 HD') === lv.nameKey('TVP1') &&
