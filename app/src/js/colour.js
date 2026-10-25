@@ -29,6 +29,43 @@ function hashHue(id) {
   for (var i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) % 360;
   return h;
 }
+/* the colour of the four corners when all are opaque and alike (a picture on its own flat background), else null */
+function cornerColour(d, N) {
+  var c = [
+    [0, 0],
+    [N - 3, 0],
+    [0, N - 3],
+    [N - 3, N - 3],
+  ].map(function (p) {
+    var R = 0,
+      G = 0,
+      B = 0,
+      n = 0,
+      a,
+      b,
+      j;
+    for (a = 0; a < 3; a++)
+      for (b = 0; b < 3; b++) {
+        j = ((p[1] + b) * N + p[0] + a) * 4;
+        if (d[j + 3] >= 230) {
+          R += d[j];
+          G += d[j + 1];
+          B += d[j + 2];
+          n++;
+        }
+      }
+    return n === 9 ? [R / 9, G / 9, B / 9] : null;
+  });
+  if (!c.every(Boolean)) return null;
+  var m = [0, 1, 2].map(function (i) {
+      return (c[0][i] + c[1][i] + c[2][i] + c[3][i]) / 4;
+    }),
+    sp = 0;
+  c.forEach(function (v) {
+    sp += Math.abs(v[0] - m[0]) + Math.abs(v[1] - m[1]) + Math.abs(v[2] - m[2]);
+  });
+  return sp < 45 ? [Math.round(m[0]), Math.round(m[1]), Math.round(m[2])] : null;
+}
 /* What the icon looks like, from its alpha: 'full' (art reaches the edges), 'pad' (an opaque, roughly square picture with a transparent
    margin around it, as many LG icons are) or 'logo' (transparent gaps inside). box is the visible picture, as fractions of the image. */
 function analyse(img) {
@@ -121,12 +158,13 @@ function analyse(img) {
         if (q / n0 / 3 > 14 || vert > 40) {
           x0 = 0;
           x1 = N - 1;
+          var cm = cornerColour(d, N); // art that touches the edges on a flat background: the tile takes the background's colour
           return {
             k: 'pad',
             box: [0, 0, 1, 1],
-            edge: [Math.round(mr), Math.round(mg), Math.round(mb)],
-            top: strip(0, 1),
-            bot: strip(N - 2, N - 1),
+            edge: cm || [Math.round(mr), Math.round(mg), Math.round(mb)],
+            top: cm || strip(0, 1),
+            bot: cm || strip(N - 2, N - 1),
           };
         }
       }
