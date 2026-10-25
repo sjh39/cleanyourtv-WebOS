@@ -33,7 +33,7 @@ The bind mount lives in RAM. A reboot without the boot scripts, or the Homebrew 
 | What | Port |
 |---|---|
 | The service (`node helper.js`), running as root | `127.0.0.1:8765` |
-| The input hook, injected into LG's input processes | none |
+| The input hook, injected into LG's input service (`lginput2`; other input processes only on firmware without it) | none |
 | Short-lived pages (Live TV pairing, share log, voice setup) and the optional notification endpoint | [Security](security.md#what-this-changes-on-a-tv) |
 
 ## What the uninstall removes

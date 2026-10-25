@@ -39,6 +39,11 @@ It uses the bundled [inputhook](credits.md#inputhook) library, which injects a s
 button can run a command. The Input button's code is **241** by default. The command opens the picker app
 (`com.cleanyourtv.picker`) over whatever is on screen.
 
+The hook goes into `lginput2`, LG's input service, where the remote's keys arrive on webOS 5 and newer. Other processes
+(`micomservice` and a few more) are only used on firmware without `lginput2`: hooked into `micomservice`, the hook replaced a
+function that process also uses to pass the remote's keys on to HDMI-CEC devices and the soundbar, and after a boot the remote no
+longer controlled a set-top box and eARC stopped working (issue 23).
+
 ## Learning your remote's code
 
 Remotes differ. In the manager app, **Input key** > **Learn the Input key** reads the code of the button you press and tests that

@@ -9,7 +9,13 @@ const D = P.D,
   HOOK = P.HOOK,
   CFGDIR = P.HOOK_CFG,
   BINDS = CFGDIR + '/keybinds.json';
-const TARGETS = ['RELEASE', 'lginput2', 'micomservice', 'tvservice', 'testapp'];
+// The processes the hook goes into. LG's input service (lginput2) is where the remote's keys arrive on webOS 5 and newer, and the
+// only one hooked when it runs. The others are only for firmware without it: in micomservice the hook replaces write(), and that
+// process also passes the remote's keys on to HDMI-CEC devices and the soundbar; hooked there, CEC control and eARC stopped
+// working after a boot (issue 23).
+const PRIMARY = 'lginput2',
+  FALLBACK = ['RELEASE', 'micomservice', 'tvservice', 'testapp'];
+const TARGETS = [PRIMARY].concat(FALLBACK);
 const DEFAULT_KEY = '241',
   COMMAND = 'sh ' + D + '/inputkey.sh',
   VOICE_COMMAND = 'sh ' + D + '/voicekey.sh',
@@ -28,7 +34,8 @@ function procs() {
       if (TARGETS.includes(n)) out.push({ pid: p, name: n });
     } catch (_) {}
   }
-  return out;
+  const primary = out.filter(x => x.name === PRIMARY);
+  return primary.length ? primary : out;
 }
 const hooked = pid => {
   try {
@@ -180,4 +187,4 @@ function learnState() {
     seconds: Math.round((Date.now() - learn.at) / 1000),
   };
 }
-module.exports = { setVoiceKey, setGuideKey, ensure, status, markSaved, startLearn, learnState, hookInfo, DEFAULT_KEY };
+module.exports = { setVoiceKey, setGuideKey, ensure, status, markSaved, startLearn, learnState, hookInfo, procs, DEFAULT_KEY };
