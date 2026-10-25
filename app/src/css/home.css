@@ -459,6 +459,41 @@ body {
   background: rgba(255, 255, 255, 0.05);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
 }
+/* an input pinned to Home: the HDMI symbol over its name, the port under a name; dimmed while nothing is connected */
+.tile.inp {
+  flex-direction: column;
+}
+.tile.inp > * + * {
+  margin-top: 6px;
+}
+.tile.inp .slab {
+  color: var(--ink);
+  max-width: 90%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.tile.inp .slab.sub {
+  font-size: 18px;
+  color: var(--ink2);
+}
+.tile.inp .slab:empty {
+  display: none;
+}
+.tile.inp.off {
+  opacity: 0.55;
+}
+/* in the dock the symbol and the name follow the tile's height, so a small square dock (Horizon) fits them too */
+#dock .tile.inp svg {
+  width: calc(var(--dock-h) * 0.3);
+  height: calc(var(--dock-h) * 0.3);
+}
+#dock .tile.inp .slab {
+  font-size: calc(var(--dock-h) * 0.11);
+}
+#dock .tile.inp .slab.sub {
+  font-size: calc(var(--dock-h) * 0.085);
+}
 
 #toast {
   position: absolute;

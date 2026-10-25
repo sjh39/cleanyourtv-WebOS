@@ -1,6 +1,9 @@
 // The launcher's own API: the list of apps with their icons, how often each is used, the inputs, launching, and the launcher's
 // settings (dock, hidden apps, sort order, clock, top buttons).
 //   GET /api/apps  GET /api/inputs  GET /api/foreground  POST /api/launch {id, params}  POST /api/config {...}  GET /icon/<app id>
+//   POST /api/inputs/pin {id, on}   pin an input (its input app, e.g. com.webos.app.hdmi2) to Home, or take it off again
+// A pinned input is listed with the apps ({id, title, input: <port>, off: <nothing connected>}), so the dock, the grid, the saved
+// layout and the order by use treat it as an app; it is kept in config.json (pinnedInputs), apart from the launcher's own keys.
 const fs = require('fs'),
   path = require('path');
 const P = require('./paths'),
@@ -33,10 +36,60 @@ function create(ctx) {
       });
     return asking;
   }
-  async function apps() {
+  async function installed() {
     if (!appCache) return askApps();
     if (Date.now() - appCacheAt > 5000) askApps();
     return appCache;
+  }
+
+  // ---- the inputs, read like the apps: the last answer at once, asked again in the background when older than 5 seconds ----
+  let inputCache = null,
+    inputCacheAt = 0,
+    askingInputs = null;
+  function askInputs() {
+    if (!askingInputs)
+      askingInputs = luna('luna://com.webos.service.eim/getAllInputStatus', {}).then(r => {
+        askingInputs = null;
+        if (Array.isArray(r.devices)) {
+          inputCache = r;
+          inputCacheAt = Date.now();
+        }
+        return r;
+      });
+    return askingInputs;
+  }
+  function knownInputs() {
+    if (!inputCache || Date.now() - inputCacheAt > 5000) askInputs();
+    return (inputCache && inputCache.devices) || [];
+  }
+  const portLabel = d => 'HDMI ' + d.port;
+  // the inputs pinned to Home, with the name and state the TV reports now (or what was saved when it was pinned)
+  function pinned() {
+    const now = {};
+    for (const d of knownInputs()) if (d.appId) now[d.appId] = d;
+    return (config.get().pinnedInputs || [])
+      .filter(p => p && typeof p.id === 'string')
+      .map(p => {
+        const d = now[p.id];
+        const label = (d && d.label) || p.label || 'HDMI ' + p.port;
+        return { id: p.id, title: label, input: (d && d.port) || p.port || 0, off: d ? !d.hdmiPlugIn : false };
+      });
+  }
+  async function apps() {
+    return (await installed()).concat(pinned());
+  }
+  async function pin(b) {
+    const id = String(b.id || '');
+    const r = await askInputs();
+    const d = (r.devices || (inputCache && inputCache.devices) || []).find(x => x.appId === id);
+    if (b.on !== false && !d) return { returnValue: false, error: 'not an input of this TV' };
+    config.update('launcher', c => {
+      const list = (c.pinnedInputs || []).filter(p => p && p.id !== id);
+      if (b.on !== false) list.push({ id, label: d.label && d.label !== portLabel(d) ? d.label : '', port: d.port });
+      c.pinnedInputs = list.slice(0, 20);
+      if (b.on === false && Array.isArray(c.dock)) c.dock = c.dock.filter(i => i !== id); // taken off Home: off the dock too
+    });
+    return { returnValue: true, pinned: b.on !== false };
   }
 
   // ---- usage: which apps get used (foreground changes), with a 30-day half-life ----
@@ -140,7 +193,8 @@ function create(ctx) {
   async function handle(req, res, u, body) {
     if (u === '/api/apps')
       return web.json(res, { apps: await apps(), config: launcherConfig(), usage: usageScores(), version: ctx.version });
-    if (u === '/api/inputs') return web.json(res, await luna('luna://com.webos.service.eim/getAllInputStatus', {}));
+    if (u === '/api/inputs') return web.json(res, await askInputs());
+    if (u === '/api/inputs/pin' && req.method === 'POST') return web.json(res, await pin(await body(req)));
     if (u === '/api/foreground') return web.json(res, await luna('luna://com.webos.applicationManager/getForegroundAppInfo', {}));
     if (u === '/api/launch' && req.method === 'POST') {
       const b = await body(req);
@@ -164,7 +218,7 @@ function create(ctx) {
 
   return {
     name: 'apps',
-    paths: ['/api/apps', '/api/inputs', '/api/foreground', '/api/launch', '/api/config'],
+    paths: ['/api/apps', '/api/inputs', '/api/inputs/pin', '/api/foreground', '/api/launch', '/api/config'],
     prefix: '/icon/',
     handle,
     start: () => setInterval(pollForeground, 4000),

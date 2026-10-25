@@ -64,7 +64,23 @@ function drawMenu() {
     var it = m.items[+row.getAttribute('data-i')];
     row.querySelector('.lb').textContent = it.label;
     if (it.sub) row.querySelector('.st').textContent = it.sub;
+    var pt = 0,
+      rowHeld = false;
+    if (it.hold) {
+      row.addEventListener('mousedown', function () {
+        rowHeld = false;
+        clearTimeout(pt);
+        pt = setTimeout(function () {
+          rowHeld = true;
+          it.hold();
+        }, 650);
+      });
+      row.addEventListener('mouseup', function () {
+        clearTimeout(pt);
+      });
+    }
     row.addEventListener('click', function () {
+      if (rowHeld) return void (rowHeld = false);
       m.idx = +row.getAttribute('data-i');
       pickMenu();
     });
@@ -182,10 +198,50 @@ function inputsMenu() {
           fn: function () {
             launch(d.appId);
           },
+          /* hold OK: pin the input to Home, where it is a tile like an app */
+          hold: function () {
+            inputMenu(d.appId, d.label || port);
+          },
         };
       });
     openMenu(t('Inputs'), items);
   });
+}
+function isPinned(id) {
+  return apps.some(function (a) {
+    return a.id === id && a.input;
+  });
+}
+function inputMenu(id, name) {
+  var on = isPinned(id);
+  openMenu(name, [
+    {
+      label: t('Open'),
+      fn: function () {
+        launch(id);
+      },
+    },
+    {
+      label: on ? t('Remove from Home') : t('Add to Home'),
+      fn: function () {
+        pinInput(id, name, !on);
+      },
+    },
+  ]);
+}
+/* the service keeps the pinned inputs (also for the Inputs picker) and lists them with the apps */
+function pinInput(id, name, on) {
+  api('/api/inputs/pin', { id: id, on: on }).then(
+    function (x) {
+      if (!x || x.returnValue !== true) return toast(t('Could not change Home'));
+      toast((on ? t('%s added to Home') : t('%s removed from Home')).replace('%s', name));
+      lastSig = '';
+      load();
+    },
+    function () {
+      toast(t('Could not change Home'));
+    }
+  );
 }
 
 function appMenu(a) {
@@ -257,12 +313,20 @@ function appMenu(a) {
         );
       },
     });
-  items.push({
-    label: t('Hide app'),
-    fn: function () {
-      hideApp(a.id);
-    },
-  });
+  if (a.input)
+    items.push({
+      label: t('Remove from Home'),
+      fn: function () {
+        pinInput(a.id, a.title, false);
+      },
+    });
+  else
+    items.push({
+      label: t('Hide app'),
+      fn: function () {
+        hideApp(a.id);
+      },
+    });
   openMenu(a.title, items);
 }
 

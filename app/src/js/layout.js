@@ -73,7 +73,7 @@ function load() {
       });
       var sig = JSON.stringify([
         x.apps.map(function (a) {
-          return a.id;
+          return a.input ? [a.id, a.title, a.off] : a.id;
         }),
         x.config,
         rank,
@@ -81,7 +81,7 @@ function load() {
       if (sig === lastSig) return;
       lastSig = sig;
       apps = x.apps.map(function (a) {
-        return { id: a.id, title: a.title };
+        return a.input ? { id: a.id, title: a.title, input: a.input, off: !!a.off } : { id: a.id, title: a.title };
       });
       cfg = x.config || {};
       applyTheme(cfg.theme);

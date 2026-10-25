@@ -27,6 +27,9 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:transparent;colo
 .chip .st{font-size:25px;font-weight:500;opacity:.7;text-align:center;line-height:1.2;max-width:100%;min-height:2.4em;
   display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
 .chip.dim{opacity:.7}
+.tile.inp{flex-direction:column;background:#2a2d36}
+.tile.inp svg{width:64px;height:64px;fill:none;stroke:var(--ink);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.tile.inp .lb{margin-top:6px;font-size:26px;font-weight:600;max-width:90%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .chip.act::after{content:"";position:absolute;right:26px;top:24px;width:16px;height:16px;border-radius:8px;background:#1fbf5a;box-shadow:0 0 0 3px rgba(11,12,16,.9)}
 .chip.f{opacity:1;background:#fff;transform:translateY(-10px) scale(1.08);box-shadow:inset 0 0 0 5px #0b0c10,0 0 0 6px #fff,0 26px 44px rgba(0,0,0,.5)}
 #inputs{justify-content:center}
@@ -51,11 +54,11 @@ var ICON={
   hdmi:'<svg viewBox="0 0 24 24"><path d="M4 8h16v7l-3 3H7l-3-3z"/><path d="M9 11v3M12 11v3M15 11v3"/></svg>',
   tv:'<svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M8 21h8M12 18v3"/></svg>'};
 var TX={
-  nl:{Apps:'Apps',Inputs:'Ingangen',Connected:'Verbonden',Live:'Live TV',LiveSub:'Je afspeellijst',Nothing:'Niets aangesloten',nohelper:'Kan de ingangen niet lezen. Live TV werkt nog.'},
-  de:{Apps:'Apps',Inputs:'Eing\u00E4nge',Connected:'Verbunden',Live:'Live-TV',LiveSub:'Deine Playlist',Nothing:'Nichts angeschlossen',nohelper:'Eing\u00E4nge nicht lesbar. Live-TV funktioniert weiter.'},
-  fr:{Apps:'Apps',Inputs:'Entr\u00E9es',Connected:'Connect\u00E9',Live:'TV en direct',LiveSub:'Votre playlist',Nothing:'Rien de connect\u00E9',nohelper:'Impossible de lire les entr\u00E9es. La TV en direct fonctionne encore.'},
-  es:{Apps:'Apps',Inputs:'Entradas',Connected:'Conectado',Live:'TV en directo',LiveSub:'Tu lista',Nothing:'Nada conectado',nohelper:'No se pueden leer las entradas. La TV en directo sigue funcionando.'}};
-var EN={Apps:'Apps',Inputs:'Inputs',Connected:'Connected',Live:'Live TV',LiveSub:'Your playlist',Nothing:'Nothing connected',nohelper:'Can\u2019t read the inputs. Live TV still works.'};
+  nl:{Apps:'Apps',Inputs:'Ingangen',Connected:'Verbonden',Live:'Live TV',LiveSub:'Je afspeellijst',Nothing:'Niets aangesloten',nohelper:'Kan de ingangen niet lezen. Live TV werkt nog.',pinned:'%s is aan Home toegevoegd',unpinned:'%s is van Home verwijderd',pinfail:'Kan Home niet aanpassen'},
+  de:{Apps:'Apps',Inputs:'Eing\u00E4nge',Connected:'Verbunden',Live:'Live-TV',LiveSub:'Deine Playlist',Nothing:'Nichts angeschlossen',nohelper:'Eing\u00E4nge nicht lesbar. Live-TV funktioniert weiter.',pinned:'%s zu Home hinzugef\u00FCgt',unpinned:'%s von Home entfernt',pinfail:'Home konnte nicht ge\u00E4ndert werden'},
+  fr:{Apps:'Apps',Inputs:'Entr\u00E9es',Connected:'Connect\u00E9',Live:'TV en direct',LiveSub:'Votre playlist',Nothing:'Rien de connect\u00E9',nohelper:'Impossible de lire les entr\u00E9es. La TV en direct fonctionne encore.',pinned:'%s ajout\u00E9 \u00E0 l\u2019accueil',unpinned:'%s retir\u00E9 de l\u2019accueil',pinfail:'Impossible de modifier l\u2019accueil'},
+  es:{Apps:'Apps',Inputs:'Entradas',Connected:'Conectado',Live:'TV en directo',LiveSub:'Tu lista',Nothing:'Nada conectado',nohelper:'No se pueden leer las entradas. La TV en directo sigue funcionando.',pinned:'%s a\u00F1adido a Inicio',unpinned:'%s quitado de Inicio',pinfail:'No se pudo cambiar Inicio'}};
+var EN={Apps:'Apps',Inputs:'Inputs',Connected:'Connected',Live:'Live TV',LiveSub:'Your playlist',Nothing:'Nothing connected',nohelper:'Can\u2019t read the inputs. Live TV still works.',pinned:'%s added to Home',unpinned:'%s removed from Home',pinfail:'Could not change Home'};
 var LANG=((window.webOSSystem&&webOSSystem.locale)||navigator.language||'en').slice(0,2);
 function t(k){return (TX[LANG]&&TX[LANG][k])||EN[k]||k}
 function $(i){return document.getElementById(i)}
@@ -90,20 +93,29 @@ function keep(img,id){   // remember the icon and its colour so the next open ne
 /* build the rows once per change of data; moving the focus only changes classes */
 function render(){
   $('capA').textContent=t('Apps');$('capI').textContent=t('Inputs');
-  var h='';apps.forEach(function(a,i){h+='<div class="tile" data-r="0" data-i="'+i+'"'+(cache.colors[a.id]?' style="background:'+cache.colors[a.id]+'"':'')+'><img alt=""></div>'});
+  var h='';apps.forEach(function(a,i){h+='<div class="tile'+(a.input?' inp':'')+'" data-r="0" data-i="'+i+'"'+(cache.colors[a.id]?' style="background:'+cache.colors[a.id]+'"':'')+'>'+(a.input?ICON.hdmi+'<span class="lb"></span>':'<img alt="">')+'</div>'});
   $('apps').innerHTML=h;
-  var imgs=$('apps').querySelectorAll('img');
-  apps.forEach(function(a,i){var im=imgs[i],data=cache.icons[a.id];im.crossOrigin='anonymous';
+  var tl=$('apps').children;
+  apps.forEach(function(a,i){if(a.input)tl[i].querySelector('.lb').textContent=a.title;else{var im=tl[i].querySelector('img'),data=cache.icons[a.id];im.crossOrigin='anonymous';
     if(data)im.src=data;
-    else{im.onload=function(){keep(im,a.id)};im.src=API+'/icon/'+encodeURIComponent(a.id)}});
+    else{im.onload=function(){keep(im,a.id)};im.src=API+'/icon/'+encodeURIComponent(a.id)}}});
   h='';inputs.forEach(function(r,i){h+='<div class="chip'+(r.dim?' dim':'')+(r.active?' act':'')+'" data-r="1" data-i="'+i+'">'+ICON[r.icon]+'<div class="tx"><span class="lb"></span><span class="st"></span></div></div>'});
   $('inputs').innerHTML=h;
   var el=$('inputs').children;inputs.forEach(function(r,i){el[i].querySelector('.lb').textContent=r.label;el[i].querySelector('.st').textContent=r.sub||''});
   $('appsBox').style.display=apps.length?'':'none'}
 function paint(){
   var a=$('apps').children,c=$('inputs').children,i;
-  for(i=0;i<a.length;i++)a[i].className='tile'+(row===0&&col[0]===i?' f':'');
+  for(i=0;i<a.length;i++)a[i].className='tile'+(apps[i].input?' inp':'')+(row===0&&col[0]===i?' f':'');
   for(i=0;i<c.length;i++)c[i].className='chip'+(inputs[i].dim?' dim':'')+(inputs[i].active?' act':'')+(row===1&&col[1]===i?' f':'')}
+/* hold OK on an HDMI input pins it to Home (a tile in the launcher) or takes it off again; a short press opens it on release */
+var pins={},downAt=0,holdT=0,heldOk=false;
+function pinCur(){var r=cur()[col[row]];if(row!==1||!r||!/^com\.webos\.app\.hdmi/.test(r.id))return false;
+  var on=!pins[r.id],x=new XMLHttpRequest();x.open('POST',API+'/api/inputs/pin');x.timeout=4000;
+  x.onload=function(){var ok=false;try{ok=JSON.parse(x.responseText).returnValue===true}catch(e){}
+    if(ok){if(on)pins[r.id]=1;else delete pins[r.id]}
+    $('msg').textContent=ok?t(on?'pinned':'unpinned').replace('%s',r.sub&&r.sub!==t('Nothing')&&r.sub!==t('Connected')?r.sub:r.label):t('pinfail')};
+  x.onerror=x.ontimeout=function(){$('msg').textContent=t('pinfail')};
+  x.send(JSON.stringify({id:r.id,on:on}));log('pin '+r.id+' '+on);return true}
 function choose(){log('choose row '+row+' col '+col[row]);var r=cur()[col[row]];if(!r)return;if(row===0)launch(r.id);else launch(r.id,r.params);setTimeout(hide,200)}
 
 var liveOn=true;   /* Live TV is optional: the manager switches it off */
@@ -129,13 +141,14 @@ function refresh(){
   var got={apps:null,inputs:null};
   function done(){if(!got.apps||!got.inputs)return;cache.apps=got.apps;cache.inputs=got.inputs;persist();$('msg').textContent='';setData(cache,false)}
   get('/api/apps',function(x){liveOn=!(x.config&&x.config.options&&x.config.options.liveTv===false);var by={};(x.apps||[]).forEach(function(a){by[a.id]=a});
-    got.apps=((x.config&&x.config.dock)||[]).filter(function(id){return by[id]}).map(function(id){return {id:id,title:by[id].title}});done()},function(){});
+    pins={};(x.apps||[]).forEach(function(a){if(a.input)pins[a.id]=1});
+    got.apps=((x.config&&x.config.dock)||[]).filter(function(id){return by[id]}).map(function(id){return by[id].input?{id:id,title:by[id].title,input:by[id].input}:{id:id,title:by[id].title}});done()},function(){});
   get('/api/inputs',function(x){got.inputs=buildInputs(x.devices);done()},function(){if(shown&&inputs.length<=1)$('msg').textContent=t('nohelper')})}
 function load(){   // the last known layout, ready before the first open
   try{var c=JSON.parse(localStorage.getItem(KEY)||'null');if(c&&c.inputs&&c.inputs.length){cache=c;cache.icons=cache.icons||{};cache.colors=cache.colors||{}}}catch(e){}
   setData(cache.inputs.length?cache:{apps:[],inputs:buildInputs([])},true)}
 function show(){
-  shown=true;moved=false;shownAt=Date.now();log('show');idle();
+  shown=true;moved=false;shownAt=Date.now();downAt=0;log('show');idle();
   setData({apps:apps,inputs:inputs},true);   // focus back on the active input
   document.body.classList.add('on');
   requestAnimationFrame(function(){log('painted')});
@@ -152,9 +165,13 @@ document.addEventListener('keydown',function(e){
   idle();
   var k=e.keyCode;
   if(k===37)move(0,-1);else if(k===39)move(0,1);else if(k===38)move(-1,0);else if(k===40)move(1,0);
-  else if(k===13)choose();
+  else if(k===13){if(downAt&&Date.now()-downAt>3000)downAt=0;   /* a release that never came */
+    if(!downAt){downAt=Date.now();heldOk=false;clearTimeout(holdT);
+      if(row===1&&cur()[col[row]]&&/^com\.webos\.app\.hdmi/.test(cur()[col[row]].id))holdT=setTimeout(function(){heldOk=pinCur()},650);
+      else{downAt=0;choose()}}}
   else if(k===461||k===27||k===8||k===10009)hide();
   e.preventDefault()});
+document.addEventListener('keyup',function(e){if(e.keyCode!==13||!downAt)return;downAt=0;clearTimeout(holdT);if(!shown)return;if(!heldOk)choose();heldOk=false});
 document.addEventListener('click',function(e){if(!shown)return;idle();var r=e.target.closest&&e.target.closest('[data-r]');if(r){row=+r.getAttribute('data-r');col[row]=+r.getAttribute('data-i');paint();choose()}else hide()});
 document.addEventListener('mousemove',function(e){var r=e.target.closest&&e.target.closest('[data-r]');if(!r)return;var a=+r.getAttribute('data-r'),i=+r.getAttribute('data-i');if(a!==row||i!==col[row]){moved=true;row=a;col[row]=i;paint()}});
 document.addEventListener('webOSRelaunch',function(){

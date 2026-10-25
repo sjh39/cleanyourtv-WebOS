@@ -13,6 +13,7 @@ the end of that line when it is longer still, so a long name (HDMI-CEC ones can 
 | Left / Right | Move |
 | Up / Down | Switch rows |
 | OK | Open |
+| Hold OK on an HDMI input | Put it on Home as a tile, or take it off again ([An input on Home](launcher.md#an-input-on-home)) |
 | Back or Input | Close |
 
 The pointer works too.

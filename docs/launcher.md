@@ -22,6 +22,7 @@ same on every supported webOS version.
 | Customise | The **Customise** button |
 | Live TV | The **Live TV** button or tile |
 | Switch input | The **Inputs** button |
+| Put an input on Home | Hold OK on it in the Inputs list |
 | Close running apps | Back on the home screen |
 
 The Magic Remote pointer works too: pointing and clicking, and holding the button on an app for its options.
@@ -58,6 +59,18 @@ The dock holds up to four apps. Hold OK on an app and choose **Add to dock**, **
 The **Inputs** button lists HDMI inputs by the names LG shows, with what is connected and a marker on the active one. OK
 switches to the input.
 
+### An input on Home
+
+Hold OK on an input in the Inputs list and choose **Add to Home**. The input then shows as a tile, with the HDMI symbol, the name
+the TV gives it (for example the name of the connected console) and its port. It is a tile like an app: OK switches to the input,
+and holding OK on it offers **Add to dock**, **Move left**, **Move right** and **Remove from dock**. **Remove from Home** takes it
+off again; that is also in the Inputs list. A tile of an input with nothing connected is dimmed and still switches to it.
+
+In the [Inputs picker](input-key.md) of the Input key, holding OK on an HDMI input does the same: it is added to Home, or taken off
+when it already is. An input in the dock also shows in the picker's row of dock apps.
+
+Suggested and first built by [ibexes](https://github.com/lasharor/cleanyourtv-WebOS/pull/25).
+
 ![Inputs menu](screenshots/inputs.jpg)
 
 ## Icons
@@ -87,6 +100,7 @@ Settings are stored on the TV in `/media/developer/cleanyourtv/config.json`:
 | `dock` | App ids in the dock (up to four). |
 | `topbar` | The buttons at the top. |
 | `hidden` | App ids you hid. |
+| `pinnedInputs` | The inputs on Home: `{id, label, port}`, `id` being the input's app (for example `com.webos.app.hdmi2`). |
 | `sort` | `usage` or `alpha`. |
 | `clock` | `auto`, `12` or `24`. |
 

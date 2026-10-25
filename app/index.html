@@ -464,6 +464,41 @@ body {
   background: rgba(255, 255, 255, 0.05);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
 }
+/* an input pinned to Home: the HDMI symbol over its name, the port under a name; dimmed while nothing is connected */
+.tile.inp {
+  flex-direction: column;
+}
+.tile.inp > * + * {
+  margin-top: 6px;
+}
+.tile.inp .slab {
+  color: var(--ink);
+  max-width: 90%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.tile.inp .slab.sub {
+  font-size: 18px;
+  color: var(--ink2);
+}
+.tile.inp .slab:empty {
+  display: none;
+}
+.tile.inp.off {
+  opacity: 0.55;
+}
+/* in the dock the symbol and the name follow the tile's height, so a small square dock (Horizon) fits them too */
+#dock .tile.inp svg {
+  width: calc(var(--dock-h) * 0.3);
+  height: calc(var(--dock-h) * 0.3);
+}
+#dock .tile.inp .slab {
+  font-size: calc(var(--dock-h) * 0.11);
+}
+#dock .tile.inp .slab.sub {
+  font-size: calc(var(--dock-h) * 0.085);
+}
 
 #toast {
   position: absolute;
@@ -1132,7 +1167,7 @@ svg.st {
 <script>
 var API = 'http://127.0.0.1:8765',
   CACHE_KEY = 'cytv.cache.v4',
-  VERSION = '1.5.1';
+  VERSION = '1.5.2';
 var DEFAULTS = {
   dock: ['netflix', 'youtube.leanback.v4', 'amazon', 'com.disney.disneyplus-prod'],
   topbar: [
@@ -1184,6 +1219,11 @@ var TX = {
     'Add to dock...': 'Aan dock toevoegen...',
     'Replace which app?': 'Welke app vervangen?',
     'Hide app': 'App verbergen',
+    'Add to Home': 'Aan Home toevoegen',
+    'Remove from Home': 'Van Home verwijderen',
+    '%s added to Home': '%s is aan Home toegevoegd',
+    '%s removed from Home': '%s is van Home verwijderd',
+    'Could not change Home': 'Kan Home niet aanpassen',
     'Remove this button': 'Deze knop verwijderen',
     'hold OK on an app': 'houd OK ingedrukt op een app',
     'Hold OK on any app to change the dock': 'Houd OK ingedrukt op een app om het dock te wijzigen',
@@ -1230,6 +1270,11 @@ var TX = {
     'Add to dock...': 'Zum Dock hinzufügen...',
     'Replace which app?': 'Welche App ersetzen?',
     'Hide app': 'App ausblenden',
+    'Add to Home': 'Zu Home hinzufügen',
+    'Remove from Home': 'Von Home entfernen',
+    '%s added to Home': '%s zu Home hinzugefügt',
+    '%s removed from Home': '%s von Home entfernt',
+    'Could not change Home': 'Home konnte nicht geändert werden',
     'Remove this button': 'Diese Schaltfläche entfernen',
     'hold OK on an app': 'OK auf einer App gedrückt halten',
     'Hold OK on any app to change the dock': 'Halte OK auf einer App gedrückt, um das Dock zu ändern',
@@ -1276,6 +1321,11 @@ var TX = {
     'Add to dock...': 'Ajouter au dock...',
     'Replace which app?': 'Remplacer quelle app ?',
     'Hide app': 'Masquer l’app',
+    'Add to Home': 'Ajouter à l’accueil',
+    'Remove from Home': 'Retirer de l’accueil',
+    '%s added to Home': '%s ajouté à l’accueil',
+    '%s removed from Home': '%s retiré de l’accueil',
+    'Could not change Home': 'Impossible de modifier l’accueil',
     'Remove this button': 'Supprimer ce bouton',
     'hold OK on an app': 'maintenez OK sur une app',
     'Hold OK on any app to change the dock': 'Maintenez OK sur une app pour modifier le dock',
@@ -1322,6 +1372,11 @@ var TX = {
     'Add to dock...': 'Añadir al dock...',
     'Replace which app?': '¿Qué app reemplazar?',
     'Hide app': 'Ocultar app',
+    'Add to Home': 'Añadir a Inicio',
+    'Remove from Home': 'Quitar de Inicio',
+    '%s added to Home': '%s añadido a Inicio',
+    '%s removed from Home': '%s quitado de Inicio',
+    'Could not change Home': 'No se pudo cambiar Inicio',
     'Remove this button': 'Quitar este botón',
     'hold OK on an app': 'mantén OK en una app',
     'Hold OK on any app to change the dock': 'Mantén OK en una app para cambiar el dock',
@@ -1930,7 +1985,7 @@ function paint(d, col) {
 }
 /* ---------- tiles (built once per app, reused across rebuilds) ---------- */
 function tile(a) {
-  if (tiles[a.id]) return tiles[a.id];
+  if (tiles[a.id]) return a.input ? inputTile(tiles[a.id], a) : tiles[a.id];
   var d = document.createElement('div');
   d.className = 'tile' + (a.sys ? ' sys' : '');
   d._a = a;
@@ -1939,6 +1994,12 @@ function tile(a) {
   if (a.sys) {
     d.innerHTML = svg(a.icon) + '<div class="slab">' + 'LG Home' + '</div>';
     return d;
+  }
+  if (a.input) {
+    d.innerHTML = svg('hdmi') + '<div class="slab"></div><div class="slab sub"></div>';
+    var f = hsl2rgb(hashHue(a.id), 0.3, 0.3);
+    paint(d, { c: f, b: hsl2rgb(hashHue(a.id), 0.3, 0.16) });
+    return inputTile(d, a);
   }
   var known = colors[a.id];
   if (known) {
@@ -1997,6 +2058,18 @@ function glowSoon(e) {
   gT = setTimeout(function () {
     glowNow(e);
   }, 110);
+}
+
+/* a pinned input: its name (or the port), the port under a name, dimmed while nothing is connected. Its name and state can change
+   while the tile is kept, so they are written each time it is drawn. */
+function inputTile(d, a) {
+  var port = 'HDMI ' + a.input,
+    named = a.title && a.title !== port;
+  d._a = a;
+  d.className = d.className.replace(/ ?\binp\b| ?\boff\b/g, '') + ' inp' + (a.off ? ' off' : '');
+  d.children[1].textContent = named ? a.title : port;
+  d.children[2].textContent = named ? port : '';
+  return d;
 }
 /* ---------- theme: the service resolves the chosen theme (manager > Theme) into CSS variables and a few numbers ---------- */
 var TH0 = { cols: 10, tileH: 151, gapY: 26, gt: 350, viewH: 780, dockN: 4, overlay: false, push: null, overlayH: 510, glow: '' },
@@ -2244,7 +2317,23 @@ function drawMenu() {
     var it = m.items[+row.getAttribute('data-i')];
     row.querySelector('.lb').textContent = it.label;
     if (it.sub) row.querySelector('.st').textContent = it.sub;
+    var pt = 0,
+      rowHeld = false;
+    if (it.hold) {
+      row.addEventListener('mousedown', function () {
+        rowHeld = false;
+        clearTimeout(pt);
+        pt = setTimeout(function () {
+          rowHeld = true;
+          it.hold();
+        }, 650);
+      });
+      row.addEventListener('mouseup', function () {
+        clearTimeout(pt);
+      });
+    }
     row.addEventListener('click', function () {
+      if (rowHeld) return void (rowHeld = false);
       m.idx = +row.getAttribute('data-i');
       pickMenu();
     });
@@ -2362,10 +2451,50 @@ function inputsMenu() {
           fn: function () {
             launch(d.appId);
           },
+          /* hold OK: pin the input to Home, where it is a tile like an app */
+          hold: function () {
+            inputMenu(d.appId, d.label || port);
+          },
         };
       });
     openMenu(t('Inputs'), items);
   });
+}
+function isPinned(id) {
+  return apps.some(function (a) {
+    return a.id === id && a.input;
+  });
+}
+function inputMenu(id, name) {
+  var on = isPinned(id);
+  openMenu(name, [
+    {
+      label: t('Open'),
+      fn: function () {
+        launch(id);
+      },
+    },
+    {
+      label: on ? t('Remove from Home') : t('Add to Home'),
+      fn: function () {
+        pinInput(id, name, !on);
+      },
+    },
+  ]);
+}
+/* the service keeps the pinned inputs (also for the Inputs picker) and lists them with the apps */
+function pinInput(id, name, on) {
+  api('/api/inputs/pin', { id: id, on: on }).then(
+    function (x) {
+      if (!x || x.returnValue !== true) return toast(t('Could not change Home'));
+      toast((on ? t('%s added to Home') : t('%s removed from Home')).replace('%s', name));
+      lastSig = '';
+      load();
+    },
+    function () {
+      toast(t('Could not change Home'));
+    }
+  );
 }
 
 function appMenu(a) {
@@ -2437,12 +2566,20 @@ function appMenu(a) {
         );
       },
     });
-  items.push({
-    label: t('Hide app'),
-    fn: function () {
-      hideApp(a.id);
-    },
-  });
+  if (a.input)
+    items.push({
+      label: t('Remove from Home'),
+      fn: function () {
+        pinInput(a.id, a.title, false);
+      },
+    });
+  else
+    items.push({
+      label: t('Hide app'),
+      fn: function () {
+        hideApp(a.id);
+      },
+    });
   openMenu(a.title, items);
 }
 
@@ -2646,7 +2783,7 @@ function load() {
       });
       var sig = JSON.stringify([
         x.apps.map(function (a) {
-          return a.id;
+          return a.input ? [a.id, a.title, a.off] : a.id;
         }),
         x.config,
         rank,
@@ -2654,7 +2791,7 @@ function load() {
       if (sig === lastSig) return;
       lastSig = sig;
       apps = x.apps.map(function (a) {
-        return { id: a.id, title: a.title };
+        return a.input ? { id: a.id, title: a.title, input: a.input, off: !!a.off } : { id: a.id, title: a.title };
       });
       cfg = x.config || {};
       applyTheme(cfg.theme);
@@ -2682,7 +2819,8 @@ var lastMove = 0,
   lastKey = 0,
   lastMX = -1,
   lastMY = -1,
-  lastEnter = 0;
+  lastEnter = 0,
+  menuHold = null;
 function hit(e) {
   e.addEventListener('mousedown', function () {
     held = false;
@@ -2742,6 +2880,20 @@ document.addEventListener('keydown', function (e) {
       downEnter = true;
       lastEnter = Date.now();
       swallowUp = true;
+      /* a row with a hold action (an input in the Inputs list) opens on release; held, it shows its options */
+      var mm = stack[stack.length - 1],
+        it = mm.items[mm.idx];
+      if (it && it.hold) {
+        menuHold = it;
+        held = false;
+        clearTimeout(downT);
+        downT = setTimeout(function () {
+          held = true;
+          it.hold();
+        }, 650);
+        e.preventDefault();
+        return;
+      }
     }
     if (menuKey(k)) e.preventDefault();
     return;
@@ -2796,6 +2948,15 @@ document.addEventListener('keyup', function (e) {
   clearTimeout(downT);
   var pr = document.querySelector('.press');
   if (pr) pr.classList.remove('press');
+  if (menuHold) {
+    var was = held;
+    menuHold = null;
+    swallowUp = false;
+    downEnter = false;
+    held = false;
+    if (!was) pickMenu();
+    return;
+  }
   if (swallowUp) {
     swallowUp = false;
     downEnter = false;
