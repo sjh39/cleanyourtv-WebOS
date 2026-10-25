@@ -66,7 +66,8 @@ Its log is `/media/developer/cytv-setup.log`, kept across the restart, with the 
 The setup matches the TV's firmware against [`compat.json`](https://github.com/lasharor/cleanyourtv-WebOS/blob/main/compat.json)
 (it fetches the newest copy from the repository and falls back to the one in the package). A listed firmware is set up directly.
 For an unlisted firmware the setup continues when LG's Home app is the flutter or web kind, and otherwise stops and offers
-**Set up anyway**. To add a firmware to the list, open an issue with the output of **Share log** ([Troubleshooting](troubleshooting.md)).
+**Set up anyway**. On a TV whose Home is LG's native program (webOS 5 to 23) the launcher becomes Home through a stand-in, see
+[what differs between webOS versions](tested-tvs.md#what-differs-between-webos-versions). To add a firmware to the list, open an issue with the output of **Share log** ([Troubleshooting](troubleshooting.md)).
 
 ## Installing a test build
 

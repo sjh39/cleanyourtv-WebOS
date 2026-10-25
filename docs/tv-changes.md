@@ -21,23 +21,28 @@ uninstall. Optional features contact other services only when you switch them on
 ## At boot
 
 1. The Homebrew Channel runs the boot scripts in `/var/lib/webosbrew/init.d/`.
-2. `10-cleanyourtv-home` starts the service and, unless `/media/developer/cleanyourtv/DISABLE` exists, **bind-mounts** a directory
-   holding the launcher over LG's Home app (`/usr/palm/applications/com.webos.app.home`). The directory's `appinfo.json` is derived
-   from this TV's own stock Home, so nothing of LG's is shipped. The system app manager (`sam`) is restarted so that it reads the
-   new Home. On TVs where LG's Home is the native app (webOS 5 to 23) and on webOS before 7, the services that talk to it (`eim`, `webapp-mgr`, `preload-manager`, `memorymanager`, those the TV
-   has) are restarted after it too (`after-sam.sh`); without that, apps stopped opening, an HDMI input lost its picture and HDMI-CEC control stopped
-   (issues 14, 23 and 24). Each step is written to `/tmp/cleanyourtv-boot.log`, which **Share log** includes.
+2. `10-cleanyourtv-home` starts the service and, unless `/media/developer/cleanyourtv/DISABLE` exists, replaces LG's Home. How
+   depends on LG's Home app as it came with the TV (`helper/tvprofile.js`, `homeTakeover`; see
+   [what differs between webOS versions](tested-tvs.md#what-differs-between-webos-versions)):
 
-   Test build `native-home-standin`: where LG's Home is the native program (webOS 5 to 23), the app manager is not restarted.
-   `home-standin.sh` is bind-mounted over that program instead (its path comes from the stock Home's `appinfo.json`, usually
-   `/usr/bin/com.webos.app.home`), and LG's running Home is stopped once. LG's Home manifest stays in place, so the app manager
-   starts the stand-in whenever Home is launched. The stand-in asks `webapp-mgr` to open the launcher folder as
-   `com.webos.app.home` and tries to register with the app manager as Home, so the Home key shows the open launcher again. If the
-   launcher is not open in `webapp-mgr` within 30 seconds, the stand-in is removed and LG's Home comes back until the next reboot.
-   A file `/media/developer/cleanyourtv/home-method` holding `mount` uses the mount and app manager restart on such a TV too.
+    - **LG's Home is a flutter or web app** (webOS 24 and newer): a directory holding the launcher is **bind-mounted** over LG's Home
+      app (`/usr/palm/applications/com.webos.app.home`). Its `appinfo.json` is derived from this TV's own stock Home, so nothing of
+      LG's is shipped. The system app manager (`sam`) is restarted so that it reads the new Home.
+    - **LG's Home is a native program** (webOS 5 to 23): `home-standin.sh` is **bind-mounted** over that program (its path comes from
+      the stock Home's `appinfo.json`, usually `/usr/bin/com.webos.app.home`) and LG's running Home is stopped once. LG's Home
+      manifest stays in place and the app manager is not restarted: it starts the stand-in whenever Home is launched. The stand-in
+      asks `webapp-mgr` to open the launcher directory as `com.webos.app.home` and tries to register with the app manager as Home,
+      so the Home key shows the open launcher again. If the launcher is not open in `webapp-mgr` within 30 seconds, the stand-in is
+      removed and LG's Home comes back until the next reboot. A file `/media/developer/cleanyourtv/home-method` holding `mount`
+      makes such a TV use the first way.
+
+   Whenever the app manager is restarted on a TV with LG's native Home or on webOS before 7 (the first way, or the setup registering
+   our extra apps), the services that talk to it (`eim`, `webapp-mgr`, `preload-manager`, `memorymanager`, those the TV has) are
+   restarted after it (`after-sam.sh`). Without that, apps stopped opening, an HDMI input lost its picture and HDMI-CEC control
+   stopped (issues 14, 23 and 24). Each step is written to `/tmp/cleanyourtv-boot.log`, which **Share log** includes.
 3. About a minute later the debloat runs, if it is on.
 
-The bind mount lives in RAM. A reboot without the boot scripts, or the Homebrew Channel's failsafe mode, leaves LG's Home as it was.
+Either bind mount lives in RAM. A reboot without the boot scripts, or the Homebrew Channel's failsafe mode, leaves LG's Home as it was.
 
 ## Processes and ports
 
