@@ -101,12 +101,13 @@ async function download(release, name, dest) {
   }
 }
 // is the offered file different from what is installed? A newer version always is; a test build also when it is another commit of the
-// same version; and a test build installed with the channel back on stable offers the stable release, even an older one.
+// same version; and a test build installed with the channel back on stable offers the stable release, even an older one or one of the same
+// version (a test build carries the version of the release it leads to, but not its files).
 function differs(offered, installed, offeredBuild, installedBuild) {
   if (!offered) return false;
   if (cmp(offered, installed) > 0) return true;
   if (offeredBuild) return offeredBuild !== installedBuild;
-  return !!installedBuild && offered !== installed;
+  return !!installedBuild;
 }
 
 function create(ctx) {

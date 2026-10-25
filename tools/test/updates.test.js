@@ -89,6 +89,12 @@ run(async () => {
     r.j.channel === '' && r.j.service.updateTo === '1.5.3',
     'back on stable after a test build offers the stable release, even an older one'
   );
+  start('1.5.3');
+  r = await ask('check', 'POST');
+  ok(
+    r.j.channel === '' && r.j.service.updateTo === '1.5.3',
+    'back on stable after a test build of the same version as the release offers the release (its files differ)'
+  );
   fs.unlinkSync(bf);
   start('1.5.3');
   r = await ask('check', 'POST');
