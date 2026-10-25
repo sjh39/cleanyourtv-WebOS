@@ -37,3 +37,20 @@ LG names its webOS versions in two ways: a marketing name and the version the TV
 
 LG also updates older TVs to newer versions, so the SDK version, not the model year, is what counts. The service avoids features the older versions lack: webOS 5 and 6 ship **Node.js 8** (and Chromium 79 on webOS 6). The
 details are in [Internals](development/internals.md#older-webos-versions).
+
+## What differs between webOS versions
+
+All per-TV decisions are made in one place, [`helper/tvprofile.js`](https://github.com/lasharor/cleanyourtv-WebOS/blob/main/helper/tvprofile.js),
+from the SDK version and the kind of LG's Home app as it came with the TV. **Share log** and `GET /api/tv` show what was decided.
+
+| | webOS 5 and 6 (SDK 5, 6) | webOS 22 and 23 (SDK 7, 8) | webOS 24 to 26 (SDK 9 to 11) |
+|---|---|---|---|
+| LG's Home app (reports) | native program | native program | flutter or web app |
+| How the launcher becomes Home | stand-in over LG's Home program; the app manager is not restarted | stand-in, as on webOS 5 and 6 | launcher folder mounted over LG's Home app; the app manager is restarted |
+| Setup on unlisted firmware | **Set up anyway** needed | **Set up anyway** needed | continues by itself |
+| Input key | Inputs list started on each press | started on each press | kept ready over the running app on webOS 25 (SDK 10); started on each press on SDK 9 and 11 |
+| Picture notifications window | `overlay` | `overlay` | `topui` from SDK 10, `overlay` on SDK 9 |
+| Node.js, browser engine | Node.js 8; Chromium 68 (webOS 5) or 79 (webOS 6) | Node.js 12 (webOS 23 report) | Node.js 16 (webOS 25) |
+
+The Home row follows LG's Home app, not the version number: a TV with a native Home gets the stand-in whatever its version, and a
+flutter or web Home gets the mount. How both work is in [What it changes on the TV](tv-changes.md#at-boot).

@@ -160,6 +160,7 @@ ensure_apps() {
   (sleep 3; pkill -9 -f /usr/palm/applications/airplay/LunaExecutable) </dev/null >/dev/null 2>&1 &
   systemctl restart sam
   for i in $(seq 1 60); do systemctl is-active sam >/dev/null && break; sleep 2; done
+  sh $D/after-sam.sh </dev/null
   sleep 10
   pkill -f "[a]pp-id=com.webos.app.home"; sleep 2
   luna-send -n 1 -w 10000 -f luna://com.webos.applicationManager/launch '{"id":"com.webos.app.home"}' </dev/null >/dev/null
@@ -188,7 +189,7 @@ restart_for_update() {
   ensure_apps
   # the overlay apps and the launcher may have new pages: restart the hidden picker (the service starts it again) and reload Home
   luna-send -n 1 -w 3000 luna://com.webos.applicationManager/closeByAppId '{"id":"com.cleanyourtv.picker"}' </dev/null >/dev/null 2>&1
-  if [ "$FRONTEND_NEW" = 1 ] && grep -q " $HOME_DIR " /proc/mounts; then
+  if [ "$FRONTEND_NEW" = 1 ] && { grep -q " $HOME_DIR " /proc/mounts || [ -f $R/tmp/cleanyourtv-home-standin ]; }; then
     sh $D/reload-home.sh </dev/null
   fi
 }
@@ -208,6 +209,8 @@ verify() {
   for i in $(seq 1 40); do
     sleep 3
     type=$(luna com.webos.applicationManager/getAppInfo '{"id":"com.webos.app.home"}' | sed -n 's/.*"type": *"\([^"]*\)".*/\1/p' | head -1)
+    # the stand-in way (LG's native Home): sam still sees LG's native Home, and webapp-mgr holds the launcher
+    if [ -f $R/tmp/cleanyourtv-home-standin ] && luna com.palm.webappmanager/listRunningApps '{}' | grep -q '"com.webos.app.home"'; then type=web; fi
     hv=$(service_answers)
     if [ "$type" = web ] && [ "$hv" = "$VERSION" ]; then ok=1; break; fi
   done
