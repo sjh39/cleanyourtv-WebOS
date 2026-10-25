@@ -58,9 +58,37 @@ function rebuild() {
     }
   }
   setFocus(nr, nc, true);
+  markRunning();
 }
 
+/* the apps that are open get a green dot; read each time Home is shown, kept only in memory */
+var running = {};
+function markRunning() {
+  var on = cfg.runDots !== false;
+  for (var id in tiles) {
+    var d = tiles[id],
+      dot = d.querySelector('.rd');
+    if (on && running[id] && !dot) {
+      dot = document.createElement('i');
+      dot.className = 'rd';
+      d.appendChild(dot);
+    } else if ((!on || !running[id]) && dot) dot.remove();
+  }
+}
+function readRunning() {
+  api('/api/running').then(
+    function (x) {
+      running = {};
+      (x.apps || []).forEach(function (a) {
+        running[a.id] = true;
+      });
+      markRunning();
+    },
+    function () {}
+  );
+}
 function load() {
+  readRunning();
   api('/api/apps')
     .then(function (x) {
       if (x.version && oldSvc(x.version) && !warned) {

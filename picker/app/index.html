@@ -50,7 +50,7 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:transparent;colo
 var API='http://127.0.0.1:8765', KEY='cytv.picker.v3';
 var apps=[], inputs=[], row=1, col=[0,0], moved=false, shown=false, shownAt=0, built='';
 var cache={apps:[],inputs:[],icons:{},colors:{}};
-var running={};   /* the apps that are open now (a green dot, as on the active input); read on every open, never stored */
+var running={},dots=true;   /* dots: Customise > Open apps in the launcher (config runDots) */   /* the apps that are open now (a green dot, as on the active input); read on every open, never stored */
 var ICON={
   hdmi:'<svg viewBox="0 0 24 24"><path d="M4 8h16v7l-3 3H7l-3-3z"/><path d="M9 11v3M12 11v3M15 11v3"/></svg>',
   tv:'<svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M8 21h8M12 18v3"/></svg>'};
@@ -106,7 +106,7 @@ function render(){
   $('appsBox').style.display=apps.length?'':'none'}
 function paint(){
   var a=$('apps').children,c=$('inputs').children,i;
-  for(i=0;i<a.length;i++)a[i].className='tile'+(apps[i].input?' inp':'')+(running[apps[i].id]?' act':'')+(row===0&&col[0]===i?' f':'');
+  for(i=0;i<a.length;i++)a[i].className='tile'+(apps[i].input?' inp':'')+(dots&&running[apps[i].id]?' act':'')+(row===0&&col[0]===i?' f':'');
   for(i=0;i<c.length;i++)c[i].className='chip'+(inputs[i].dim?' dim':'')+(inputs[i].active?' act':'')+(row===1&&col[1]===i?' f':'')}
 /* hold OK on an HDMI input pins it to Home (a tile in the launcher) or takes it off again; a short press opens it on release */
 var pins={},downAt=0,holdT=0,heldOk=false;
@@ -141,7 +141,7 @@ function get(path,cb,fail){var x=new XMLHttpRequest();x.open('GET',API+path);x.t
 function refresh(){
   var got={apps:null,inputs:null};
   function done(){if(!got.apps||!got.inputs)return;cache.apps=got.apps;cache.inputs=got.inputs;persist();$('msg').textContent='';setData(cache,false)}
-  get('/api/apps',function(x){liveOn=!(x.config&&x.config.options&&x.config.options.liveTv===false);var by={};(x.apps||[]).forEach(function(a){by[a.id]=a});
+  get('/api/apps',function(x){liveOn=!(x.config&&x.config.options&&x.config.options.liveTv===false);dots=!(x.config&&x.config.runDots===false);var by={};(x.apps||[]).forEach(function(a){by[a.id]=a});
     pins={};(x.apps||[]).forEach(function(a){if(a.input)pins[a.id]=1});
     got.apps=((x.config&&x.config.dock)||[]).filter(function(id){return by[id]}).map(function(id){return by[id].input?{id:id,title:by[id].title,input:by[id].input}:{id:id,title:by[id].title}});done()},function(){});
   get('/api/inputs',function(x){got.inputs=buildInputs(x.devices);done()},function(){if(shown&&inputs.length<=1)$('msg').textContent=t('nohelper')});

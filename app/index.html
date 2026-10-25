@@ -464,6 +464,26 @@ body {
   background: rgba(255, 255, 255, 0.05);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
 }
+/* an app that is open: a green dot, as in the Inputs picker (a child element: ::before is the focus ring, ::after the gloss) */
+.tile .rd {
+  position: absolute;
+  z-index: 1;
+  right: 14px;
+  top: 14px;
+  width: 14px;
+  height: 14px;
+  border-radius: 7px;
+  background: #1fbf5a;
+  box-shadow: 0 0 0 3px rgba(11, 12, 16, 0.85);
+  pointer-events: none;
+}
+#dock .tile .rd {
+  right: 20px;
+  top: 20px;
+  width: 18px;
+  height: 18px;
+  border-radius: 9px;
+}
 /* an input pinned to Home: the HDMI symbol over its name, the port under a name; dimmed while nothing is connected */
 .tile.inp {
   flex-direction: column;
@@ -1167,7 +1187,7 @@ svg.st {
 <script>
 var API = 'http://127.0.0.1:8765',
   CACHE_KEY = 'cytv.cache.v4',
-  VERSION = '1.5.2';
+  VERSION = '1.5.3';
 var DEFAULTS = {
   dock: ['netflix', 'youtube.leanback.v4', 'amazon', 'com.disney.disneyplus-prod'],
   topbar: [
@@ -1219,6 +1239,9 @@ var TX = {
     'Add to dock...': 'Aan dock toevoegen...',
     'Replace which app?': 'Welke app vervangen?',
     'Hide app': 'App verbergen',
+    'Open apps': 'Geopende apps',
+    'Green dot': 'Groene stip',
+    'No dot': 'Geen stip',
     'Add to Home': 'Aan Home toevoegen',
     'Remove from Home': 'Van Home verwijderen',
     '%s added to Home': '%s is aan Home toegevoegd',
@@ -1270,6 +1293,9 @@ var TX = {
     'Add to dock...': 'Zum Dock hinzufügen...',
     'Replace which app?': 'Welche App ersetzen?',
     'Hide app': 'App ausblenden',
+    'Open apps': 'Geöffnete Apps',
+    'Green dot': 'Grüner Punkt',
+    'No dot': 'Kein Punkt',
     'Add to Home': 'Zu Home hinzufügen',
     'Remove from Home': 'Von Home entfernen',
     '%s added to Home': '%s zu Home hinzugefügt',
@@ -1321,6 +1347,9 @@ var TX = {
     'Add to dock...': 'Ajouter au dock...',
     'Replace which app?': 'Remplacer quelle app ?',
     'Hide app': 'Masquer l’app',
+    'Open apps': 'Apps ouvertes',
+    'Green dot': 'Point vert',
+    'No dot': 'Pas de point',
     'Add to Home': 'Ajouter à l’accueil',
     'Remove from Home': 'Retirer de l’accueil',
     '%s added to Home': '%s ajouté à l’accueil',
@@ -1372,6 +1401,9 @@ var TX = {
     'Add to dock...': 'Añadir al dock...',
     'Replace which app?': '¿Qué app reemplazar?',
     'Hide app': 'Ocultar app',
+    'Open apps': 'Apps abiertas',
+    'Green dot': 'Punto verde',
+    'No dot': 'Sin punto',
     'Add to Home': 'Añadir a Inicio',
     'Remove from Home': 'Quitar de Inicio',
     '%s added to Home': '%s añadido a Inicio',
@@ -2425,6 +2457,10 @@ function closeRunning(list, ids) {
       toast(t('Could not close'));
     }
   );
+  ids.forEach(function (id) {
+    delete running[id];
+  });
+  markRunning();
   m.items = runningItems(left);
   m.idx = Math.min(m.idx, m.items.length - 1);
   drawMenu();
@@ -2621,6 +2657,15 @@ function customizeMenu() {
       },
     },
     {
+      label: t('Open apps'),
+      sub: cfg.runDots === false ? t('No dot') : t('Green dot'),
+      fn: function () {
+        if (cfg.runDots === false) delete cfg.runDots;
+        else cfg.runDots = false;
+        saveCfg();
+      },
+    },
+    {
       label: t('Clock'),
       sub: cfg.clock === '24' ? t('24-hour') : cfg.clock === '12' ? t('12-hour') : t('Automatic'),
       fn: function () {
@@ -2768,9 +2813,37 @@ function rebuild() {
     }
   }
   setFocus(nr, nc, true);
+  markRunning();
 }
 
+/* the apps that are open get a green dot; read each time Home is shown, kept only in memory */
+var running = {};
+function markRunning() {
+  var on = cfg.runDots !== false;
+  for (var id in tiles) {
+    var d = tiles[id],
+      dot = d.querySelector('.rd');
+    if (on && running[id] && !dot) {
+      dot = document.createElement('i');
+      dot.className = 'rd';
+      d.appendChild(dot);
+    } else if ((!on || !running[id]) && dot) dot.remove();
+  }
+}
+function readRunning() {
+  api('/api/running').then(
+    function (x) {
+      running = {};
+      (x.apps || []).forEach(function (a) {
+        running[a.id] = true;
+      });
+      markRunning();
+    },
+    function () {}
+  );
+}
 function load() {
+  readRunning();
   api('/api/apps')
     .then(function (x) {
       if (x.version && oldSvc(x.version) && !warned) {

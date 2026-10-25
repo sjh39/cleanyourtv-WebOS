@@ -459,6 +459,26 @@ body {
   background: rgba(255, 255, 255, 0.05);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
 }
+/* an app that is open: a green dot, as in the Inputs picker (a child element: ::before is the focus ring, ::after the gloss) */
+.tile .rd {
+  position: absolute;
+  z-index: 1;
+  right: 14px;
+  top: 14px;
+  width: 14px;
+  height: 14px;
+  border-radius: 7px;
+  background: #1fbf5a;
+  box-shadow: 0 0 0 3px rgba(11, 12, 16, 0.85);
+  pointer-events: none;
+}
+#dock .tile .rd {
+  right: 20px;
+  top: 20px;
+  width: 18px;
+  height: 18px;
+  border-radius: 9px;
+}
 /* an input pinned to Home: the HDMI symbol over its name, the port under a name; dimmed while nothing is connected */
 .tile.inp {
   flex-direction: column;

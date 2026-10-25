@@ -172,6 +172,10 @@ function closeRunning(list, ids) {
       toast(t('Could not close'));
     }
   );
+  ids.forEach(function (id) {
+    delete running[id];
+  });
+  markRunning();
   m.items = runningItems(left);
   m.idx = Math.min(m.idx, m.items.length - 1);
   drawMenu();
@@ -364,6 +368,15 @@ function customizeMenu() {
       sub: cfg.sort === 'alpha' ? t('A to Z') : t('Most used first'),
       fn: function () {
         cfg.sort = cfg.sort === 'alpha' ? 'usage' : 'alpha';
+        saveCfg();
+      },
+    },
+    {
+      label: t('Open apps'),
+      sub: cfg.runDots === false ? t('No dot') : t('Green dot'),
+      fn: function () {
+        if (cfg.runDots === false) delete cfg.runDots;
+        else cfg.runDots = false;
         saveCfg();
       },
     },
