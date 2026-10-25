@@ -14,12 +14,13 @@
 //                  is the native app (webOS 5 to 23 reports) and on webOS before 7. There they kept talking to the old app manager: web
 //                  and video apps no longer opened, an HDMI input had no picture, HDMI-CEC control stopped and no apps were preloaded
 //                  (issues 14, 23 and 24). TVs with the flutter or web Home (webOS 24 and newer) restart what depends on SAM themselves.
-//                  Exception: OLED65C35LA on SDK 11 needs arccontroller restarted after SAM (issue 21).
+//                  On webOS 26 (SDK 11) with the flutter or web Home, HDMI ARC to a soundbar stayed silent after the restart until
+//                  arccontroller was restarted (issue 21, OLED65C35LA): that one is restarted there. webOS 25 (SDK 10) keeps eARC.
 //                  scripts/after-sam.sh restarts only services that exist and are active.
 //   homeTakeover   how the launcher becomes Home. 'mount': its folder is mounted over LG's Home app and the app manager is restarted
 //                  to read it (flutter and web Home). 'standin' where LG's Home is the native program: a small script is mounted over
 //                  that program and asks webapp-mgr to open the launcher as com.webos.app.home, so LG's Home manifest stays and the
-//                  app manager is not restarted (test build, issues 14, 23 and 24). scripts/home-standin.sh is the script.
+//                  app manager is not restarted (issues 14, 23 and 24). scripts/home-standin.sh is the script.
 // To support a new kind of TV, change the rules here and add a case to tools/test/tvprofile.test.js.
 //
 // In the service: tvprofile.create({luna}) -> { get(), refresh() }, saved in tv.json.
@@ -62,11 +63,11 @@ function decide(facts, compat) {
     tested: !!testedNote,
     testedNote,
     legacyNode: nodeMajor > 0 && nodeMajor < 10,
-    // where LG's Home is the native app (webOS 5, 6, 22, 23 reports) or the webOS version is before 7
+    // where LG's Home is the native app (webOS 5, 6, 22, 23 reports) or the webOS version is before 7; on webOS 26 the ARC controller
     afterSam:
       (major > 0 && major < 7) || /\snative$/.test(homeKind)
         ? 'eim webapp-mgr preload-manager memorymanager'
-        : f.model === 'OLED65C35LA' && major === 11 && homeKind === 'com.webos.app.home flutter'
+        : major === 11 && /\s(?:flutter|web)$/.test(homeKind)
           ? 'arccontroller'
           : '',
     homeTakeover: /^com\.webos\.app\.home native$/.test(homeKind) ? 'standin' : 'mount',

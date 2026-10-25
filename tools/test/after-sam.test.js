@@ -32,7 +32,7 @@ run(async () => {
       input: script,
       encoding: 'utf8',
       env: Object.assign({}, process.env, {
-        FACTS: JSON.stringify({ returnValue: true, sdkVersion: '11.2.0', modelName: 'OLED65C35LA' }),
+        FACTS: JSON.stringify({ returnValue: true, sdkVersion: '11.2.0', modelName: 'OLED65C35LA.AEU' }),
         STATE: state,
         CALLS: calls,
       }),
