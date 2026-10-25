@@ -91,7 +91,7 @@ run(async () => {
   cp.spawnSync('mkdir', ['-p', path.join(R, 'var/lib/webosbrew/init.d')]);
   write(
     path.join(BIN, 'luna-send'),
-    '#!/bin/sh\necho \'{"returnValue": true, "modelName": "OLED55CX3LA", "firmwareVersion": "04.41.35", "sdkVersion": "5.4.3"}\'\n',
+    '#!/bin/sh\necho \'{"returnValue": true, "modelName": "OLED55CX3LA", "firmwareVersion": "04.30.10", "sdkVersion": "5.4.3"}\'\n',
     0o755
   );
   write(path.join(BIN, 'systemctl'), '#!/bin/sh\nexit 0\n', 0o755);
