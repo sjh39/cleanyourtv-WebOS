@@ -6,3 +6,5 @@ S=$L/home-overlay
 mkdir -p $S
 cp $L/app/* $S/
 node $L/jtool.js stage "$L/backup/home-appinfo.orig.json" "$S/appinfo.json"
+# what scripts/home-standin.sh sends to webapp-mgr where LG's Home is the native program (homeTakeover 'standin')
+node $L/jtool.js wamlaunch "$S/appinfo.json" "$S" "$L/wam-launch.json"

@@ -27,6 +27,14 @@ uninstall. Optional features contact other services only when you switch them on
    new Home. On TVs where LG's Home is the native app (webOS 5 to 23) and on webOS before 7, the services that talk to it (`eim`, `webapp-mgr`, `preload-manager`, `memorymanager`, those the TV
    has) are restarted after it too (`after-sam.sh`); without that, apps stopped opening, an HDMI input lost its picture and HDMI-CEC control stopped
    (issues 14, 23 and 24). Each step is written to `/tmp/cleanyourtv-boot.log`, which **Share log** includes.
+
+   Test build `native-home-standin`: where LG's Home is the native program (webOS 5 to 23), the app manager is not restarted.
+   `home-standin.sh` is bind-mounted over that program instead (its path comes from the stock Home's `appinfo.json`, usually
+   `/usr/bin/com.webos.app.home`), and LG's running Home is stopped once. LG's Home manifest stays in place, so the app manager
+   starts the stand-in whenever Home is launched. The stand-in asks `webapp-mgr` to open the launcher folder as
+   `com.webos.app.home` and tries to register with the app manager as Home, so the Home key shows the open launcher again. If the
+   launcher is not open in `webapp-mgr` within 30 seconds, the stand-in is removed and LG's Home comes back until the next reboot.
+   A file `/media/developer/cleanyourtv/home-method` holding `mount` uses the mount and app manager restart on such a TV too.
 3. About a minute later the debloat runs, if it is on.
 
 The bind mount lives in RAM. A reboot without the boot scripts, or the Homebrew Channel's failsafe mode, leaves LG's Home as it was.

@@ -51,6 +51,13 @@ run(async () => {
       tv.decide({ sdk: '' }).afterSam === '',
     'after the app manager restart, webOS 5 and 6 and every TV with the native Home restart the services that talk to it (issues 14, 23, 24); a flutter Home and an unknown TV do not'
   );
+  ok(
+    tv.decide({ home: 'com.webos.app.home native' }).homeTakeover === 'standin' &&
+      tv.decide({ home: 'com.webos.app.home flutter' }).homeTakeover === 'mount' &&
+      tv.decide({ home: 'com.webos.app.home web' }).homeTakeover === 'mount' &&
+      tv.decide({}).homeTakeover === 'mount',
+    "LG's native Home is taken over by a stand-in for its program (no app manager restart); flutter, web and unknown by the mount"
+  );
   // the setup script asks the same rules from the shell
   const cli = args => cp.spawnSync(process.execPath, [path.join(helper, 'tvprofile.js')].concat(args), { encoding: 'utf8' }).stdout.trim();
   ok(

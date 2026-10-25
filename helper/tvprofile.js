@@ -15,6 +15,10 @@
 //                  and video apps no longer opened, an HDMI input had no picture, HDMI-CEC control stopped and no apps were preloaded
 //                  (issues 14, 23 and 24). TVs with the flutter or web Home (webOS 24 and newer) restart what depends on SAM themselves.
 //                  scripts/after-sam.sh restarts those of them that the TV has.
+//   homeTakeover   how the launcher becomes Home. 'mount': its folder is mounted over LG's Home app and the app manager is restarted
+//                  to read it (flutter and web Home). 'standin' where LG's Home is the native program: a small script is mounted over
+//                  that program and asks webapp-mgr to open the launcher as com.webos.app.home, so LG's Home manifest stays and the
+//                  app manager is not restarted (test build, issues 14, 23 and 24). scripts/home-standin.sh is the script.
 // To support a new kind of TV, change the rules here and add a case to tools/test/tvprofile.test.js.
 //
 // In the service: tvprofile.create({luna}) -> { get(), refresh() }, saved in tv.json.
@@ -59,6 +63,7 @@ function decide(facts, compat) {
     legacyNode: nodeMajor > 0 && nodeMajor < 10,
     // where LG's Home is the native app (webOS 5, 6, 22, 23 reports) or the webOS version is before 7
     afterSam: (major > 0 && major < 7) || /\snative$/.test(homeKind) ? 'eim webapp-mgr preload-manager memorymanager' : '',
+    homeTakeover: /^com\.webos\.app\.home native$/.test(homeKind) ? 'standin' : 'mount',
   };
 }
 const readJson = (file, d) => {
