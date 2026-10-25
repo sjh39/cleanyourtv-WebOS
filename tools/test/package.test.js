@@ -56,6 +56,20 @@ run(async () => {
     fe && ipk && files.indexOf(fe + '.sha256') >= 0 && files.indexOf(ipk + '.sha256') >= 0,
     'the launcher, the package and their .sha256 files'
   );
+  // the Homebrew Channel repository: the package of this release with its size and checksum
+  const repo = JSON.parse(fs.readFileSync(path.join(dist, 'apps.json'), 'utf8')),
+    man = JSON.parse(fs.readFileSync(path.join(dist, 'com.cleanyourtv.manager.manifest.json'), 'utf8')),
+    ipkBuf = fs.readFileSync(path.join(dist, ipk));
+  ok(
+    repo.packages.length === 1 &&
+      repo.packages[0].manifest.ipkHash.sha256 === require('crypto').createHash('sha256').update(ipkBuf).digest('hex') &&
+      man.ipkSize === ipkBuf.length &&
+      man.ipkUrl.endsWith('/' + ipk) &&
+      repo.packages[0].manifestUrl.endsWith('/com.cleanyourtv.manager.manifest.json') &&
+      man.rootRequired === true &&
+      man.version === ipk.split('_')[1],
+    'the Homebrew Channel repository (apps.json and the manifest) names this package, its size and checksum'
+  );
   const feNames = tarNames(fs.readFileSync(path.join(dist, fe)));
   ok(feNames.indexOf('app/index.html') >= 0 && feNames.indexOf('app/version.json') >= 0, 'the launcher download holds the built page');
   ok(!feNames.some(n => /^app\/src\//.test(n)), "the launcher's source files are not shipped (they are built into index.html)");

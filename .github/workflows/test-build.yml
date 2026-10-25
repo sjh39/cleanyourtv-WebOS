@@ -39,7 +39,9 @@ jobs:
           path: ${{ runner.temp }}/shots
           if-no-files-found: ignore
       - name: Build the package
-        run: CYTV_BUILD="${GITHUB_SHA::7}" python3 ipk/build.py
+        run: |
+          slug=$(printf '%s' "$GITHUB_REF_NAME" | tr 'A-Z' 'a-z' | sed 's/[^a-z0-9]/-/g; s/--*/-/g; s/^-//; s/-$//' | cut -c1-60)
+          CYTV_BUILD="${GITHUB_SHA::7}" CYTV_REPO="$GITHUB_REPOSITORY" CYTV_TAG="test-$slug" python3 ipk/build.py
       - name: Publish the test build
         env:
           GH_TOKEN: ${{ github.token }}

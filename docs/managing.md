@@ -9,6 +9,9 @@ latest GitHub release, each checked against its SHA-256 file.
 - **Go back to launcher** returns to the previous launcher version after an update.
 - Before the setup, the app offers a newer package by itself.
 - Running the [install command](install.md#1-install-the-manager-app) again also updates.
+- An update from the [Homebrew Channel](install.md#from-the-homebrew-channel) (or `ares-install`) installs the package only; the
+  service notices the new package within about four minutes and takes it into use, as an update from the app does. A version whose
+  start failed once is not tried again.
 
 ## Update channel
 

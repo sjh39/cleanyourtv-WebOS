@@ -3,7 +3,8 @@
 ## Quick start
 
 1. Root the TV and install the Homebrew Channel ([rootmy.tv](https://rootmy.tv)).
-2. From your computer, run the install command with the TV's IP address (below). It installs the **CleanYourTV** manager app.
+2. Install the **CleanYourTV** manager app: from the [Homebrew Channel](#from-the-homebrew-channel), or from your computer with the
+   install command and the TV's IP address (below).
 3. On the TV, open **CleanYourTV** and choose **Set up now**. It takes about a minute and the screen blinks once.
 
 That is all. The launcher is LG's Home from then on.
@@ -25,7 +26,21 @@ That is all. The launcher is LG's Home from then on.
 
 ### 1. Install the manager app
 
-From your computer, with your TV's IP address:
+#### From the Homebrew Channel
+
+Add CleanYourTV's repository to the Homebrew Channel once: open the Homebrew Channel, the gear at the top, **Add repository**, and
+enter
+
+```text
+https://github.com/lasharor/cleanyourtv-WebOS/releases/latest/download/apps.json
+```
+
+**CleanYourTV** then shows in the channel's list: open it and choose **Install**. A new release shows there as an update. The
+package is the same file as in [Releases](https://github.com/lasharor/cleanyourtv-WebOS/releases), checked against its SHA-256.
+
+#### From your computer
+
+With your TV's IP address:
 
 ```sh
 ssh root@192.168.1.50 'curl -fsSL https://raw.githubusercontent.com/lasharor/cleanyourtv-WebOS/main/install.sh | sh'

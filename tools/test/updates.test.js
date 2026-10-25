@@ -110,4 +110,33 @@ run(async () => {
     'an update check on a connection that drops mid-answer ends with an error (' + r.j.checkError + ')'
   );
   drop.server.close();
+
+  // a package installed by the Homebrew Channel (or ares-install) is brought into use by bootstrap.sh update, once it stayed the same
+  const exec = req('exec'),
+    P = req('paths'),
+    ran = [],
+    real = exec.detached;
+  exec.detached = sc => ran.push(sc);
+  fs.mkdirSync(path.join(P.SERVICE_DIR, 'helper'), { recursive: true });
+  fs.writeFileSync(path.join(P.SERVICE_DIR, 'helper', 'helper.js'), "const VERSION = '9.1.0';\n");
+  fs.writeFileSync(path.join(P.SERVICE_DIR, 'bootstrap.sh'), '');
+  const u = req('updates').create({ luna: async () => ({}), config: memoryConfig({}), version: '9.0.0' });
+  u.watchPackage();
+  const first = ran.length;
+  u.watchPackage();
+  u.watchPackage();
+  ok(
+    first === 0 && ran.length === 1 && /bootstrap\.sh update 9\.1\.0$/.test(ran[0]),
+    'a package installed by another tool is applied once, after it was seen twice'
+  );
+  const same = req('updates').create({ luna: async () => ({}), config: memoryConfig({}), version: '9.1.0' });
+  same.watchPackage();
+  same.watchPackage();
+  fs.writeFileSync(path.join(P.D, 'last-error.txt'), 'update to 9.1.0 failed at now');
+  const failed = req('updates').create({ luna: async () => ({}), config: memoryConfig({}), version: '9.0.0' });
+  failed.watchPackage();
+  failed.watchPackage();
+  ok(ran.length === 1, 'the running version is left alone, and a package whose update already failed is not tried again');
+  fs.unlinkSync(path.join(P.D, 'last-error.txt'));
+  exec.detached = real;
 });

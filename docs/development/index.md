@@ -28,7 +28,9 @@ python3 ipk/build.py
 ```
 
 writes the release files to `dist/`: `com.cleanyourtv.manager_<version>_all.ipk`, `frontend-<version>.tgz` and a `.sha256` file for
-each. Attach them to a GitHub release tagged `v<version>`. The **service** version is `VERSION` in `helper/helper.js`; the
+each, and the Homebrew Channel repository: `apps.json` and `com.cleanyourtv.manager.manifest.json`, which point at the package in
+the release tagged `v<version>` (`CYTV_TAG` and `CYTV_REPO` change the tag and the repository). Attach all of them to a GitHub
+release tagged `v<version>`: the channel reads `releases/latest/download/apps.json`, so the newest release is what it offers. The **service** version is `VERSION` in `helper/helper.js`; the
 **launcher** version is `app/version.json` and `VERSION` in `app/src/js/core.js` (the build refuses to run when they differ). Run
 `node tools/build-pages.js` after changing a page's sources.
 

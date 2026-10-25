@@ -76,7 +76,7 @@ npm install                        # once: TypeScript, ESLint and Prettier for c
 npm run format                     # formats the code (Prettier) and rebuilds the pages
 node tools/test.js live            # one area of tests (the files in tools/test)
 node tools/build-pages.js          # builds app/index.html and manager/app/index.html from app/src and manager/src
-python3 ipk/build.py               # writes dist/: the package and the launcher bundle with .sha256 files
+python3 ipk/build.py               # writes dist/: the package, the launcher bundle (.sha256 files) and the Homebrew Channel apps.json
 node tools/theme-docs.js           # regenerates the settings table in docs/themes.md from helper/themeschema.js
 node tools/theme-index.js          # writes themes/index.json
 node tools/theme-preview.mjs <id>  # renders a theme in headless Chrome (Node 22+)
