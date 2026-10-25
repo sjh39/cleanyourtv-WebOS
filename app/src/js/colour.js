@@ -76,6 +76,15 @@ function analyse(img) {
         }
       return n ? [Math.round(R / n), Math.round(G / n), Math.round(B / n)] : null;
     }
+    var vis = 0,
+      sum = 0,
+      li; // mean brightness of the visible pixels, 0-255
+    for (li = 0; li < d.length; li += 4)
+      if (d[li + 3] >= 128) {
+        vis++;
+        sum += 0.2126 * d[li] + 0.7152 * d[li + 1] + 0.0722 * d[li + 2];
+      }
+    var lm = vis ? sum / vis : 255;
     var margin = Math.max(x0, y0, N - 1 - x1, N - 1 - y1) / N,
       ratio = bw / bh;
     var k = solid / (bw * bh) < 0.85 || ratio < 0.8 || ratio > 1.25 ? 'logo' : margin < 0.03 ? 'full' : 'pad',
@@ -142,7 +151,7 @@ function analyse(img) {
       if (n) edge = [Math.round(R / n), Math.round(G / n), Math.round(B / n)];
       else k = 'logo';
     }
-    return { k: k, box: [x0 / N, y0 / N, (x1 + 1) / N, (y1 + 1) / N], edge: edge, top: strip(y0, y0 + 1), bot: strip(y1 - 1, y1) };
+    return { k: k, lm: lm, box: [x0 / N, y0 / N, (x1 + 1) / N, (y1 + 1) / N], edge: edge, top: strip(y0, y0 + 1), bot: strip(y1 - 1, y1) };
   } catch (e) {
     return null;
   }
@@ -202,6 +211,8 @@ function iconColor(img, id) {
   var fb = hsl2rgb(hashHue(id), 0.42, 0.42);
   glow = glow || (edge && rgb2hsl(edge[0], edge[1], edge[2])[1] > 0.3 ? edge : fb);
   var col = { c: glow, b: edge || hsl2rgb(rgb2hsl(glow[0], glow[1], glow[2])[0], 0.4, 0.2) };
+  // near-black strokes (made for a white background) vanish on a dark tile: use a light one
+  if (an && an.k === 'logo' && an.lm < 80) col.b = [236, 238, 242];
   if (an) {
     col.k = an.k;
     if (an.box) col.box = an.box;
