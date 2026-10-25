@@ -163,7 +163,7 @@ function create(ctx) {
     if (strs(b.hidden)) out.hidden = strs(b.hidden);
     if (b.sort === 'usage' || b.sort === 'alpha') out.sort = b.sort;
     if (['auto', '24', '12'].includes(b.clock)) out.clock = b.clock;
-    if (b.runDots === false) out.runDots = false; // the green dot on open apps (on unless switched off)
+    if (b.runDots === true) out.runDots = true; // the green dot on open apps (off unless switched on)
     if (Array.isArray(b.topbar))
       out.topbar = b.topbar
         .slice(0, 12)

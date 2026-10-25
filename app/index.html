@@ -2658,10 +2658,10 @@ function customizeMenu() {
     },
     {
       label: t('Open apps'),
-      sub: cfg.runDots === false ? t('No dot') : t('Green dot'),
+      sub: cfg.runDots === true ? t('Green dot') : t('No dot'),
       fn: function () {
-        if (cfg.runDots === false) delete cfg.runDots;
-        else cfg.runDots = false;
+        if (cfg.runDots === true) delete cfg.runDots;
+        else cfg.runDots = true;
         saveCfg();
       },
     },
@@ -2819,7 +2819,7 @@ function rebuild() {
 /* the apps that are open get a green dot; read each time Home is shown, kept only in memory */
 var running = {};
 function markRunning() {
-  var on = cfg.runDots !== false;
+  var on = cfg.runDots === true;
   for (var id in tiles) {
     var d = tiles[id],
       dot = d.querySelector('.rd');

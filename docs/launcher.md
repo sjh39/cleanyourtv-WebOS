@@ -11,9 +11,9 @@ same on every supported webOS version.
 - **Top shelf.** The name of the focused app and an ambient glow taken from its icon.
 - **Grid.** All other apps, sorted by how often you use each one (or A to Z).
 - **Top buttons.** Inputs, Live TV, Settings and Customise, and a clock. The buttons you see are yours to change.
-- **Open apps.** A green dot on the tile of every app that is open, as on the active input in the Inputs list. Back on the home
-  screen lists them to close them (see [Running apps](#running-apps)). **Customise** > **Open apps** switches the dot off, in the
-  launcher and in the Inputs picker.
+- **Open apps.** Optionally a green dot on the tile of every app that is open, as on the active input in the Inputs list: off by
+  default, **Customise** > **Open apps** switches it on, in the launcher and in the Inputs picker. Back on the home screen lists
+  the open apps to close them (see [Running apps](#running-apps)).
 
 ## Keys
 
@@ -106,7 +106,7 @@ Settings are stored on the TV in `/media/developer/cleanyourtv/config.json`:
 | `pinnedInputs` | The inputs on Home: `{id, label, port}`, `id` being the input's app (for example `com.webos.app.hdmi2`). |
 | `sort` | `usage` or `alpha`. |
 | `clock` | `auto`, `12` or `24`. |
-| `runDots` | `false` hides the green dot on open apps. |
+| `runDots` | `true` shows a green dot on open apps (off by default). |
 
 See [`config.example.json`](https://github.com/lasharor/cleanyourtv-WebOS/blob/main/config.example.json). Change settings in
 the launcher; the file is read and written by the service.

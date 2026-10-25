@@ -64,7 +64,7 @@ function rebuild() {
 /* the apps that are open get a green dot; read each time Home is shown, kept only in memory */
 var running = {};
 function markRunning() {
-  var on = cfg.runDots !== false;
+  var on = cfg.runDots === true;
   for (var id in tiles) {
     var d = tiles[id],
       dot = d.querySelector('.rd');

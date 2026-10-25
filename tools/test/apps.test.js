@@ -64,10 +64,10 @@ run(async () => {
   });
   await call(apps, '/api/config', 'POST', { dock: ['a.one'], sort: 'alpha' });
   ok(config.get().pinnedInputs.length === 2, "saving the launcher's settings keeps the pinned inputs");
-  await call(apps, '/api/config', 'POST', { dock: ['a.one'], runDots: false });
-  const off = config.get().runDots === false;
+  await call(apps, '/api/config', 'POST', { dock: ['a.one'], runDots: true });
+  const on = config.get().runDots === true;
   await call(apps, '/api/config', 'POST', { dock: ['a.one'], runDots: 'yes' });
-  ok(off && config.get().runDots === undefined, 'the green dot on open apps is saved only when switched off');
+  ok(on && config.get().runDots === undefined, 'the green dot on open apps is off by default and saved only when switched on');
   config.update('test', c => {
     c.dock = ['a.one', 'com.webos.app.hdmi2'];
   });

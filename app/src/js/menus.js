@@ -373,10 +373,10 @@ function customizeMenu() {
     },
     {
       label: t('Open apps'),
-      sub: cfg.runDots === false ? t('No dot') : t('Green dot'),
+      sub: cfg.runDots === true ? t('Green dot') : t('No dot'),
       fn: function () {
-        if (cfg.runDots === false) delete cfg.runDots;
-        else cfg.runDots = false;
+        if (cfg.runDots === true) delete cfg.runDots;
+        else cfg.runDots = true;
         saveCfg();
       },
     },
