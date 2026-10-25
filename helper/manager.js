@@ -200,6 +200,7 @@ function create(ctx) {
     prefix: '/api/manager/',
     paths: ['/api/frontend-ok', '/api/undo'],
     handle,
+    start: () => setInterval(updates.watchPackage, 120000),
     check: updates.check,
     status,
     frontendLoaded: updates.frontendLoaded,

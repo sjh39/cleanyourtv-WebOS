@@ -167,6 +167,31 @@ function create(ctx) {
   }
   const stale = () => !checking && Date.now() - releaseAt > 300000;
 
+  // ---- a package installed by someone else (the Homebrew Channel, ares-install): the running service is the copy in D, so it is
+  // brought to the package's version with bootstrap.sh update, as after an update from the manager. Only once the package has stayed
+  // the same for two checks in a row and no update of our own is running (that one runs bootstrap.sh update itself). ----
+  const packaged = () => {
+    try {
+      const v = (/const VERSION = '([^']+)'/.exec(fs.readFileSync(P.SERVICE_DIR + '/helper/helper.js', 'utf8')) || [])[1];
+      return v && fs.existsSync(P.SERVICE_DIR + '/bootstrap.sh') ? v + ' ' + (buildOf(P.SERVICE_DIR + '/BUILD') || '') : '';
+    } catch (_) {
+      return '';
+    }
+  };
+  let seenPackage = '',
+    applied = false;
+  function watchPackage() {
+    const now = packaged();
+    if (!now || applied || busy() || now === version + ' ' + (serviceBuild() || '')) return void (seenPackage = '');
+    if (now !== seenPackage) return void (seenPackage = now);
+    applied = true;
+    const ver = now.split(' ')[0];
+    // bootstrap.sh writes this when the new version did not start and it went back: do not try the same package again and again
+    if (readText(D + '/last-error.txt').indexOf('update to ' + ver + ' failed') >= 0) return;
+    console.log('updates: the installed package is service ' + now.trim() + ', this is ' + version + '; applying it');
+    exec.detached('sleep 1; sh ' + P.SERVICE_DIR + '/bootstrap.sh update ' + ver);
+  }
+
   // ---- the launcher: D/app is replaced, the old one kept as D/app.prev; a launcher that does not report back is rolled back ----
   // reload-home.sh closes the Home page and launches it again; on webOS 6, where WebAppMgr keeps the old page and there is no
   // renderer process to stop, it restarts webapp-mgr (issue 9: the new launcher never started there and the update rolled back)
@@ -334,6 +359,7 @@ function create(ctx) {
     check,
     status,
     stale,
+    watchPackage,
     job: () => job,
     busy,
     tests,

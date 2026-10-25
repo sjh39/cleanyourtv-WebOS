@@ -2,6 +2,8 @@
 """Build the release files into dist/:
   com.cleanyourtv.manager_<version>_all.ipk (+ .sha256)   the package: manager app, picker app, notify app, service
   frontend-<version>.tgz (+ .sha256)                      the launcher alone, installed by the manager app
+  apps.json, com.cleanyourtv.manager.manifest.json         the Homebrew Channel repository: the package of this release
+                                                           (CYTV_REPO owner/repo, CYTV_TAG the release tag, default v<version>)
 Run from anywhere: python3 ipk/build.py"""
 import hashlib, io, json, os, re, shutil, sys, tarfile
 
@@ -100,5 +102,28 @@ add(data, './usr/palm/packages/%s/packageinfo.json' % PKG, json.dumps({'id': PKG
 size = sum(len(d) for _, d, _ in data) // 1024 + 1
 ctl = ('Package: %s\nVersion: %s\nSection: misc\nPriority: optional\nArchitecture: all\nInstalled-Size: %d\n'
        'Maintainer: N/A <nobody@example.com>\nDescription: CleanYourTV for LG webOS\nwebOS-Package-Format-Version: 2\nwebOS-Packager-Version: x.y.x\n' % (PKG, version, size)).encode()
-write('%s_%s_all.ipk' % (PKG, version), ar([('debian-binary', b'2.0\n'), ('control.tar.gz', tgz([('control', ctl, 0o644)], './')), ('data.tar.gz', tgz(data))]))
+ipk_name = '%s_%s_all.ipk' % (PKG, version)
+ipk = ar([('debian-binary', b'2.0\n'), ('control.tar.gz', tgz([('control', ctl, 0o644)], './')), ('data.tar.gz', tgz(data))])
+write(ipk_name, ipk)
+
+# ---- the Homebrew Channel repository (Settings > Add repository: https://github.com/<repo>/releases/latest/download/apps.json) ----
+REPO = os.environ.get('CYTV_REPO') or 'lasharor/cleanyourtv-WebOS'
+TAG = os.environ.get('CYTV_TAG') or 'v' + version
+if not re.fullmatch(r'[\w.-]+/[\w.-]+', REPO) or not re.fullmatch(r'[\w.-]+', TAG):
+    sys.exit('CYTV_REPO must be owner/repo and CYTV_TAG a release tag')
+raw = 'https://raw.githubusercontent.com/%s/main/' % REPO
+dl = 'https://github.com/%s/releases/download/%s/' % (REPO, TAG)
+summary = 'A clean Home screen for rooted LG TVs, without LG\'s ads and tracking'
+manifest = {
+    'id': PKG, 'version': version, 'type': 'web', 'title': 'CleanYourTV', 'appDescription': summary,
+    'iconUri': raw + 'manager/app/largeIcon.png', 'sourceUrl': 'https://github.com/' + REPO, 'rootRequired': True,
+    'ipkUrl': dl + ipk_name, 'ipkHash': {'sha256': hashlib.sha256(ipk).hexdigest()}, 'ipkSize': len(ipk),
+}
+repo = {'paging': {'page': 1, 'count': 1, 'maxPage': 1, 'itemsTotal': 1}, 'packages': [{
+    'id': PKG, 'title': 'CleanYourTV', 'iconUri': manifest['iconUri'], 'shortDescription': summary,
+    'manifestUrl': dl + PKG + '.manifest.json', 'manifest': manifest, 'pool': 'main',
+    'fullDescriptionUrl': raw + 'docs/homebrew-channel.html'}]}
+for name, obj in ((PKG + '.manifest.json', manifest), ('apps.json', repo)):
+    open(os.path.join(DIST, name), 'w').write(json.dumps(obj, indent=2) + '\n')
+    print('%-52s (Homebrew Channel, %s)' % (name, TAG))
 print('service %s, launcher %s' % (version, fe))
