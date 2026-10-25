@@ -58,7 +58,8 @@ Themes live in the repository, so a new one is a pull request:
 3. Add `preview.jpg`: a screenshot of the home screen with your theme (16:9, about 800 px wide, at most 600 KB). The TV shows it in the
    theme list.
 4. If it uses a wallpaper, add the image to the same folder (`.jpg`, `.png` or `.webp`, at most 1.5 MB, 1920 x 1080) and name it in
-   `effects.wallpaper`. A wallpaper must be your own work or under a licence that allows redistribution; say which in the pull request.
+   `effects.wallpaper`. A typeface goes in the folder too, named in `type.fontFile`, with its licence file. A wallpaper or typeface
+   must be your own work or under a licence that allows redistribution; say which in the pull request.
 5. Run `node tools/theme-index.js` to update `themes/index.json`, then `node tools/test.js theme`: it checks every theme folder against the
    schema, that the screenshot is there, and that the index is up to date.
 6. Open the pull request. Once it is merged into `main`, every TV can download the theme; no release is needed.
@@ -150,7 +151,8 @@ when the focus moves down into it (Back or Up closes it); a dock at the top leav
 | `surface.menuAlpha` | 0.5 to 1 | `0.97` | Opacity of the dark layer behind menus. |
 | `surface.rowRadius` | 0 to 50 | `30` | Corner radius of menu rows. |
 | **type** | | | |
-| `type.font` | `default`, `serif`, `mono`, `pixel` | `default` | The typeface: the TV's own, a serif, a monospace or `pixel` (Pixelify Sans, built into the launcher). |
+| `type.font` | `default`, `serif`, `mono` | `default` | The typeface: the TV's own, a serif or a monospace. |
+| `type.fontFile` | a file name | none | A typeface of the theme: a file in the theme's folder, `.woff2`, `.woff`, `.ttf` or `.otf`, at most 400 KB, used for all text. Characters it lacks come from `type.font`. Its licence must allow redistribution; put the licence file in the folder too. |
 | `type.scale` | 0.8 to 1.3 | `1` | Scale of the text of buttons, menus and tiles. |
 | **clock** | | | |
 | `clock.show` | `true` or `false` | `true` | Show the clock. |

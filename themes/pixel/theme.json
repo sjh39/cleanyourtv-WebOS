@@ -17,7 +17,7 @@
   "rowRadius": 0
  },
  "type": {
-  "font": "pixel",
+  "fontFile": "pixel.woff2",
   "scale": 1.05
  },
  "clock": {
