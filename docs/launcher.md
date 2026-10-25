@@ -78,9 +78,8 @@ Suggested and first built by [ibexes](https://github.com/lasharor/cleanyourtv-We
 Each tile uses the app's own icon. The tile colour is taken from the icon's edge colour, so an icon that reaches its edges blends
 into the tile, and the ambient glow comes from the icon's most vivid colour. Colours are worked out once per app and remembered.
 
-!!! note "Icons with a transparent margin"
-    An icon that is an opaque square with a transparent margin around it (many LG icons) can look boxed in on its tile. A fix
-    that fills the tile is available as a test build; see [Test builds](managing.md#test-builds).
+An icon that is an opaque square with a transparent margin around it (many LG icons) is enlarged so it fills its tile, and a
+gradient icon in the dock gets a tile with the same gradient ([#3](https://github.com/lasharor/cleanyourtv-WebOS/issues/3)).
 
 ## Language
 
