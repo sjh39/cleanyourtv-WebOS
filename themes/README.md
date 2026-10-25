@@ -47,7 +47,7 @@ Folder: [`bloom/`](bloom/)
 
 ### Horizon
 
-Everything along the bottom edge of a dusk landscape: the app name, a row of seven square apps and round buttons. Down opens all apps over the picture.
+A row of seven square apps along the bottom of a dusk landscape, the clock on the left and the buttons on the right at the top. Down moves the row up and shows all apps below it.
 
 [![Horizon](horizon/preview.jpg)](horizon/preview.jpg)
 

@@ -1,7 +1,7 @@
 {
  "name": "Horizon",
  "author": "CleanYourTV",
- "description": "Everything along the bottom edge of a dusk landscape: the app name, a row of seven square apps and round buttons. Down opens all apps over the picture.",
+ "description": "A row of seven square apps along the bottom of a dusk landscape, the clock on the left and the buttons on the right at the top. Down moves the row up and shows all apps below it.",
  "colors": {
   "night": "#0d0b16",
   "panel": "#1f1a2c",
@@ -14,26 +14,23 @@
  },
  "clock": {
   "layout": "inline",
-  "align": "right",
+  "align": "left",
   "x": 96,
-  "y": 48,
-  "scale": 0.72,
-  "dateScale": 0.8
+  "y": 54,
+  "scale": 0.9,
+  "dateScale": 0.85
  },
  "bar": {
-  "style": "round",
-  "size": 58,
-  "anchor": "bottom",
+  "style": "pill",
+  "anchor": "top",
   "align": "right",
   "x": 96,
-  "y": 109,
+  "y": 54,
+  "size": 58,
   "gap": 14
  },
  "shelf": {
-  "align": "left",
-  "x": 96,
-  "y": 786,
-  "scale": 0.7
+  "show": false
  },
  "dock": {
   "anchor": "bottom",
@@ -41,23 +38,23 @@
   "x": 96,
   "y": 76,
   "count": 7,
-  "w": 124,
-  "h": 124,
-  "gap": 18,
-  "radius": 28,
+  "w": 150,
+  "h": 150,
+  "gap": 22,
+  "radius": 32,
   "lift": 6,
   "focusScale": 1.08
  },
  "grid": {
-  "mode": "overlay",
-  "cols": 12,
-  "tileH": 124,
-  "gapX": 18,
-  "gapY": 18,
-  "radius": 28,
-  "overlayDim": 0.6,
-  "y": 466,
-  "overlayH": 290
+  "mode": "push",
+  "dockUp": 180,
+  "clipTop": 160,
+  "cols": 10,
+  "tileH": 150,
+  "gapX": 22,
+  "gapY": 22,
+  "radius": 32,
+  "align": "left"
  },
  "tile": {
   "border": 0.08,

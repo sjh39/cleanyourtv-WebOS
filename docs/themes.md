@@ -33,7 +33,7 @@ folder of the GitHub repository (the `main` branch):
 | Large print | Eight columns of big tiles and larger text. |
 | Still | No animation and a quiet glow. |
 | Bloom | A flower wallpaper with the dock in a glass panel at the bottom. Down moves the dock up and the apps appear below it, centred. |
-| Horizon | Everything along the bottom edge of a dusk landscape: the app name, a row of seven square apps and round buttons. Down opens all apps over the picture. |
+| Horizon | A row of seven square apps along the bottom of a dusk landscape, the clock on the left and the buttons on the right at the top. Down moves the row up and shows all apps below it. |
 
 ![Classic, Compact, Large print and Midnight](screenshots/themes-1.jpg)
 
@@ -41,7 +41,7 @@ folder of the GitHub repository (the `main` branch):
 
 ![Bloom: the home screen and the app grid opened with Down](screenshots/themes-3.jpg)
 
-![Horizon: the home screen and all apps opened with Down](screenshots/themes-4.jpg)
+![Horizon: the home screen and all apps shown with Down](screenshots/themes-4.jpg)
 
 The pictures are the launcher page rendered in a browser with each theme.
 
