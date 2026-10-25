@@ -145,8 +145,9 @@
   color: var(--ink2);
   max-width: 1100px;
 }
-#lv.gd #lv-spin {
-  visibility: hidden;
+#lv.gd #lv-spin,
+#lv.gd #lv-tune {
+  visibility: hidden; /* the guide list covers the middle of the screen */
 }
 #lv-tune {
   left: 0;
