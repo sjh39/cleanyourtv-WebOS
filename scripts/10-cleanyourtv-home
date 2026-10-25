@@ -13,11 +13,14 @@ if grep -q " $H " /proc/mounts; then
   sh $L/reload-home.sh
   exit 0
 fi
+echo "$(cut -d' ' -f1 /proc/uptime) home: mounting the launcher over LG's Home, restarting sam" >> /tmp/cleanyourtv-boot.log
 mount --bind $L/home-overlay $H && { (sleep 3; pkill -9 -f /usr/palm/applications/airplay/LunaExecutable) </dev/null >/dev/null 2>&1 & systemctl restart sam; }
+echo "$(cut -d' ' -f1 /proc/uptime) home: sam restarted" >> /tmp/cleanyourtv-boot.log
 # After the sam restart nothing is in the foreground (black screen). Once sam is back, start Home again
 # unless the user already went somewhere else (e.g. an HDMI input).
 (
   for i in $(seq 1 60); do systemctl is-active sam >/dev/null && break; sleep 2; done
+  sh $L/after-sam.sh   # webOS before 7: the services that keep talking to the old sam (issues 23 and 24)
   sleep 8
   fg=$(luna-send -n 1 -w 5000 -f luna://com.webos.applicationManager/getForegroundAppInfo '{}' </dev/null | grep '"appId"')
   case "$fg" in

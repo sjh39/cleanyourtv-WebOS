@@ -15,6 +15,7 @@ for m in $(awk '$2 ~ /applications\/com.webos.app.home$/ {print $2}' /proc/mount
 (sleep 3; pkill -9 -f /usr/palm/applications/airplay/LunaExecutable) </dev/null >/dev/null 2>&1 &
 systemctl restart sam
 for i in $(seq 1 60); do systemctl is-active sam >/dev/null && break; sleep 2; done
+[ -f /media/developer/cleanyourtv/after-sam.sh ] && sh /media/developer/cleanyourtv/after-sam.sh </dev/null
 sleep 5
 # the old web renderer for Home would keep showing the launcher; retry until the stock flutter Home is up
 for t in 1 2 3 4; do

@@ -44,6 +44,13 @@ run(async () => {
     const wrong = Object.keys(c[2]).filter(k => p[k] !== c[2][k]);
     ok(!wrong.length, c[0] + (wrong.length ? ': ' + wrong.map(k => k + ' is ' + JSON.stringify(p[k])).join(', ') : ''));
   }
+  ok(
+    tv.decide({ sdk: '5.6.2' }).afterSam === 'eim webapp-mgr preload-manager memorymanager' &&
+      tv.decide({ sdk: '6.5.3' }).afterSam !== '' &&
+      tv.decide({ sdk: '10.2.2' }).afterSam === '' &&
+      tv.decide({ sdk: '' }).afterSam === '',
+    'after the app manager restart, webOS 5 and 6 restart the services that talk to it (issues 23 and 24); newer webOS and an unknown TV do not'
+  );
   // the setup script asks the same rules from the shell
   const cli = args => cp.spawnSync(process.execPath, [path.join(helper, 'tvprofile.js')].concat(args), { encoding: 'utf8' }).stdout.trim();
   ok(
