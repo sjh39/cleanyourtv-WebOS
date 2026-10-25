@@ -49,7 +49,7 @@ run(async () => {
       tv.decide({ sdk: '6.5.3' }).afterSam !== '' &&
       tv.decide({ sdk: '10.2.2' }).afterSam === '' &&
       tv.decide({ sdk: '' }).afterSam === '',
-    'after the app manager restart, webOS 5 and 6 restart the services that talk to it (issues 23 and 24); newer webOS and an unknown TV do not'
+    'after the app manager restart, webOS 5 and 6 and every TV with the native Home restart the services that talk to it (issues 14, 23, 24); a flutter Home and an unknown TV do not'
   );
   // the setup script asks the same rules from the shell
   const cli = args => cp.spawnSync(process.execPath, [path.join(helper, 'tvprofile.js')].concat(args), { encoding: 'utf8' }).stdout.trim();

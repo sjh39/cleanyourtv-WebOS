@@ -24,9 +24,9 @@ uninstall. Optional features contact other services only when you switch them on
 2. `10-cleanyourtv-home` starts the service and, unless `/media/developer/cleanyourtv/DISABLE` exists, **bind-mounts** a directory
    holding the launcher over LG's Home app (`/usr/palm/applications/com.webos.app.home`). The directory's `appinfo.json` is derived
    from this TV's own stock Home, so nothing of LG's is shipped. The system app manager (`sam`) is restarted so that it reads the
-   new Home. On webOS 5 and 6 the services that talk to it (`eim`, `webapp-mgr`, `preload-manager`, `memorymanager`, those the TV
-   has) are restarted after it too (`after-sam.sh`); without that, apps stopped opening and HDMI-CEC control stopped on an OLED CX
-   (issues 23 and 24). Each step is written to `/tmp/cleanyourtv-boot.log`, which **Share log** includes.
+   new Home. On TVs where LG's Home is the native app (webOS 5 to 23) and on webOS before 7, the services that talk to it (`eim`, `webapp-mgr`, `preload-manager`, `memorymanager`, those the TV
+   has) are restarted after it too (`after-sam.sh`); without that, apps stopped opening, an HDMI input lost its picture and HDMI-CEC control stopped
+   (issues 14, 23 and 24). Each step is written to `/tmp/cleanyourtv-boot.log`, which **Share log** includes.
 3. About a minute later the debloat runs, if it is on.
 
 The bind mount lives in RAM. A reboot without the boot scripts, or the Homebrew Channel's failsafe mode, leaves LG's Home as it was.

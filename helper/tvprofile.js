@@ -10,9 +10,10 @@
 //   homeSupported  LG's Home is the flutter or web app the launcher was written for; other kinds need "Set up anyway" (--force).
 //   tested, testedNote  the firmware or SDK is in compat.json (a trailing * matches a prefix).
 //   legacyNode     Node.js before 10 (webOS 5 and 6): the service avoids what Node 8 lacks (see AGENTS.md).
-//   afterSam       the system services restarted after the app manager (SAM) is restarted to take over Home, on webOS before 7. There
-//                  they kept talking to the old app manager: web and video apps no longer opened, HDMI-CEC control of other devices
-//                  stopped and no apps were preloaded (issues 23 and 24, OLED CX). Newer webOS restarts what depends on SAM itself.
+//   afterSam       the system services restarted after the app manager (SAM) is restarted to take over Home, on TVs where LG's Home
+//                  is the native app (webOS 5 to 23 reports) and on webOS before 7. There they kept talking to the old app manager: web
+//                  and video apps no longer opened, an HDMI input had no picture, HDMI-CEC control stopped and no apps were preloaded
+//                  (issues 14, 23 and 24). TVs with the flutter or web Home (webOS 24 and newer) restart what depends on SAM themselves.
 //                  scripts/after-sam.sh restarts those of them that the TV has.
 // To support a new kind of TV, change the rules here and add a case to tools/test/tvprofile.test.js.
 //
@@ -56,7 +57,8 @@ function decide(facts, compat) {
     tested: !!testedNote,
     testedNote,
     legacyNode: nodeMajor > 0 && nodeMajor < 10,
-    afterSam: major > 0 && major < 7 ? 'eim webapp-mgr preload-manager memorymanager' : '',
+    // where LG's Home is the native app (webOS 5, 6, 22, 23 reports) or the webOS version is before 7
+    afterSam: (major > 0 && major < 7) || /\snative$/.test(homeKind) ? 'eim webapp-mgr preload-manager memorymanager' : '',
   };
 }
 const readJson = (file, d) => {
