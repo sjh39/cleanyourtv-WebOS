@@ -52,7 +52,10 @@ function create(ctx) {
       napi = ctx.feature('notifyapi');
     let ours = false;
     try {
-      ours = fs.readFileSync(P.PROC + '/mounts', 'utf8').includes(' ' + P.HOME_APP + ' ');
+      const mounts = fs.readFileSync(P.PROC + '/mounts', 'utf8');
+      // the launcher's folder over LG's Home app, or the stand-in over LG's native Home program (scripts/home-standin.sh)
+      const standin = fs.existsSync(P.STANDIN) ? fs.readFileSync(P.STANDIN, 'utf8').trim() : '';
+      ours = mounts.includes(' ' + P.HOME_APP + ' ') || (!!standin && mounts.includes(' ' + standin + ' '));
     } catch (_) {}
     return Object.assign(updates.status(), {
       options: opts,

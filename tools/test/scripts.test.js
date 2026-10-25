@@ -37,6 +37,29 @@ run(async () => {
   opts('', '');
   c = JSON.parse(fs.readFileSync(cfg, 'utf8'));
   ok(c.options.inputKey === true && c.options.debloat === true, 'a first install without values defaults both to on');
+  // the stand-in way (LG's native Home): the program it is mounted over, and the request to webapp-mgr
+  const jtool = args => cp.spawnSync(process.execPath, [jt].concat(args), { encoding: 'utf8' });
+  const prog = path.join(tmp, 'lg-home-program'),
+    nat = path.join(tmp, 'native-home.json');
+  fs.writeFileSync(prog, '');
+  fs.writeFileSync(nat, JSON.stringify({ id: 'com.webos.app.home', type: 'native', main: prog }));
+  r = jtool(['exe', nat]);
+  ok(r.status === 0 && r.stdout.trim() === prog, "jtool exe: the program of LG's native Home");
+  fs.writeFileSync(nat, JSON.stringify({ id: 'com.webos.app.home', type: 'native', main: path.join(tmp, 'missing') }));
+  ok(jtool(['exe', nat]).status === 1, 'jtool exe: a missing program is reported, so the mount way is used instead');
+  const ov = path.join(tmp, 'overlay.json'),
+    req = path.join(tmp, 'wam-launch.json');
+  fs.writeFileSync(ov, JSON.stringify({ id: 'com.webos.app.home', type: 'web', main: 'index.html' }));
+  jtool(['wamlaunch', ov, '/media/developer/cleanyourtv/home-overlay', req]);
+  const q = JSON.parse(fs.readFileSync(req, 'utf8')),
+    qs = JSON.parse(fs.readFileSync(req + '.str', 'utf8'));
+  ok(
+    q.appDesc.id === 'com.webos.app.home' &&
+      q.appDesc.type === 'web' &&
+      q.appDesc.folderPath === '/media/developer/cleanyourtv/home-overlay' &&
+      JSON.parse(qs.appDesc).folderPath === q.appDesc.folderPath,
+    'jtool wamlaunch: webapp-mgr opens the launcher folder as com.webos.app.home (also with the description as a string)'
+  );
   // bootstrap.sh run for real against a folder that stands in for the TV's root (CYTV_TEST_ROOT), with stand-ins for luna-send and systemctl
   const R = path.join(tmp, 'root'),
     S = path.join(tmp, 'pkg'),
