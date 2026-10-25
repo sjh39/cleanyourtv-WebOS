@@ -359,8 +359,9 @@ run(async () => {
     ok(
       vfn('http://h/a.m3u8').length === 1 &&
         vfn('http://h/stream').length === 2 &&
-        vfn('http://h/stream')[0].type === 'application/x-mpegURL',
-      'launcher: other addresses keep their order'
+        vfn('http://h/stream')[0].type === '' &&
+        vfn('http://h/stream')[1].type === 'application/x-mpegURL',
+      'launcher: other addresses (often without an extension) start as a plain src, HLS is the fallback (issue 13)'
     );
     ok(
       /addEventListener\(\s*'error',\s*function \(e\) \{\s*if \(e\.target === v \|\| e\.target\.parentNode === v\) onError\(\);\s*\},\s*true\s*\)/.test(

@@ -2932,8 +2932,10 @@ var LIVE = (function () {
       v.push({ src: url, type: 'application/x-mpegURL' });
       return v;
     }
-    v.push({ src: url, type: 'application/x-mpegURL' });
+    /* Any other address (often without an extension, e.g. http://host:port/user/pass/8078) also starts as a plain src: typed as HLS
+       first it took about 30 s on webOS 5, plain about 2 s (issue 13). HLS stays as the fallback. */
     v.push({ src: url, type: '' });
+    v.push({ src: url, type: 'application/x-mpegURL' });
     return v;
   }
 
