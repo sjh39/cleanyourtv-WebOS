@@ -57,8 +57,8 @@
  },
  "grid": {
   "mode": "push",
-  "dockUp": 210,
-  "clipTop": 160,
+  "dockUp": 260,
+  "clipTop": 240,
   "cols": 10,
   "tileH": 136,
   "gapX": 22,

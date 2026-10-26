@@ -70,3 +70,8 @@
   unicode-bidi: plaintext;
   text-align: right;
 }
+/* Arabic letters join: no letter spacing in the greeting (clock.greeting) */
+[dir="rtl"] [data-clock="stack"] #greet {
+  letter-spacing: 0;
+  margin: 0 6px 12px 0;
+}

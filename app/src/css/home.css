@@ -333,6 +333,13 @@ body {
   opacity: 1;
   pointer-events: auto;
 }
+/* the app name stays with the dock's resting place; with the grid open it would sit among the tiles */
+[data-grid="push"] #shelf {
+  transition: opacity calc(0.25s * var(--spd)) linear;
+}
+[data-grid="push"].grid-open #shelf {
+  opacity: 0;
+}
 /* every row of tiles centred, also a last row that is not full */
 [data-galign="center"] #grid {
   display: flex;
