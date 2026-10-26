@@ -54,6 +54,9 @@ services you choose (update checks go to GitHub). See [What it changes on the TV
    **Set up now** in the app on the TV.
 3. Check the [tested TVs](tested-tvs.md) and report yours if it is not listed.
 
+Questions and ideas are welcome on the [CleanYourTV Discord](https://discord.gg/9hHAmCfqB); bugs go in the
+[issues](https://github.com/lasharor/cleanyourtv-WebOS/issues).
+
 ## Disclaimer
 
 CleanYourTV is an independent project. It is not affiliated with, endorsed by or supported by LG Electronics. LG and webOS are

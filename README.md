@@ -142,6 +142,13 @@ covers the ports, the token for notifications, voice and dev builds. To report a
 
 ---
 
+## Community
+
+Questions, ideas and showing off your home screen: join the [CleanYourTV Discord](https://discord.gg/9hHAmCfqB). Bugs and reports of TVs
+that work go in the [issues](https://github.com/lasharor/cleanyourtv-WebOS/issues), so they stay findable.
+
+---
+
 ## Contributing
 
 Troubleshooting and fixing with an AI assistant (Claude, ChatGPT, a local model) is supported: [`AGENTS.md`](AGENTS.md) is the briefing,
