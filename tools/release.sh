@@ -28,7 +28,7 @@ if git diff --quiet "$last" HEAD -- $PKG; then
   say "the package did not change since $last: no release"
   echo "tag=" >> "$OUT"
   echo "docs=$docs" >> "$OUT"
-  [ -n "$DRY" ] || git push -q origin HEAD:main
+  [ -n "$DRY" ] || git push -q origin HEAD:refs/heads/main
   exit 0
 fi
 
@@ -72,7 +72,7 @@ rm -f helper/helper.js.bak app/version.json.bak app/src/js/core.js.bak
 [ "$(ver < helper/helper.js)" = "$svc_new" ] && [ "$(fever < app/version.json)" = "$fe_new" ] || { say "the version change did not apply"; exit 1; }
 git add helper/helper.js app/version.json app/src/js/core.js app/index.html
 git diff --cached --quiet || git commit -q -m "Release $svc_new (launcher $fe_new)"   # nothing to commit when both were raised by hand
-git push -q origin HEAD:dev
-git push -q origin HEAD:main
+git push -q origin HEAD:refs/heads/dev   # refs/heads: the dev pre-release has a tag of the same name
+git push -q origin HEAD:refs/heads/main
 echo "tag=v$svc_new" >> "$OUT"
 echo "docs=$docs" >> "$OUT"

@@ -37,7 +37,7 @@ jobs:
       - uses: actions/checkout@v4
         if: steps.gate.outputs.go == '1'
         with:
-          ref: dev
+          ref: refs/heads/dev
           fetch-depth: 0
       - name: Cache Node 8 and the old Chromium builds
         if: steps.gate.outputs.go == '1'
@@ -78,9 +78,9 @@ jobs:
           gh release create "$TAG" --target "$(git rev-parse HEAD)" --title "$TAG" --notes-file "$RUNNER_TEMP/release-notes.md" \
             dist/*.ipk dist/*.ipk.sha256 dist/*.tgz dist/*.tgz.sha256 dist/apps.json dist/*.manifest.json
           # pushes made with this workflow's token start no workflows, so the dev build (now with the new version) is started here
-          gh workflow run dev-build.yml --ref dev
+          gh workflow run dev-build.yml --ref refs/heads/dev
       - name: Publish the documentation
         if: steps.rel.outputs.docs == '1'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh workflow run docs.yml --ref main
+        run: gh workflow run docs.yml --ref refs/heads/main
