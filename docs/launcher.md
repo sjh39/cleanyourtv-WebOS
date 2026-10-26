@@ -63,6 +63,22 @@ system apps are never in it. The list is read when it opens and closes when you 
 Putting the dock, buttons, hidden apps, order and clock back to the defaults is in the manager app: **Reset Home customisation**.
 
 
+## Cards
+
+Themes with places for cards (for now **Lock Screen**) have a **Cards** row in **Customise**. It lists the places (above the clock,
+beside the clock, a column on the right, above the dock); choose one to put a card there or leave it empty. A card you chose stays
+when you switch to another theme with the same place.
+
+| Card | What it shows |
+|---|---|
+| Greeting | Good morning, afternoon or evening, with your name if you set one, and the date on a second line where there is room. |
+| Text | Your own text. `{{greeting}}`, `{{time}}`, `{{date}}` and `{{weekday}}` are filled in and kept up to date; `**bold**`, `*italic*` and a line starting with `#` for a heading. In three sizes. |
+
+Names, texts and the other options are typed on your phone: **Customise** > **Cards** > **Set up from your phone** opens the manager
+app with a QR code. The page shows a form for each place, and **Edit as JSON** shows all cards at once, for example
+`{"greeting": {"type": "greeting", "name": "Sam"}}`. It stays open while you use it, at most an hour, and needs the code shown on
+the TV. Weather and Home Assistant cards are coming. How a theme marks its places is in [Themes](themes.md#slots-for-cards).
+
 ## Inputs
 
 The **Inputs** button lists HDMI inputs by the names LG shows, with what is connected and a marker on the active one. OK

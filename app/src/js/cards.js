@@ -1,23 +1,73 @@
 /* ---------- cards: small widgets in the slots a theme declares (theme.json "slots"), chosen in Customise > Cards ----------
    cfg.cards is {<slot id>: {type, ...options}}; a slot without an entry shows the card the theme puts there (slot.card), and
    {type: 'none'} leaves it empty. Each card type draws itself into its box; draw() runs on every rebuild and every clock tick. */
+/* what changes with the time, for the cards: the greeting of the day part, the time and the date as the clock shows them */
+function greetText(name) {
+  var h = new Date().getHours();
+  if (name) return (h < 12 ? t('Good morning, %s') : h < 18 ? t('Good afternoon, %s') : t('Good evening, %s')).replace('%s', name);
+  return h < 12 ? t('Good morning') : h < 18 ? t('Good afternoon') : t('Good evening');
+}
+function dateText(o) {
+  try {
+    return new Date().toLocaleDateString(LOC, o || { weekday: 'long', day: 'numeric', month: 'long' });
+  } catch (e) {
+    return '';
+  }
+}
+function timeText() {
+  try {
+    return new Date().toLocaleTimeString(LOC, clockOpts());
+  } catch (e) {
+    return '';
+  }
+}
+/* a template card's text: {{greeting}}, {{time}}, {{date}}, {{weekday}} filled in, then **bold**, *italic* and "# heading" lines */
+function cardMarkup(src) {
+  var vars = { greeting: greetText(''), time: timeText(), date: dateText(), weekday: dateText({ weekday: 'long' }) };
+  var esc = function (x) {
+    return String(x).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  };
+  return esc(String(src || '').slice(0, 1000))
+    .replace(/\{\{\s*([\w.]+)\s*\}\}/g, function (m, k) {
+      return k in vars ? esc(vars[k]) : '';
+    })
+    .split('\n')
+    .map(function (l) {
+      l = l.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>').replace(/\*([^*]+)\*/g, '<i>$1</i>');
+      return /^#\s/.test(l) ? '<div class="hd">' + l.replace(/^#\s+/, '') + '</div>' : '<div>' + (l || '&nbsp;') + '</div>';
+    })
+    .join('');
+}
 var CARD_TYPES = {
-  /* "Good morning" by the time of day, with an optional name (set on the phone page) */
+  /* "Good morning" by the time of day, with an optional name and an optional second line (the date); set on the phone page */
   greeting: {
     name: function () {
       return t('Greeting');
     },
     draw: function (el, o) {
-      var h = new Date().getHours(),
-        n = String(o.name || '').slice(0, 40),
-        s = n
-          ? (h < 12 ? t('Good morning, %s') : h < 18 ? t('Good afternoon, %s') : t('Good evening, %s')).replace('%s', n)
-          : h < 12
-            ? t('Good morning')
-            : h < 18
-              ? t('Good afternoon')
-              : t('Good evening');
-      if (el.textContent !== s) el.textContent = s;
+      var s = greetText(String(o.name || '').slice(0, 40)),
+        l2 = o.line === 'date' ? dateText() : '',
+        key = s + '|' + l2;
+      if (el._k === key) return;
+      el._k = key;
+      el.innerHTML = '<div class="l1"></div>' + (l2 ? '<div class="l2"></div>' : '');
+      el.firstChild.textContent = s;
+      if (l2) el.lastChild.textContent = l2;
+    },
+  },
+  /* text from the phone page, with what changes filled in */
+  template: {
+    name: function () {
+      return t('Text');
+    },
+    draw: function (el, o) {
+      var h = cardMarkup(o.text);
+      if (el._k === h) return;
+      el._k = h;
+      el.innerHTML = h;
+      el.setAttribute('data-size', o.size === 'small' || o.size === 'large' ? o.size : 'medium');
     },
   },
 };
@@ -46,6 +96,7 @@ function drawCards() {
     var el = document.createElement('div'),
       st = el.style;
     el.className = 'card card-' + c.type + (sl.keep ? ' keep' : '');
+    el.setAttribute('data-align', sl.align || 'left');
     st.setProperty('--cl', sl.l);
     st.setProperty('--cr', sl.r);
     st.setProperty('--ct', sl.t);
@@ -76,7 +127,7 @@ function setCard(id, type) {
 }
 function cardsMenu() {
   openBuilt(t('Cards'), function () {
-    return (TH.slots || []).map(function (sl) {
+    var rows = (TH.slots || []).map(function (sl) {
       var c = cardFor(sl);
       return {
         label: slotName(sl.id),
@@ -87,6 +138,17 @@ function cardsMenu() {
         },
       };
     });
+    /* names, texts and the other options are typed on a phone page, opened from the manager app with a QR code */
+    return rows.concat([
+      { sep: true },
+      {
+        label: t('Set up from your phone'),
+        sub: t('names, texts, card options'),
+        fn: function () {
+          launch('com.cleanyourtv.manager', { open: 'cards' });
+        },
+      },
+    ]);
   });
 }
 function slotMenu(sl) {

@@ -127,6 +127,37 @@ function openWallPair() {
     }
   );
 }
+/* Cards: the options of the cards in the theme's slots, typed on a phone page (helper/cards.js); opened from the launcher's Customise > Cards */
+function openCardsPair() {
+  shareMode = 'cards';
+  push('share');
+  $('share').style.display = 'block';
+  $('shareurl').textContent = '';
+  $('qrbox').style.visibility = 'hidden';
+  $('share').querySelector('h2').textContent = tr('Cards');
+  $('share').querySelector('ol').innerHTML = tr(
+    '<li>Phone on the <b>same Wi-Fi</b> as the TV.</li><li>Scan the code with the camera.</li><li>Choose a card for each place and fill in its options, then tap <b>Save</b>.</li>'
+  );
+  $('sharemsg').textContent = tr('Preparing\u2026');
+  api('/api/cards/pair', {}).then(
+    function (r) {
+      if (view !== 'share' || shareMode !== 'cards') return;
+      if (r.error) {
+        $('sharemsg').textContent = tr(r.error);
+        return;
+      }
+      drawQr(r.qr);
+      $('qrbox').style.visibility = 'visible';
+      $('shareurl').textContent = tr(r.url + '   code ' + r.code);
+      $('sharemsg').textContent = tr(
+        'The page stays open while you use it, at most an hour. It is not encrypted: what you type travels over your Wi-Fi.'
+      );
+    },
+    function () {
+      $('sharemsg').textContent = tr('The service did not answer.');
+    }
+  );
+}
 function openLivePair() {
   shareMode = 'live';
   push('share');

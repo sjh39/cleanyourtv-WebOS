@@ -430,7 +430,19 @@ function resolve(t, accent) {
   if (v.slots && v.slots.length)
     out.slots = v.slots.map(sl => {
       const o = place(sl.anchor, sl.align, sl.x, sl.y);
-      return { id: sl.id, l: o.l, r: o.r, t: o.t, b: o.b, tx: o.tx, w: px(sl.w), h: px(sl.h), card: sl.card, keep: sl.keep };
+      return {
+        id: sl.id,
+        align: sl.align,
+        l: o.l,
+        r: o.r,
+        t: o.t,
+        b: o.b,
+        tx: o.tx,
+        w: px(sl.w),
+        h: px(sl.h),
+        card: sl.card,
+        keep: sl.keep,
+      };
     });
   // only a theme with a typeface has this key, so the replies for the other themes stay as they were
   if (v['type.fontFile']) out.font = { id: v.fontTheme || t.id, file: v['type.fontFile'] };

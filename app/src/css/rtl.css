@@ -80,6 +80,6 @@
   right: var(--cl);
   transform: var(--ctxr, var(--ctx));
 }
-[dir="rtl"] .card-greeting {
+[dir="rtl"] .card-greeting .l1 {
   letter-spacing: 0;
 }
