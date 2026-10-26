@@ -1,0 +1,79 @@
+{
+ "name": "Lock Screen",
+ "author": "CleanYourTV",
+ "description": "A phone-style lock screen: a greeting and big clock top-left, and a small translucent dock low in the corner over a calm landscape. Turn Wallpapers on for your photos.",
+ "colors": {
+  "night": "#0a1426",
+  "panel": "#15243a",
+  "ink": "#ffffff",
+  "accent": "#ffffff"
+ },
+ "surface": {
+  "pillAlpha": 0.14,
+  "pillRing": 0.18
+ },
+ "type": {
+  "scale": 0.95
+ },
+ "clock": {
+  "layout": "stack",
+  "align": "left",
+  "anchor": "top",
+  "x": 96,
+  "y": 70,
+  "scale": 1.6,
+  "dateScale": 0.95,
+  "greeting": true
+ },
+ "shelf": {
+  "show": true,
+  "align": "left",
+  "x": 96,
+  "y": 740,
+  "scale": 1
+ },
+ "bar": {
+  "style": "pill",
+  "anchor": "top",
+  "align": "right",
+  "x": 96,
+  "y": 64,
+  "size": 52,
+  "gap": 14
+ },
+ "dock": {
+  "anchor": "bottom",
+  "align": "left",
+  "x": 96,
+  "y": 72,
+  "count": 7,
+  "w": 150,
+  "h": 104,
+  "gap": 48,
+  "radius": 52,
+  "tileAlpha": 0.3,
+  "lift": 6,
+  "focusScale": 1.08
+ },
+ "grid": {
+  "mode": "push",
+  "dockUp": 210,
+  "clipTop": 160,
+  "cols": 10,
+  "tileH": 136,
+  "gapX": 22,
+  "gapY": 22,
+  "radius": 30,
+  "align": "left"
+ },
+ "tile": {
+  "border": 0.18,
+  "ringWidth": 3,
+  "ringOffset": 4
+ },
+ "effects": {
+  "glow": 0,
+  "wallpaper": "lockscreen.jpg",
+  "wallpaperDim": 0.15
+ }
+}

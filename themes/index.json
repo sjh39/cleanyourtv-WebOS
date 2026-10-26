@@ -37,6 +37,13 @@
    "preview": "large/preview.jpg"
   },
   {
+   "id": "lockscreen",
+   "name": "Lock Screen",
+   "author": "CleanYourTV",
+   "description": "A phone-style lock screen: a greeting and big clock top-left, and a small translucent dock low in the corner over a calm landscape. Turn Wallpapers on for your photos.",
+   "preview": "lockscreen/preview.jpg"
+  },
+  {
    "id": "midnight",
    "name": "Midnight",
    "author": "CleanYourTV",

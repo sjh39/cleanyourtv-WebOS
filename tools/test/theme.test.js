@@ -93,6 +93,17 @@ run(async () => {
     'effects are clamped, a wallpaper path is refused and unknown keys are dropped'
   );
   ok(themeMod.normalize({}, '../x') === null, 'a bad theme id is refused');
+  // clock.greeting and dock.tileAlpha: a stacked greeting over the clock and a see-through dock
+  const glass = themeMod.resolve(themeMod.normalize({ clock: { layout: 'stack', greeting: true }, dock: { tileAlpha: 0.3 } }, 'glass'));
+  ok(
+    glass.vars['--greet-d'] === 'block' && glass.vars['--dock-tile-alpha'] === '0.3' && glass.attrs.clock === 'stack',
+    'clock.greeting shows the greeting and dock.tileAlpha makes the dock tiles see-through'
+  );
+  const plain = themeMod.resolve(themeMod.normalize({}, 'plain'));
+  ok(
+    plain.vars['--greet-d'] === 'none' && plain.vars['--dock-tile-alpha'] === '1',
+    'by default there is no greeting and the dock tiles are opaque'
+  );
   const tbase = themeMod.normalize({ grid: { cols: 7 }, dock: { count: 6 } }, 'base'),
     tkid = themeMod.normalize({ grid: { cols: 'many' }, bar: { style: 'round' } }, 'kid', tbase.v);
   ok(

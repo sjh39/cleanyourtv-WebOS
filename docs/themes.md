@@ -37,6 +37,7 @@ folder of the GitHub repository (the `main` branch):
 | Bloom | A flower wallpaper with the dock in a glass panel at the bottom. Down moves the dock up and the apps appear below it, centred. |
 | Horizon | A row of seven square apps along the bottom of a dusk landscape, the clock on the left and the buttons on the right at the top. Down moves the row up and shows all apps below it. |
 | Pixel | Pixel art: a blocky typeface, square tiles and buttons, a yellow focus box and a sunset over a lake drawn in big pixels. Moves without animation, like an old console. |
+| Lock Screen | A phone-style lock screen: a greeting and a big clock top left, and a small, translucent dock low in the corner over a calm blue landscape, so the picture fills the screen. Down moves the dock up and shows all apps below it. Turn Wallpapers on for your own photos. |
 
 ![Classic, Compact, Large print and Midnight](screenshots/themes-1.jpg)
 
@@ -158,6 +159,7 @@ when the focus moves down into it (Back or Up closes it); a dock at the top leav
 | **clock** | | | |
 | `clock.show` | `true` or `false` | `true` | Show the clock. |
 | `clock.date` | `true` or `false` | `true` | Show the date beside or under the time. |
+| `clock.greeting` | `true` or `false` | `false` | Show a greeting (Good morning / afternoon / evening, in the language) in capitals above the time. Needs the stacked layout. |
 | `clock.layout` | `inline`, `stack` | `inline` | `inline`: the date beside the time; `stack`: under it. |
 | `clock.anchor` | `top`, `bottom` | `top` | Which screen edge `clock.y` counts from. |
 | `clock.align` | `left`, `center`, `right` | `left` | Which side `clock.x` counts from; `center` centres it. |
@@ -193,6 +195,7 @@ when the focus moves down into it (Back or Up closes it); a dock at the top leav
 | `dock.radius` | 0 to 80 | `36` | Corner radius of dock tiles. |
 | `dock.panel` | 0 to 0.6 | `0` | Opacity of a translucent panel behind the dock tiles; 0 for none. |
 | `dock.panelPad` | 0 to 60 | `24` | Space between the panel and the tiles, in px. |
+| `dock.tileAlpha` | 0 to 1 | `1` | Opacity of the dock tile background; below 1 lets the wallpaper show through the tiles. |
 | `dock.lift` | 0 to 40 | `10` | How far the focused dock tile rises, in px. |
 | `dock.focusScale` | 1 to 1.3 | `1.05` | Scale of the focused dock tile. |
 | **grid** | | | |
