@@ -670,9 +670,9 @@ function build() {
     });
     rows.push({
       label: 'Picture size',
-      sub: w.size === '4k' ? '4K (3840 px)' : 'Full HD (1920 px)',
+      sub: w.size === 'hd' ? 'Full HD (1920 px)' : '4K (3840 px)',
       fn: function () {
-        wallCall('/api/wallpapers/set', { size: w.size === '4k' ? 'hd' : '4k' });
+        wallCall('/api/wallpapers/set', { size: w.size === 'hd' ? '4k' : 'hd' });
       },
     });
     rows.push({ sep: true });

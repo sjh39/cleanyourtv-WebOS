@@ -334,8 +334,6 @@ var MTX = {
       'Elke foto die Wallpapers kan tonen, en de ruimte die ze op de TV gebruiken (hooguit 150 MB).',
     'Downloads new and changed photos from the chosen albums now and removes the ones that left them.':
       'Downloadt nu nieuwe en gewijzigde foto’s uit de gekozen albums en verwijdert de foto’s die eruit zijn gegaan.',
-    'Full HD (the default) keeps photos at 1920 pixels, the size Home is drawn at; 4K at 3840, which uses about four times the space. It applies to new uploads and to the next Immich sync.':
-      'Full HD (de standaard) bewaart foto’s op 1920 pixels, de grootte waarop Home wordt getekend; 4K op 3840, wat ongeveer vier keer zoveel ruimte kost. Geldt voor nieuwe uploads en de volgende Immich-synchronisatie.',
     'Deletes every uploaded photo from the TV. Immich photos stay.': 'Verwijdert elke geüploade foto van de TV. Immich-foto’s blijven.',
     'Forgets the address and the key and deletes the Immich photos from the TV. Uploads stay.':
       'Vergeet het adres en de sleutel en verwijdert de Immich-foto’s van de TV. Uploads blijven.',
@@ -435,6 +433,8 @@ var MTX = {
       'Werkt zonder de service: zoekt een nieuwer pakket en installeert het via de rootservice.',
     'This TV also has LG’s full-screen Home: if the Home button opens that instead of this launcher, set TV Settings > General > Home Settings > Home Style to Basic.':
       'Deze TV heeft ook LG’s schermvullende Home: opent de Home-knop die in plaats van deze launcher, zet dan TV-instellingen > Algemeen > Home-instellingen > Home-stijl op Basis.',
+    '4K (the default) keeps photos at 3840 pixels, the size the TV draws Home at, so they look sharp; Full HD at 1920 fits about four times as many photos in 150 MB. It applies to new uploads and to the next Immich sync.':
+      '4K (de standaard) bewaart foto’s op 3840 pixels, de grootte waarop de TV Home tekent, zodat ze scherp zijn; Full HD op 1920 past ongeveer vier keer zoveel foto’s in 150 MB. Geldt voor nieuwe uploads en de volgende Immich-synchronisatie.',
   },
   'de': {
     'Close': 'Schließen',
@@ -769,8 +769,6 @@ var MTX = {
       'Jedes Foto, das Wallpapers zeigen kann, und der Platz, den sie auf dem Fernseher belegen (höchstens 150 MB).',
     'Downloads new and changed photos from the chosen albums now and removes the ones that left them.':
       'Lädt jetzt neue und geänderte Fotos aus den gewählten Alben und entfernt die, die nicht mehr darin sind.',
-    'Full HD (the default) keeps photos at 1920 pixels, the size Home is drawn at; 4K at 3840, which uses about four times the space. It applies to new uploads and to the next Immich sync.':
-      'Full HD (Standard) speichert Fotos mit 1920 Pixeln, der Größe, in der Home gezeichnet wird; 4K mit 3840, was etwa viermal so viel Platz braucht. Gilt für neue Uploads und die nächste Immich-Synchronisierung.',
     'Deletes every uploaded photo from the TV. Immich photos stay.': 'Löscht jedes hochgeladene Foto vom Fernseher. Immich-Fotos bleiben.',
     'Forgets the address and the key and deletes the Immich photos from the TV. Uploads stay.':
       'Vergisst Adresse und Schlüssel und löscht die Immich-Fotos vom Fernseher. Uploads bleiben.',
@@ -870,6 +868,8 @@ var MTX = {
       'Funktioniert ohne den Dienst: sucht ein neueres Paket und installiert es über den Root-Dienst.',
     'This TV also has LG’s full-screen Home: if the Home button opens that instead of this launcher, set TV Settings > General > Home Settings > Home Style to Basic.':
       'Dieser Fernseher hat auch LGs Vollbild-Home: Öffnet die Home-Taste dieses statt des Launchers, stelle Einstellungen > Allgemein > Home-Einstellungen > Home-Stil auf Einfach.',
+    '4K (the default) keeps photos at 3840 pixels, the size the TV draws Home at, so they look sharp; Full HD at 1920 fits about four times as many photos in 150 MB. It applies to new uploads and to the next Immich sync.':
+      '4K (Standard) speichert Fotos mit 3840 Pixeln, der Größe, in der der Fernseher Home zeichnet, damit sie scharf sind; Full HD mit 1920 passt etwa viermal so viele Fotos in 150 MB. Gilt für neue Uploads und die nächste Immich-Synchronisierung.',
   },
   'fr': {
     'Close': 'Fermer',
@@ -1203,8 +1203,6 @@ var MTX = {
       'Toutes les photos que Wallpapers peut afficher, et l’espace qu’elles occupent sur le téléviseur (150 Mo au plus).',
     'Downloads new and changed photos from the chosen albums now and removes the ones that left them.':
       'Télécharge maintenant les photos nouvelles et modifiées des albums choisis et retire celles qui en sont sorties.',
-    'Full HD (the default) keeps photos at 1920 pixels, the size Home is drawn at; 4K at 3840, which uses about four times the space. It applies to new uploads and to the next Immich sync.':
-      'Full HD (par défaut) garde les photos à 1920 pixels, la taille à laquelle l’accueil est dessiné ; 4K à 3840, ce qui prend environ quatre fois plus de place. S’applique aux nouveaux envois et à la prochaine synchronisation Immich.',
     'Deletes every uploaded photo from the TV. Immich photos stay.':
       'Supprime toutes les photos envoyées du téléviseur. Les photos Immich restent.',
     'Forgets the address and the key and deletes the Immich photos from the TV. Uploads stay.':
@@ -1304,6 +1302,8 @@ var MTX = {
       'Fonctionne sans le service : cherche un paquet plus récent et l’installe via le service root.',
     'This TV also has LG’s full-screen Home: if the Home button opens that instead of this launcher, set TV Settings > General > Home Settings > Home Style to Basic.':
       'Ce téléviseur a aussi l’accueil plein écran de LG : si le bouton Home l’ouvre au lieu de ce launcher, réglez Paramètres > Général > Paramètres de l’accueil > Style d’accueil sur Basique.',
+    '4K (the default) keeps photos at 3840 pixels, the size the TV draws Home at, so they look sharp; Full HD at 1920 fits about four times as many photos in 150 MB. It applies to new uploads and to the next Immich sync.':
+      '4K (par défaut) garde les photos à 3840 pixels, la taille à laquelle le téléviseur dessine l’accueil, pour qu’elles soient nettes ; Full HD à 1920 en fait tenir environ quatre fois plus dans 150 Mo. S’applique aux nouveaux envois et à la prochaine synchronisation Immich.',
   },
   'es': {
     'Close': 'Cerrar',
@@ -1637,8 +1637,6 @@ var MTX = {
       'Todas las fotos que Wallpapers puede mostrar, y el espacio que ocupan en el televisor (como máximo 150 MB).',
     'Downloads new and changed photos from the chosen albums now and removes the ones that left them.':
       'Descarga ahora las fotos nuevas y cambiadas de los álbumes elegidos y quita las que salieron de ellos.',
-    'Full HD (the default) keeps photos at 1920 pixels, the size Home is drawn at; 4K at 3840, which uses about four times the space. It applies to new uploads and to the next Immich sync.':
-      'Full HD (predeterminado) guarda las fotos a 1920 píxeles, el tamaño al que se dibuja Inicio; 4K a 3840, que ocupa unas cuatro veces más. Se aplica a las nuevas subidas y a la próxima sincronización de Immich.',
     'Deletes every uploaded photo from the TV. Immich photos stay.':
       'Borra todas las fotos subidas del televisor. Las de Immich se quedan.',
     'Forgets the address and the key and deletes the Immich photos from the TV. Uploads stay.':
@@ -1739,6 +1737,8 @@ var MTX = {
       'Funciona sin el servicio: busca un paquete más nuevo y lo instala mediante el servicio root.',
     'This TV also has LG’s full-screen Home: if the Home button opens that instead of this launcher, set TV Settings > General > Home Settings > Home Style to Basic.':
       'Este televisor también tiene el Inicio a pantalla completa de LG: si el botón Home lo abre en lugar de este launcher, pon Ajustes > General > Ajustes de Inicio > Estilo de Inicio en Básico.',
+    '4K (the default) keeps photos at 3840 pixels, the size the TV draws Home at, so they look sharp; Full HD at 1920 fits about four times as many photos in 150 MB. It applies to new uploads and to the next Immich sync.':
+      '4K (predeterminado) guarda las fotos a 3840 píxeles, el tamaño al que el televisor dibuja Inicio, para que se vean nítidas; Full HD a 1920 permite unas cuatro veces más fotos en 150 MB. Se aplica a las nuevas subidas y a la próxima sincronización de Immich.',
   },
 };
 var MT = MTX[MLANG] || null,
