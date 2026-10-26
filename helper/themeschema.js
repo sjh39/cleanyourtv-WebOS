@@ -67,7 +67,7 @@ const SCHEMA = [
   ['clock.layout', 'enum', ['inline', 'stack'], 'inline', '`inline`: the date beside the time; `stack`: under it.'],
   ['clock.anchor', 'enum', TOPBOT, 'top', 'Which screen edge `clock.y` counts from.'],
   ['clock.align', 'enum', POS, 'left', 'Which side `clock.x` counts from; `center` centres it.'],
-  ['clock.x', 'int', [0, 900], 96, 'Distance from that side, in px (on a 1920 x 1080 canvas).'],
+  ['clock.x', 'int', [0, 900], 96, 'Distance from that side, in px (on a 1920 x 1080 canvas). Not used when centred.'],
   ['clock.y', 'int', [0, 900], 54, 'Distance from the top or bottom edge, in px.'],
   ['clock.scale', 'num', [0.6, 2.5], 1, 'Scale of the time.'],
   ['clock.dateScale', 'num', [0.6, 2], 1, 'Scale of the date.'],
@@ -82,7 +82,7 @@ const SCHEMA = [
   ['bar.labels', 'enum', ['auto', 'show', 'hide'], 'auto', 'Button labels: `auto` shows them except in the `round` style.'],
   ['bar.anchor', 'enum', TOPBOT, 'top', 'Which screen edge `bar.y` counts from.'],
   ['bar.align', 'enum', POS, 'right', 'Which side `bar.x` counts from.'],
-  ['bar.x', 'int', [0, 900], 96, 'Distance from that side, in px.'],
+  ['bar.x', 'int', [0, 900], 96, 'Distance from that side, in px. Not used when centred.'],
   ['bar.y', 'int', [0, 900], 54, 'Distance from the top or bottom edge, in px.'],
   ['bar.size', 'int', [40, 100], 64, 'Height of a button, in px.'],
   ['bar.gap', 'int', [4, 40], 16, 'Space between buttons, in px.'],
@@ -93,7 +93,7 @@ const SCHEMA = [
   ['shelf.scale', 'num', [0.4, 1.6], 1, 'Scale of the name.'],
   ['dock.anchor', 'enum', TOPBOT, 'top', 'Which screen edge `dock.y` counts from.'],
   ['dock.align', 'enum', POS, 'left', 'Which side `dock.x` counts from; `center` centres the dock.'],
-  ['dock.x', 'int', [0, 900], 96, 'Distance from that side, in px.'],
+  ['dock.x', 'int', [0, 900], 96, 'Distance from that side, in px. Not used when centred.'],
   ['dock.y', 'auto', [0, 1000], null, 'Distance from the top or bottom edge, in px. Empty: 360 from the top, 68 from the bottom.'],
   ['dock.count', 'int', [3, 8], 4, 'Apps in the dock.'],
   ['dock.w', 'int', [120, 500], 408, 'Width of a dock tile, in px.'],
@@ -257,7 +257,8 @@ function place(anchor, align, x, y) {
   if (align === 'left') o.l = px(x);
   else if (align === 'right') o.r = px(x);
   else {
-    o.l = 'calc(50% + ' + x + 'px)';
+    // centred: x is a distance from a side, so it does not apply
+    o.l = '50%';
     o.tx = 'translateX(-50%)';
   }
   if (anchor === 'top') o.t = px(y);

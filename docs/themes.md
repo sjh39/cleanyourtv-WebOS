@@ -161,7 +161,7 @@ when the focus moves down into it (Back or Up closes it); a dock at the top leav
 | `clock.layout` | `inline`, `stack` | `inline` | `inline`: the date beside the time; `stack`: under it. |
 | `clock.anchor` | `top`, `bottom` | `top` | Which screen edge `clock.y` counts from. |
 | `clock.align` | `left`, `center`, `right` | `left` | Which side `clock.x` counts from; `center` centres it. |
-| `clock.x` | 0 to 900 | `96` | Distance from that side, in px (on a 1920 x 1080 canvas). |
+| `clock.x` | 0 to 900 | `96` | Distance from that side, in px (on a 1920 x 1080 canvas). Not used when centred. |
 | `clock.y` | 0 to 900 | `54` | Distance from the top or bottom edge, in px. |
 | `clock.scale` | 0.6 to 2.5 | `1` | Scale of the time. |
 | `clock.dateScale` | 0.6 to 2 | `1` | Scale of the date. |
@@ -171,7 +171,7 @@ when the focus moves down into it (Back or Up closes it); a dock at the top leav
 | `bar.labels` | `auto`, `show`, `hide` | `auto` | Button labels: `auto` shows them except in the `round` style. |
 | `bar.anchor` | `top`, `bottom` | `top` | Which screen edge `bar.y` counts from. |
 | `bar.align` | `left`, `center`, `right` | `right` | Which side `bar.x` counts from. |
-| `bar.x` | 0 to 900 | `96` | Distance from that side, in px. |
+| `bar.x` | 0 to 900 | `96` | Distance from that side, in px. Not used when centred. |
 | `bar.y` | 0 to 900 | `54` | Distance from the top or bottom edge, in px. |
 | `bar.size` | 40 to 100 | `64` | Height of a button, in px. |
 | `bar.gap` | 4 to 40 | `16` | Space between buttons, in px. |
@@ -184,7 +184,7 @@ when the focus moves down into it (Back or Up closes it); a dock at the top leav
 | **dock** | | | |
 | `dock.anchor` | `top`, `bottom` | `top` | Which screen edge `dock.y` counts from. |
 | `dock.align` | `left`, `center`, `right` | `left` | Which side `dock.x` counts from; `center` centres the dock. |
-| `dock.x` | 0 to 900 | `96` | Distance from that side, in px. |
+| `dock.x` | 0 to 900 | `96` | Distance from that side, in px. Not used when centred. |
 | `dock.y` | px, 0 to 1000 | empty | Distance from the top or bottom edge, in px. Empty: 360 from the top, 68 from the bottom. |
 | `dock.count` | 3 to 8 | `4` | Apps in the dock. |
 | `dock.w` | 120 to 500 | `408` | Width of a dock tile, in px. |

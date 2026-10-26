@@ -4,6 +4,7 @@
 [dir="rtl"] #clock {
   left: var(--clock-r);
   right: var(--clock-l);
+  transform: var(--clock-txr, var(--clock-tx));
 }
 [dir="rtl"] #date {
   margin-left: 0;
@@ -15,6 +16,7 @@
 [dir="rtl"] #bar {
   left: var(--bar-r);
   right: var(--bar-l);
+  transform: var(--bar-txr, var(--bar-tx));
 }
 [dir="rtl"] #bar > * + * {
   margin-left: 0;
@@ -33,6 +35,7 @@
 [dir="rtl"] #dock {
   left: var(--dock-r);
   right: var(--dock-l);
+  transform: var(--dock-txr, var(--dock-tx));
 }
 [dir="rtl"] #dock > * + * {
   margin-left: 0;

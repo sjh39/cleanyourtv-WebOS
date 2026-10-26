@@ -19,6 +19,13 @@ function applyTheme(t) {
     st.setProperty(k, t.vars[k]);
     themeKeys.push(k);
   }
+  /* a centred box is placed from the right in a right-to-left language (rtl.css), so it moves the other way to its centre */
+  ['clock', 'bar', 'dock'].forEach(function (n) {
+    if (t.vars['--' + n + '-tx'] === 'translateX(-50%)') {
+      st.setProperty('--' + n + '-txr', 'translateX(50%)');
+      themeKeys.push('--' + n + '-txr');
+    }
+  });
   /* a theme's own typeface, served from its folder; the family name is in --font */
   var fs = $('tfont'),
     f = t.font,
