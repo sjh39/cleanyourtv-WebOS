@@ -2536,6 +2536,7 @@ function saveCfg() {
   });
   store();
   rebuild();
+  WALL.sync(); /* a changed Wallpapers setting (on, off, the interval) takes effect at once, not only the next time Home opens */
 }
 function isHidden(id) {
   return (cfg.hidden || []).indexOf(id) >= 0;
