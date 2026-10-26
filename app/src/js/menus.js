@@ -292,6 +292,92 @@ function pinInput(id, name, on) {
   );
 }
 
+function appMenu(a) {
+  var di = dockIds(),
+    pos = di.indexOf(a.id),
+    items = [
+      {
+        label: t('Open'),
+        fn: function () {
+          launch(a.id);
+        },
+      },
+    ];
+  if (pos >= 0) {
+    if (pos > 0)
+      items.push({
+        label: t('Move left in dock'),
+        fn: function () {
+          var d = di.slice();
+          d.splice(pos, 1);
+          d.splice(pos - 1, 0, a.id);
+          setDock(d);
+        },
+      });
+    if (pos < di.length - 1)
+      items.push({
+        label: t('Move right in dock'),
+        fn: function () {
+          var d = di.slice();
+          d.splice(pos, 1);
+          d.splice(pos + 1, 0, a.id);
+          setDock(d);
+        },
+      });
+    items.push({
+      label: t('Remove from dock'),
+      fn: function () {
+        setDock(
+          di.filter(function (i) {
+            return i !== a.id;
+          })
+        );
+      },
+    });
+  } else if (di.length < TH.dockN)
+    items.push({
+      label: t('Add to dock'),
+      fn: function () {
+        setDock(di.concat(a.id));
+      },
+    });
+  else
+    items.push({
+      label: t('Add to dock...'),
+      stay: true,
+      fn: function () {
+        openMenu(
+          t('Replace which app?'),
+          di.map(function (id, i) {
+            return {
+              label: title(id),
+              fn: function () {
+                var d = di.slice();
+                d[i] = a.id;
+                setDock(d);
+              },
+            };
+          })
+        );
+      },
+    });
+  if (a.input)
+    items.push({
+      label: t('Remove from Home'),
+      fn: function () {
+        pinInput(a.id, a.title, false);
+      },
+    });
+  else
+    items.push({
+      label: t('Hide app'),
+      fn: function () {
+        hideApp(a.id);
+      },
+    });
+  openMenu(a.title, items);
+}
+
 function removeButton(o) {
   cfg.topbar = topbar().filter(function (b) {
     return b !== o;
@@ -345,10 +431,8 @@ function customizeMenu() {
     { label: t('Hidden apps'), sub: nh ? String(nh) : '', stay: true, fn: hiddenMenu },
     {
       label: t('App order'),
-      sub: cfg.sort === 'custom' ? t('My order') : cfg.sort === 'alpha' ? t('A to Z') : t('Most used first'),
-      stay: cfg.sort === 'custom',
+      sub: cfg.sort === 'alpha' ? t('A to Z') : t('Most used first'),
       fn: function () {
-        if (cfg.sort === 'custom') return orderMenu();
         cfg.sort = cfg.sort === 'alpha' ? 'usage' : 'alpha';
         saveCfg();
       },
@@ -424,21 +508,6 @@ function wallMenu() {
         launch('com.cleanyourtv.manager', { open: 'wallpapers' });
       },
     },
-  ]);
-}
-/* My order comes from moving apps in wiggle mode; going back to a sorted order drops it, so this asks first */
-function orderMenu() {
-  var to = function (s) {
-    return function () {
-      cfg.sort = s;
-      delete cfg.order;
-      saveCfg();
-    };
-  };
-  openMenu(t('Drop my order?'), [
-    { label: t('Keep my order'), fn: function () {} },
-    { label: t('Most used first'), fn: to('usage') },
-    { label: t('A to Z'), fn: to('alpha') },
   ]);
 }
 /* the apps that can go in the dock or on a button: not hidden, not Live TV, A to Z */

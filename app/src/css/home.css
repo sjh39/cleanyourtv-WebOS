@@ -532,60 +532,6 @@ body {
 #toast.on {
   opacity: 1;
 }
-/* wiggle mode (hold OK on an app): the tiles rock, the focused one stands still and shows where the carried app goes */
-@keyframes wig {
-  0% {
-    transform: rotate(-1.4deg);
-  }
-  50% {
-    transform: rotate(1.4deg);
-  }
-  100% {
-    transform: rotate(-1.4deg);
-  }
-}
-.wiggle .tile:not(.f) {
-  animation: wig 0.32s ease-in-out infinite;
-}
-.wiggle .tile:nth-child(2n):not(.f) {
-  animation-delay: -0.16s;
-}
-.wiggle .tile.carry {
-  opacity: 0.92;
-  box-shadow: 0 34px 50px rgba(0, 0, 0, 0.7);
-}
-.tile .wx {
-  position: absolute;
-  z-index: 2;
-  left: 8px;
-  top: 8px;
-  width: 44px;
-  height: 44px;
-  border-radius: 22px;
-  background: rgba(30, 32, 38, 0.95);
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25);
-  color: var(--ink);
-  font-size: 34px;
-  font-style: normal;
-  line-height: 42px;
-  text-align: center;
-}
-.wiggle .tile.carry .wx {
-  display: none;
-}
-#wighint {
-  position: absolute;
-  z-index: 20;
-  left: 50%;
-  bottom: 40px;
-  transform: translateX(-50%);
-  padding: 16px 34px;
-  border-radius: 30px;
-  background: var(--panel);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
-  font-size: 26px;
-  white-space: nowrap;
-}
 /* Wallpapers (wall.js): two photo layers that cross-fade and a darkening layer, behind everything; the theme's own background steps back */
 .wp,
 .wpd {

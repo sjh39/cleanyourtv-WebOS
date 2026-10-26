@@ -73,13 +73,7 @@ run(async () => {
   const on = config.get().runDots === true;
   await call(apps, '/api/config', 'POST', { dock: ['a.one'], runDots: 'yes' });
   ok(on && config.get().runDots === undefined, 'the green dot on open apps is off by default and saved only when switched on');
-  await call(apps, '/api/config', 'POST', { sort: 'custom', order: ['b.two', 'a.one', 3] });
-  const mine = config.get();
-  await call(apps, '/api/config', 'POST', { sort: 'alpha' });
-  ok(
-    mine.sort === 'custom' && JSON.stringify(mine.order) === '["b.two","a.one"]' && config.get().sort === 'alpha' && !config.get().order,
-    'My order (wiggle mode) is saved with its app ids, and a sorted order replaces it'
-  );
+
   config.update('test', c => {
     c.dock = ['a.one', 'com.webos.app.hdmi2'];
   });
