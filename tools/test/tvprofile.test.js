@@ -58,13 +58,6 @@ run(async () => {
       tv.decide({}).homeTakeover === 'mount',
     "LG's native Home is taken over by a stand-in for its program (no app manager restart); flutter, web and unknown by the mount"
   );
-  // Issue 21: ARC remained silent after SAM restarted, although the controller was active.
-  const arc = { model: 'OLED65C35LA.AEU', sdk: '11.2.0', home: 'com.webos.app.home flutter' };
-  ok(tv.decide(arc).afterSam === 'arccontroller', 'webOS 26 restarts the ARC controller after SAM (issue 21), whatever the model name');
-  ok(tv.decide(Object.assign({}, arc, { home: 'com.webos.app.home web' })).afterSam === 'arccontroller', 'also with the web Home');
-  for (const change of [{ sdk: '10.2.2' }, { sdk: '' }, { home: '' }]) {
-    ok(tv.decide(Object.assign({}, arc, change)).afterSam === '', 'not on webOS 25 or an unknown TV ' + JSON.stringify(change));
-  }
   // the setup script asks the same rules from the shell
   const cli = args => cp.spawnSync(process.execPath, [path.join(helper, 'tvprofile.js')].concat(args), { encoding: 'utf8' }).stdout.trim();
   ok(
@@ -77,10 +70,6 @@ run(async () => {
     "from the shell: is the firmware in the repository's compat.json"
   );
   ok(cli(['get', 'homeSupported', '--home', 'com.webos.app.home flutter']) === '1', "from the shell: LG's Home kind");
-  ok(
-    cli(['get', 'afterSam', '--sdk', arc.sdk, '--home', arc.home]) === 'arccontroller',
-    'from the shell: webOS 26 restarts the ARC controller'
-  );
   // the service saves the profile and reads it again after a restart
   const svc = tv.create({ luna: async () => ({ returnValue: true, modelName: 'X', firmwareVersion: '1', sdkVersion: '6.5.0' }) });
   const p = await svc.refresh();

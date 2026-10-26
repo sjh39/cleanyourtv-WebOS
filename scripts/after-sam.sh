@@ -1,8 +1,7 @@
 #!/bin/sh
-# Run after the system app manager (SAM) was restarted to take over Home. On webOS before 7 and where LG's Home is the native program,
-# the services that talk to SAM keep a connection to the old one: web and video apps stop opening, the remote stops controlling HDMI-CEC
-# devices and apps are no longer preloaded (issues 23 and 24); on webOS 26 HDMI ARC to a soundbar stays silent (issue 21). Restart those
-# of them this TV has; which ones is decided by helper/tvprofile.js (afterSam).
+# Run after the system app manager (SAM) was restarted to take over Home. On webOS before 7 the services that talk to SAM keep a
+# connection to the old one: web and video apps stop opening, the remote stops controlling HDMI-CEC devices and apps are no longer
+# preloaded (issues 23 and 24). Restart those of them this TV has; which ones is decided by helper/tvprofile.js (afterSam).
 # Each step is written to /tmp/cleanyourtv-boot.log, which Share log includes.
 export PATH=/usr/bin:/usr/sbin:/bin:/sbin:$PATH
 L=/media/developer/cleanyourtv
