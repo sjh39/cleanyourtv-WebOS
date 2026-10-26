@@ -196,9 +196,13 @@ document.addEventListener('webOSRelaunch', function () {
 document.addEventListener('visibilitychange', function () {
   if (document.hidden) {
     WIG.exit();
+    WALL.hidden();
     if (LIVE.on) LIVE.exit();
     closeRunningMenu();
-  } else load();
+  } else {
+    load();
+    WALL.shown();
+  }
 });
 
 function tick() {

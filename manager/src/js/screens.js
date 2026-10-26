@@ -58,6 +58,71 @@ function openLiveTv() {
     }
   );
 }
+/* Wallpapers: photos uploaded from a phone and synced from Immich (helper/wallpapers.js); the launcher's Customise switches them on */
+function openWallpapers() {
+  api('/api/wallpapers/status').then(
+    function (r) {
+      wp = r;
+      if (view !== 'wallpapers') push('wallpapers');
+      else {
+        build();
+        draw();
+      }
+      if (r.immich && r.immich.state === 'syncing') setTimeout(wallRefresh, 3000);
+    },
+    function () {
+      banner('The service did not answer', 'err');
+    }
+  );
+}
+function wallRefresh() {
+  if (view === 'wallpapers') openWallpapers();
+}
+function wallCall(path, b, msg) {
+  api(path, b || {}).then(
+    function (r) {
+      wp = r;
+      if (msg) banner(msg, 'ok');
+      if (view !== 'wallpapers') pop();
+      else {
+        build();
+        draw();
+      }
+      if (r.immich && r.immich.state === 'syncing') setTimeout(wallRefresh, 3000);
+    },
+    function () {
+      banner('The service did not answer', 'err');
+    }
+  );
+}
+function openWallPair() {
+  shareMode = 'wall';
+  push('share');
+  $('share').style.display = 'block';
+  $('shareurl').textContent = '';
+  $('qrbox').style.visibility = 'hidden';
+  $('share').querySelector('h2').textContent = 'Wallpapers';
+  $('share').querySelector('ol').innerHTML =
+    '<li>Phone on the <b>same Wi-Fi</b> as the TV.</li><li>Scan the code with the camera.</li><li>Choose <b>Upload photos</b> or <b>Configure Immich</b>.</li>';
+  $('sharemsg').textContent = 'Preparing\u2026';
+  api('/api/wallpapers/pair', {}).then(
+    function (r) {
+      if (view !== 'share' || shareMode !== 'wall') return;
+      if (r.error) {
+        $('sharemsg').textContent = r.error;
+        return;
+      }
+      drawQr(r.qr);
+      $('qrbox').style.visibility = 'visible';
+      $('shareurl').textContent = r.url + '   code ' + r.code;
+      $('sharemsg').textContent =
+        'The page stays open while you use it, at most an hour. It is not encrypted: your photos and the Immich key travel over your Wi-Fi.';
+    },
+    function () {
+      $('sharemsg').textContent = 'The service did not answer.';
+    }
+  );
+}
 function openLivePair() {
   shareMode = 'live';
   push('share');

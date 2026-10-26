@@ -634,6 +634,84 @@ function build() {
     rows.push({ label: 'Back', fn: pop });
     return;
   }
+  if (view === 'wallpapers') {
+    var w = wp || { uploads: 0, immich: {}, total: 0, limits: { uploads: 100 }, bytes: 0 },
+      im = w.immich || {},
+      ago = function (t) {
+        if (!t) return 'never';
+        var m = Math.round((Date.now() - t) / 60000);
+        return m < 1 ? 'just now' : m < 60 ? m + ' min ago' : m < 1440 ? Math.round(m / 60) + ' h ago' : Math.round(m / 1440) + ' days ago';
+      };
+    rows.push({ label: 'Manage from your phone', sub: 'upload photos, configure Immich', fn: openWallPair });
+    rows.push({ sep: true });
+    rows.push({ label: 'Local uploads', sub: w.uploads + ' photos', fn: openWallPair });
+    rows.push({
+      label: 'Immich',
+      sub: !im.configured
+        ? 'not connected \u00B7 set up from your phone'
+        : im.state === 'syncing'
+          ? 'syncing\u2026 ' + (im.done || 0) + ' new'
+          : im.photos + ' photos \u00B7 synced ' + ago(im.lastSync) + (im.error ? ' \u00B7 ' + im.error : ''),
+      fn: openWallPair,
+    });
+    rows.push({
+      label: 'Total',
+      sub: w.total + ' photos \u00B7 ' + Math.round(w.bytes / 1048576) + ' of 150 MB',
+      fn: null,
+    });
+    rows.push({ sep: true });
+    rows.push({
+      label: 'Sync now',
+      sub: im.configured ? (im.state === 'syncing' ? 'syncing\u2026' : 'Immich: new and changed photos') : 'connect Immich first',
+      dim: !im.configured || im.state === 'syncing',
+      fn: function () {
+        if (im.configured && im.state !== 'syncing') wallCall('/api/wallpapers/sync', {}, 'Syncing with Immich\u2026');
+      },
+    });
+    rows.push({
+      label: 'Picture size',
+      sub: w.size === 'hd' ? 'Full HD (1920 px)' : '4K (3840 px)',
+      fn: function () {
+        wallCall('/api/wallpapers/set', { size: w.size === 'hd' ? '4k' : 'hd' });
+      },
+    });
+    rows.push({ sep: true });
+    rows.push({
+      label: 'Remove all uploads',
+      sub: w.uploads ? '' : 'nothing to remove',
+      dim: !w.uploads,
+      fn: function () {
+        if (w.uploads) push('confirm-wp-uploads');
+      },
+    });
+    rows.push({
+      label: 'Disconnect Immich',
+      sub: im.configured ? '' : 'not connected',
+      dim: !im.configured,
+      fn: function () {
+        if (im.configured) push('confirm-wp-immich');
+      },
+    });
+    rows.push({ sep: true });
+    rows.push({ label: 'Back', fn: pop });
+    return;
+  }
+  if (view === 'confirm-wp-uploads' || view === 'confirm-wp-immich') {
+    var upl = view === 'confirm-wp-uploads';
+    rows.push({ label: 'Cancel', fn: pop });
+    rows.push({
+      label: upl ? 'Yes, remove all uploads' : 'Yes, disconnect Immich',
+      sub: upl ? 'the uploaded photos are deleted from the TV' : 'the key is forgotten and its photos are deleted from the TV',
+      fn: function () {
+        wallCall(
+          upl ? '/api/wallpapers/remove-uploads' : '/api/wallpapers/disconnect',
+          {},
+          upl ? 'Uploads removed' : 'Immich disconnected'
+        );
+      },
+    });
+    return;
+  }
   if (view === 'confirm-reset') {
     rows.push({ label: 'Cancel', fn: pop });
     rows.push({
@@ -719,6 +797,11 @@ function build() {
     },
   });
   rows.push({ label: 'Live TV', sub: onoff(st.options.liveTv !== false), fn: openLiveTv });
+  rows.push({
+    label: 'Wallpapers',
+    sub: st.wallpapers ? st.wallpapers.total + ' photos' : '',
+    fn: openWallpapers,
+  });
   rows.push({
     label: 'Input key',
     sub: st.inputhook && st.inputhook.hook && !st.inputhook.hook.attached ? 'not available' : onoff(st.options.inputKey),

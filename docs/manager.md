@@ -11,6 +11,7 @@
 | Update channel | Follow the stable releases or the [dev builds](managing.md#dev-builds). |
 | Go back to launcher | Appears after a launcher update. |
 | CleanYourTV as Home | **Use CleanYourTV as Home** (LG's Home or ours; the TV restarts) and the optional **Learn the Home key**. |
+| Wallpapers | Your own photos behind Home: the phone page (uploads and Immich), counts, **Sync now**, **Picture size**, **Remove all uploads** and **Disconnect Immich**. See [Wallpapers](wallpapers.md). |
 | Live TV | **Show Live TV** (off hides it in the launcher and Inputs list and leaves the Guide button to LG), the **Playlist** (set up from your phone with a QR code and a 6-digit code), **Refresh playlist and guide**, **Learn the Guide key**, **Clear recent channels** and **Remove the playlist**. See [Live TV](live-tv.md). |
 | Input key | The takeover switch, **Learn the Input key**, **Input key shows** (the Inputs list over the running app, ready in the background or started when pressed, or the launcher's own list). See [The Input key](input-key.md). |
 | Debloat | The four groups of the [debloat](debloat.md), each on or off, and **Switch all on** / **Switch all off**. |

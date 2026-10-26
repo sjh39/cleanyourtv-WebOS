@@ -20,7 +20,7 @@ same on every supported webOS version.
 | Action | How |
 |---|---|
 | Open an app | OK |
-| App options (dock, hide) | Hold OK on an app |
+| Move or hide apps | Hold OK on an app (wiggle mode, see below) |
 | Move or remove a top button | Hold OK on it |
 | Customise | The **Customise** button |
 | Live TV | The **Live TV** button or tile |
@@ -56,10 +56,26 @@ system apps are never in it. The list is read when it opens and closes when you 
 - the **app order** (most used first, or A to Z);
 - **mark running apps** (a green dot on their tiles, or none);
 - the **clock** format (automatic, 12 or 24 hour);
-- the **theme** (see [Themes](themes.md)) and the **accent colour**;
+- the **theme** (see [Themes](themes.md)) and the **accent colour**; the theme list shows each theme's screenshot;
+- **Wallpapers**: your own photos behind Home, and how often they change (see [Wallpapers](wallpapers.md));
 - **More settings...**, which opens the [manager app](manager.md) for everything the TV and the service do.
 
 Putting the dock, buttons, hidden apps, order and clock back to the defaults is in the manager app: **Reset Home customisation**.
+
+## Moving apps
+
+Hold OK on an app and every tile starts to wiggle; the app you held is picked up.
+
+| Action | How |
+|---|---|
+| Move the picked-up app | Arrows, also up into the dock. In a full dock it swaps places with the app there. |
+| Put it down / pick up another | OK |
+| Hide the focused app | Hold OK (an input pinned to Home is taken off Home). With the pointer: the × on a tile. |
+| Done | Back |
+
+With the Magic Remote, hold the button on an app and drag it to another app's place. Moving an app in the grid switches
+**App order** to **My order**; choosing **Most used first** or **A to Z** again asks before it drops your order. Apps added later
+go at the end.
 
 ## Inputs
 

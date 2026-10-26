@@ -373,6 +373,12 @@ function customizeMenu() {
     },
     { sep: true },
     { label: t('Theme'), stay: true, fn: themeMenu },
+    {
+      label: t('Wallpapers'),
+      sub: cfg.wall && cfg.wall.on ? t('On') : t('Off'),
+      stay: true,
+      fn: wallMenu,
+    },
     { label: t('Accent colour'), stay: true, fn: accentMenu },
     { sep: true },
     {
@@ -380,6 +386,42 @@ function customizeMenu() {
       sub: 'CleanYourTV',
       fn: function () {
         launch('com.cleanyourtv.manager');
+      },
+    },
+  ]);
+}
+/* Wallpapers: switched on here and how often the photo changes; the photos are added in the manager (uploads from a phone, Immich) */
+function wallMenu() {
+  var w = cfg.wall || { on: false, every: 15 },
+    n = +String((cfg.wallpapers && cfg.wallpapers.stamp) || '0').split(':')[0] || 0,
+    EV = [0, 5, 15, 60],
+    evName = function (m) {
+      return m ? t('Every %s min').replace('%s', m) : t('Each time Home opens');
+    };
+  openMenu(t('Wallpapers'), [
+    {
+      label: t('Use Wallpapers'),
+      sub: (w.on ? t('On') : t('Off')) + ' \u00B7 ' + (n ? t('%s photos').replace('%s', n) : t('no photos yet')),
+      fn: function () {
+        cfg.wall = { on: !w.on, every: w.every == null ? 15 : w.every };
+        saveCfg();
+      },
+    },
+    {
+      label: t('New photo'),
+      sub: evName(w.every == null ? 15 : w.every),
+      fn: function () {
+        var e = w.every == null ? 15 : w.every;
+        cfg.wall = { on: !!w.on, every: EV[(EV.indexOf(e) + 1) % EV.length] };
+        saveCfg();
+      },
+    },
+    { sep: true },
+    {
+      label: t('Add photos...'),
+      sub: 'CleanYourTV',
+      fn: function () {
+        launch('com.cleanyourtv.manager', { open: 'wallpapers' });
       },
     },
   ]);

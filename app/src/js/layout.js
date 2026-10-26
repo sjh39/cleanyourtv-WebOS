@@ -116,6 +116,7 @@ function load() {
       if (liveOn()) apps.push({ id: '__live', title: t('Live TV') });
       store();
       rebuild();
+      WALL.sync();
       if (!perfReady) {
         perfReady = true;
         perfMark('launcher ready ' + Math.round(performance.now()));

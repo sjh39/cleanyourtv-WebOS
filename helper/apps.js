@@ -165,6 +165,9 @@ function create(ctx) {
     if (strs(b.order)) out.order = strs(b.order); // My order: the grid's apps as moved in wiggle mode
     if (['auto', '24', '12'].includes(b.clock)) out.clock = b.clock;
     if (b.runDots === true) out.runDots = true; // the green dot on open apps (off unless switched on)
+    // Wallpapers in the launcher: on or off, and how often the photo changes (minutes; 0: each time Home opens)
+    if (b.wall && typeof b.wall === 'object')
+      out.wall = { on: b.wall.on === true, every: [0, 5, 15, 60].indexOf(b.wall.every) >= 0 ? b.wall.every : 15 };
     if (Array.isArray(b.topbar))
       out.topbar = b.topbar
         .slice(0, 12)
@@ -188,7 +191,10 @@ function create(ctx) {
     delete c.voice;
     delete c.notifyApi;
     delete c.theme;
-    const theme = ctx.feature('theme');
+    delete c.wallpapers; // holds the Immich key; the launcher gets only a stamp that changes with the set of photos
+    const theme = ctx.feature('theme'),
+      wp = ctx.feature('wallpapers');
+    if (wp) c.wallpapers = { stamp: wp.stamp() };
     return theme ? Object.assign(c, { theme: theme.resolved() }) : c;
   }
 

@@ -586,3 +586,26 @@ body {
   font-size: 26px;
   white-space: nowrap;
 }
+/* Wallpapers (wall.js): two photo layers that cross-fade and a darkening layer, behind everything; the theme's own background steps back */
+.wp,
+.wpd {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1920px;
+  height: 1080px;
+  opacity: 0;
+  pointer-events: none;
+}
+.wp {
+  background-size: cover;
+  background-position: center;
+  transition: opacity calc(1.2s * var(--spd)) linear;
+}
+.wp.on,
+.wpon .wpd {
+  opacity: 1;
+}
+body.wpon {
+  background-image: none;
+}

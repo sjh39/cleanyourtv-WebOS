@@ -591,6 +591,29 @@ body {
   font-size: 26px;
   white-space: nowrap;
 }
+/* Wallpapers (wall.js): two photo layers that cross-fade and a darkening layer, behind everything; the theme's own background steps back */
+.wp,
+.wpd {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1920px;
+  height: 1080px;
+  opacity: 0;
+  pointer-events: none;
+}
+.wp {
+  background-size: cover;
+  background-position: center;
+  transition: opacity calc(1.2s * var(--spd)) linear;
+}
+.wp.on,
+.wpon .wpd {
+  opacity: 1;
+}
+body.wpon {
+  background-image: none;
+}
 /* menus */
 #ov {
   position: absolute;
@@ -1394,6 +1417,16 @@ var TX = {
     'My order': 'Mijn volgorde',
     'Drop my order?': 'Mijn volgorde loslaten?',
     'Keep my order': 'Mijn volgorde houden',
+    'Wallpapers': 'Wallpapers',
+    'Use Wallpapers': 'Wallpapers gebruiken',
+    'On': 'Aan',
+    'Off': 'Uit',
+    '%s photos': '%s foto’s',
+    'no photos yet': 'nog geen foto’s',
+    'New photo': 'Nieuwe foto',
+    'Every %s min': 'Elke %s min',
+    'Each time Home opens': 'Elke keer dat Home opent',
+    'Add photos...': 'Foto’s toevoegen...',
   },
   de: {
     'Running apps': 'Geöffnete Apps',
@@ -1467,6 +1500,16 @@ var TX = {
     'My order': 'Meine Reihenfolge',
     'Drop my order?': 'Meine Reihenfolge verwerfen?',
     'Keep my order': 'Meine Reihenfolge behalten',
+    'Wallpapers': 'Wallpapers',
+    'Use Wallpapers': 'Wallpapers verwenden',
+    'On': 'An',
+    'Off': 'Aus',
+    '%s photos': '%s Fotos',
+    'no photos yet': 'noch keine Fotos',
+    'New photo': 'Neues Foto',
+    'Every %s min': 'Alle %s Min.',
+    'Each time Home opens': 'Bei jedem Öffnen von Home',
+    'Add photos...': 'Fotos hinzufügen...',
   },
   fr: {
     'Running apps': 'Apps ouvertes',
@@ -1540,6 +1583,16 @@ var TX = {
     'My order': 'Mon ordre',
     'Drop my order?': 'Abandonner mon ordre ?',
     'Keep my order': 'Garder mon ordre',
+    'Wallpapers': 'Wallpapers',
+    'Use Wallpapers': 'Utiliser Wallpapers',
+    'On': 'Activé',
+    'Off': 'Désactivé',
+    '%s photos': '%s photos',
+    'no photos yet': 'pas encore de photos',
+    'New photo': 'Nouvelle photo',
+    'Every %s min': 'Toutes les %s min',
+    'Each time Home opens': 'À chaque ouverture de l’accueil',
+    'Add photos...': 'Ajouter des photos...',
   },
   es: {
     'Running apps': 'Apps abiertas',
@@ -1613,6 +1666,16 @@ var TX = {
     'My order': 'Mi orden',
     'Drop my order?': '¿Descartar mi orden?',
     'Keep my order': 'Mantener mi orden',
+    'Wallpapers': 'Wallpapers',
+    'Use Wallpapers': 'Usar Wallpapers',
+    'On': 'Activado',
+    'Off': 'Desactivado',
+    '%s photos': '%s fotos',
+    'no photos yet': 'aún no hay fotos',
+    'New photo': 'Nueva foto',
+    'Every %s min': 'Cada %s min',
+    'Each time Home opens': 'Cada vez que se abre Inicio',
+    'Add photos...': 'Añadir fotos...',
   },
 };
 var TXL = {
@@ -2390,6 +2453,107 @@ function posOf(e) {
   }
   return null;
 }
+/* ---------- Wallpapers: the service's photos (uploads and Immich, GET /api/wallpapers/list) behind Home instead of the theme's
+   background. A random photo each time Home opens and every cfg.wall.every minutes (0: only when Home opens), cross-faded between two
+   layers (opacity only). Darkened like a theme's wallpaper. Off, or no photos: the theme as it is. ---------- */
+var WALL = (function () {
+  var list = [],
+    stamp = '',
+    cur = '',
+    side = 0,
+    timer = 0,
+    els = null;
+  function want() {
+    return !!(cfg.wall && cfg.wall.on);
+  }
+  function layers() {
+    if (els) return els;
+    var g = $('gA');
+    els = ['wpA', 'wpB', 'wpD'].map(function (id) {
+      var d = document.createElement('div');
+      d.id = id;
+      d.className = id === 'wpD' ? 'wpd' : 'wp';
+      document.body.insertBefore(d, g);
+      return d;
+    });
+    return els;
+  }
+  function dim() {
+    var th = cfg.theme || {},
+      d = th.wallpaper && th.wallpaper.dim != null ? th.wallpaper.dim : 0.4;
+    layers()[2].style.background = 'rgba(' + (th.nightRgb || '7, 8, 11') + ',' + d + ')';
+  }
+  function show(id) {
+    var url = API + '/api/wallpapers/photo/' + id,
+      im = new Image();
+    im.onload = function () {
+      if (!want()) return;
+      var l = layers(),
+        on = l[side],
+        off = l[side ^ 1];
+      side ^= 1;
+      on.style.backgroundImage = 'url("' + url + '")';
+      on.classList.add('on');
+      off.classList.remove('on');
+      dim();
+      document.body.classList.add('wpon');
+      cur = id;
+    };
+    im.src = url;
+  }
+  function next() {
+    if (!list.length) return;
+    var pick = list[Math.floor(Math.random() * list.length)];
+    for (var n = 0; pick === cur && list.length > 1 && n < 8; n++) pick = list[Math.floor(Math.random() * list.length)];
+    show(pick);
+  }
+  function arm() {
+    clearInterval(timer);
+    var m = (cfg.wall && cfg.wall.every) || 0;
+    if (m > 0 && list.length > 1) timer = setInterval(next, m * 60000);
+  }
+  function off() {
+    clearInterval(timer);
+    document.body.classList.remove('wpon');
+    if (els) {
+      els[0].classList.remove('on');
+      els[1].classList.remove('on');
+    }
+    cur = '';
+  }
+  /* after the settings were read: switched on or off, a new interval, or a different set of photos */
+  function sync() {
+    if (!want()) return off();
+    var st = (cfg.wallpapers && cfg.wallpapers.stamp) || '';
+    if (st === stamp && list.length) {
+      dim();
+      return arm();
+    }
+    stamp = st;
+    api('/api/wallpapers/list').then(
+      function (x) {
+        list = x.photos || [];
+        if (!list.length) return off();
+        if (!cur || list.indexOf(cur) < 0) next();
+        arm();
+      },
+      function () {}
+    );
+  }
+  return {
+    sync: sync,
+    /* Home is on screen again: a new photo, and the timer runs again */
+    shown: function () {
+      if (want() && list.length) {
+        next();
+        arm();
+      }
+    },
+    hidden: function () {
+      clearInterval(timer);
+    },
+  };
+})();
 /* ---------- config (edited in the launcher, saved through the helper) ---------- */
 function saveCfg() {
   api('/api/config', cfg).catch(function () {
@@ -2857,6 +3021,12 @@ function customizeMenu() {
     },
     { sep: true },
     { label: t('Theme'), stay: true, fn: themeMenu },
+    {
+      label: t('Wallpapers'),
+      sub: cfg.wall && cfg.wall.on ? t('On') : t('Off'),
+      stay: true,
+      fn: wallMenu,
+    },
     { label: t('Accent colour'), stay: true, fn: accentMenu },
     { sep: true },
     {
@@ -2864,6 +3034,42 @@ function customizeMenu() {
       sub: 'CleanYourTV',
       fn: function () {
         launch('com.cleanyourtv.manager');
+      },
+    },
+  ]);
+}
+/* Wallpapers: switched on here and how often the photo changes; the photos are added in the manager (uploads from a phone, Immich) */
+function wallMenu() {
+  var w = cfg.wall || { on: false, every: 15 },
+    n = +String((cfg.wallpapers && cfg.wallpapers.stamp) || '0').split(':')[0] || 0,
+    EV = [0, 5, 15, 60],
+    evName = function (m) {
+      return m ? t('Every %s min').replace('%s', m) : t('Each time Home opens');
+    };
+  openMenu(t('Wallpapers'), [
+    {
+      label: t('Use Wallpapers'),
+      sub: (w.on ? t('On') : t('Off')) + ' \u00B7 ' + (n ? t('%s photos').replace('%s', n) : t('no photos yet')),
+      fn: function () {
+        cfg.wall = { on: !w.on, every: w.every == null ? 15 : w.every };
+        saveCfg();
+      },
+    },
+    {
+      label: t('New photo'),
+      sub: evName(w.every == null ? 15 : w.every),
+      fn: function () {
+        var e = w.every == null ? 15 : w.every;
+        cfg.wall = { on: !!w.on, every: EV[(EV.indexOf(e) + 1) % EV.length] };
+        saveCfg();
+      },
+    },
+    { sep: true },
+    {
+      label: t('Add photos...'),
+      sub: 'CleanYourTV',
+      fn: function () {
+        launch('com.cleanyourtv.manager', { open: 'wallpapers' });
       },
     },
   ]);
@@ -3245,6 +3451,7 @@ function load() {
       if (liveOn()) apps.push({ id: '__live', title: t('Live TV') });
       store();
       rebuild();
+      WALL.sync();
       if (!perfReady) {
         perfReady = true;
         perfMark('launcher ready ' + Math.round(performance.now()));
@@ -3453,9 +3660,13 @@ document.addEventListener('webOSRelaunch', function () {
 document.addEventListener('visibilitychange', function () {
   if (document.hidden) {
     WIG.exit();
+    WALL.hidden();
     if (LIVE.on) LIVE.exit();
     closeRunningMenu();
-  } else load();
+  } else {
+    load();
+    WALL.shown();
+  }
 });
 
 function tick() {

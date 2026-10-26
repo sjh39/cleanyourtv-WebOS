@@ -6,7 +6,9 @@ Live TV, the Inputs picker and the notification cards keep their own look.
 
 In the launcher, **Customise** > **Theme** lists the themes; choosing one applies it at once (a theme that is not on the TV yet is
 downloaded first). **Go back to the previous theme** is at the bottom of the list. **Customise** > **Accent colour** sets the colour of
-the focus ring and of the highlighted button or menu row, on top of any theme. The screenshots are on this page.
+the focus ring and of the highlighted button or menu row, on top of any theme. The theme list shows the highlighted theme's
+screenshot and description. The Inputs picker and the Live TV banner and guide follow the theme's colours, accent and typeface too.
+Your own photos can replace a theme's background: see [Wallpapers](wallpapers.md).
 
 ## Where the themes come from
 

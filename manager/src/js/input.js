@@ -38,12 +38,22 @@ document.addEventListener('wheel', function (e) {
   if (e.deltaY > 0) next(1);
   else if (e.deltaY < 0) next(-1);
 }); /* the Magic Remote wheel */
+/* opened with {"open":"wallpapers"} (the launcher's Customise > Wallpapers): straight to that screen */
+function wantView() {
+  var p = {};
+  try {
+    p = JSON.parse(window.webOSSystem.launchParams || '{}');
+  } catch (e) {}
+  if (p && p.open === 'wallpapers') openWallpapers();
+}
 document.addEventListener('webOSRelaunch', function () {
   view = 'main';
   idx = 0;
   idxStack = [];
   listY = 0;
   load();
+  wantView();
 });
 banner('Reading status…', 'work');
 load();
+wantView();

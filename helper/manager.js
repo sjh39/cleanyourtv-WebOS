@@ -49,7 +49,8 @@ function create(ctx) {
   function status() {
     const opts = config.options(),
       voice = ctx.feature('voice'),
-      napi = ctx.feature('notifyapi');
+      napi = ctx.feature('notifyapi'),
+      wp = ctx.feature('wallpapers');
     let ours = false;
     try {
       const mounts = fs.readFileSync(P.PROC + '/mounts', 'utf8');
@@ -62,6 +63,7 @@ function create(ctx) {
       picker: Object.assign({}, config.get().picker || {}, { mode: inputkey().mode(), released: !!opts.inputKey && !inputkey().on() }),
       voice: voice ? (v => ({ installed: v.installed, enabled: v.enabled }))(voice.status()) : null,
       notifyApi: napi ? { enabled: napi.info().enabled, port: napi.info().port } : { enabled: false },
+      wallpapers: wp ? (w => ({ total: w.total, uploads: w.uploads, immich: w.immich.photos }))(wp.status()) : null,
       home: { enabled: !fs.existsSync(P.DISABLE), fullhome: fs.existsSync(P.FULLHOME_APP), ours },
       inputhook: inputhook.status(keys().input),
       keys: keys(),

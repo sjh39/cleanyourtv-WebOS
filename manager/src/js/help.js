@@ -21,6 +21,19 @@ var INFO = {
   'Switch all on': 'Switches every group on.',
   'Switch all off': 'Switches the debloat off: the services start again and the hosts lines are removed.',
   'More': 'Voice and network notifications.',
+  'Wallpapers':
+    'Your own photos behind Home: uploaded from a phone, or synced from Immich albums. Switch them on in the launcher: Customise > Wallpapers.',
+  'Manage from your phone':
+    'Shows a QR code. On the phone page you upload photos (they are made the right size on the phone), delete uploads, connect Immich, choose albums and hide single photos.',
+  'Local uploads': 'Photos uploaded from a phone, kept on the TV. At most 100.',
+  'Immich':
+    'Photos from the Immich albums you chose, downloaded to the TV every six hours (and with Sync now), so Home never waits for Immich. At most 300.',
+  'Total': 'Every photo Wallpapers can show, and the space they use on the TV (at most 150 MB).',
+  'Sync now': 'Downloads new and changed photos from the chosen albums now and removes the ones that left them.',
+  'Picture size':
+    '4K keeps photos at 3840 pixels, Full HD at 1920 (more photos fit in 150 MB). It applies to new uploads and to the next Immich sync.',
+  'Remove all uploads': 'Deletes every uploaded photo from the TV. Immich photos stay.',
+  'Disconnect Immich': 'Forgets the address and the key and deletes the Immich photos from the TV. Uploads stay.',
   'Reset Home customisation':
     'Puts the dock, the top buttons, hidden apps, the app order and the clock back to the defaults. The theme stays.',
   'Yes, reset Home': 'The launcher\u2019s own settings go back to the defaults. Apps, the theme and everything in this app stay.',

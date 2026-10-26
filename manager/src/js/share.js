@@ -63,6 +63,12 @@ function closeShare() {
     liveRefresh();
     return;
   }
+  if (shareMode === 'wall') {
+    api('/api/wallpapers/pair', { stop: true }).catch(function () {});
+    pop();
+    wallRefresh();
+    return;
+  }
   if (shareMode === 'pair') {
     api('/api/voice/pair-stop', {}).catch(function () {});
     pop();

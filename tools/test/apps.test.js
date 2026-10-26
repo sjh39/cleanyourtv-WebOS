@@ -27,9 +27,14 @@ run(async () => {
       };
     return { returnValue: true };
   };
-  const config = memoryConfig({ dock: ['a.one'] });
-  const apps = req('apps').create({ config, luna, version: '1.6.0', feature: () => null });
+  const config = memoryConfig({ dock: ['a.one'], wallpapers: { immich: { url: 'http://immich', key: 'secret-immich-key' } } });
+  const wpStub = { stamp: () => '3:abcd' };
+  const apps = req('apps').create({ config, luna, version: '1.6.0', feature: n => (n === 'wallpapers' ? wpStub : null) });
   let r = await call(apps, '/api/apps');
+  ok(
+    r.out.indexOf('secret-immich-key') < 0 && r.j.config.wallpapers.stamp === '3:abcd',
+    'the launcher gets a stamp of the Wallpapers photos, never the Immich key'
+  );
   ok(
     asked === 1 && r.j.apps.length === 1 && r.j.apps[0].title === 'One' && r.j.config.dock[0] === 'a.one',
     'the first list is asked from the app manager, without LG Home'
