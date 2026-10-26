@@ -12,7 +12,7 @@ same on every supported webOS version.
 - **Grid.** All other apps, sorted by how often you use each one (or A to Z).
 - **Top buttons.** Inputs, Live TV, Settings and Customise, and a clock. The buttons you see are yours to change.
 - **Open apps.** Optionally a green dot on the tile of every app that is open, as on the active input in the Inputs list: off by
-  default, **Customise** > **Open apps** switches it on, in the launcher and in the Inputs picker. Back on the home screen lists
+  default, **Customise** > **Mark running apps** switches it on, in the launcher and in the Inputs picker. Back on the home screen lists
   the open apps to close them (see [Running apps](#running-apps)).
 
 ## Keys
@@ -21,7 +21,7 @@ same on every supported webOS version.
 |---|---|
 | Open an app | OK |
 | App options (dock, hide) | Hold OK on an app |
-| Remove a top button | Hold OK on it |
+| Move or remove a top button | Hold OK on it |
 | Customise | The **Customise** button |
 | Live TV | The **Live TV** button or tile |
 | Switch input | The **Inputs** button |
@@ -47,16 +47,19 @@ system apps are never in it. The list is read when it opens and closes when you 
 
 ![Customise menu](screenshots/customise.jpg)
 
-**Customise** holds:
+**Customise** holds how Home looks:
 
-- the **top buttons** (add Inputs, Settings, Live TV or any app, or remove one),
-- **hidden apps** (show them again),
-- the **app order** (most used first, or A to Z),
-- **open apps** (a green dot on their tiles, or none),
-- the **clock** format (automatic, 12 or 24 hour),
-- **Reset customisation**.
+- the **dock**: each app in it can be replaced (an app already in the dock swaps places), moved or removed, and **Add an app...**
+  fills a free place. Holding OK on an app does the same from the home screen;
+- the **top buttons**: move one left or right, remove it, or add Inputs, Settings, Live TV or any app;
+- **hidden apps** (show them again);
+- the **app order** (most used first, or A to Z);
+- **mark running apps** (a green dot on their tiles, or none);
+- the **clock** format (automatic, 12 or 24 hour);
+- the **theme** (see [Themes](themes.md)) and the **accent colour**;
+- **More settings...**, which opens the [manager app](manager.md) for everything the TV and the service do.
 
-The dock holds up to four apps. Hold OK on an app and choose **Add to dock**, **Move left**, **Move right** or **Remove from dock**.
+Putting the dock, buttons, hidden apps, order and clock back to the defaults is in the manager app: **Reset Home customisation**.
 
 ## Inputs
 

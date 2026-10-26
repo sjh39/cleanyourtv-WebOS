@@ -76,3 +76,6 @@
   font-size: 20px;
   color: var(--ink2);
 }
+#ov .msep {
+  height: 6px;
+}

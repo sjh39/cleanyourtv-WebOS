@@ -74,6 +74,7 @@ function create(ctx) {
     const cur = config.options();
     const next = Object.assign({}, cur);
     for (const k of ['debloat', 'inputKey', 'liveTv']) if (typeof o[k] === 'boolean') next[k] = o[k];
+    if (Array.isArray(o.debloatOff)) next.debloatOff = debloat.cleanOff(o.debloatOff);
     config.update('manager', c => {
       if (typeof o.pickerPrewarm === 'boolean')
         c.picker = Object.assign(
@@ -92,6 +93,7 @@ function create(ctx) {
     });
     inputkey().syncMode();
     if (next.debloat !== cur.debloat) await debloat.apply(next.debloat);
+    else if (next.debloat) await debloat.change(debloat.cleanOff(cur.debloatOff), debloat.cleanOff(next.debloatOff));
     ensureHook();
     return next;
   }

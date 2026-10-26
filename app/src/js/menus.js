@@ -17,8 +17,8 @@ function setHtml(el, h) {
   el.parentNode.replaceChild(n, el);
   return n;
 }
-function openMenu(title, items) {
-  stack.push({ title: title, items: items, idx: 0 });
+function openMenu(title, items, idx) {
+  stack.push({ title: title, items: items, idx: idx || 0 });
   drawMenu();
 }
 function closeMenus() {
@@ -45,6 +45,10 @@ function drawMenu() {
   var h = '<div class="panel"><h2></h2><div class="more">' + (start > 0 ? '▲' : '') + '</div>';
   for (var i = start; i < Math.min(m.items.length, start + N); i++) {
     var it = m.items[i];
+    if (it.sep) {
+      h += '<div class="msep"></div>';
+      continue;
+    }
     h +=
       '<div class="row' +
       (i === m.idx ? ' f' : '') +
@@ -95,14 +99,19 @@ function pickMenu() {
     if (stack.length === n && !it.stay) closeMenus();
   }
 }
+/* the next row up or down that is not a separator, or -1 */
+function menuStep(m, d) {
+  for (var i = m.idx + d; i >= 0 && i < m.items.length; i += d) if (!m.items[i].sep) return i;
+  return -1;
+}
 function menuKey(k) {
-  var m = stack[stack.length - 1];
-  if (k === 38 && m.idx > 0) {
-    m.idx--;
+  var m = stack[stack.length - 1],
+    n = k === 38 ? menuStep(m, -1) : k === 40 ? menuStep(m, 1) : -1;
+  if (n >= 0) {
+    m.idx = n;
     drawMenu();
-  } else if (k === 40 && m.idx < m.items.length - 1) {
-    m.idx++;
-    drawMenu();
+  } else if (k === 38 || k === 40) {
+    /* the first or last row: nothing to move to */
   } else if (k === 13) pickMenu();
   else if (k === 461 || k === 27 || k === 8) backMenu();
   else return false;
@@ -340,29 +349,51 @@ function removeButton(o) {
   });
   saveCfg();
 }
-function barMenu(o) {
-  openMenu(barLabel(o), [
-    {
-      label: t('Remove this button'),
-      fn: function () {
-        removeButton(o);
-      },
-    },
-  ]);
+/* moves a button one place among the shown ones (a hidden Live TV button keeps its place in the saved list) */
+function moveButton(o, d) {
+  var tb = topbar().slice(),
+    i = tb.indexOf(o),
+    j = i + d;
+  while (j >= 0 && j < tb.length && !liveOn() && tb[j].action === 'live') j += d;
+  if (i < 0 || j < 0 || j >= tb.length) return;
+  tb[i] = tb[j];
+  tb[j] = o;
+  cfg.topbar = tb;
+  saveCfg();
 }
-
-function customizeMenu() {
-  openMenu(t('Customise'), [
-    {
-      label: 'Dock',
-      sub: t('hold OK on an app'),
-      stay: true,
+function barMenu(o) {
+  var sb = shownBar(),
+    pos = sb.indexOf(o),
+    items = [];
+  if (pos > 0)
+    items.push({
+      label: t('Move left'),
       fn: function () {
-        toast(t('Hold OK on any app to change the dock'));
+        moveButton(o, -1);
       },
+    });
+  if (pos >= 0 && pos < sb.length - 1)
+    items.push({
+      label: t('Move right'),
+      fn: function () {
+        moveButton(o, 1);
+      },
+    });
+  items.push({
+    label: t('Remove this button'),
+    fn: function () {
+      removeButton(o);
     },
+  });
+  openMenu(barLabel(o), items);
+}
+/* Customise: how Home looks. What the TV and the service do is in the manager app (More settings...) */
+function customizeMenu() {
+  var nh = hiddenIds().length;
+  openMenu(t('Customise'), [
+    { label: t('Dock'), stay: true, fn: dockMenu },
     { label: t('Top buttons'), stay: true, fn: topButtonsMenu },
-    { label: t('Hidden apps'), stay: true, fn: hiddenMenu },
+    { label: t('Hidden apps'), sub: nh ? String(nh) : '', stay: true, fn: hiddenMenu },
     {
       label: t('App order'),
       sub: cfg.sort === 'alpha' ? t('A to Z') : t('Most used first'),
@@ -372,7 +403,7 @@ function customizeMenu() {
       },
     },
     {
-      label: t('Open apps'),
+      label: t('Mark running apps'),
       sub: cfg.runDots === true ? t('Green dot') : t('No dot'),
       fn: function () {
         if (cfg.runDots === true) delete cfg.runDots;
@@ -389,27 +420,206 @@ function customizeMenu() {
         tick();
       },
     },
+    { sep: true },
+    { label: t('Theme'), stay: true, fn: themeMenu },
+    { label: t('Accent colour'), stay: true, fn: accentMenu },
+    { sep: true },
     {
-      label: t('Reset customisation'),
+      label: t('More settings...'),
+      sub: 'CleanYourTV',
       fn: function () {
-        cfg = {};
-        saveCfg();
+        launch('com.cleanyourtv.manager');
       },
     },
   ]);
 }
+/* the apps that can go in the dock or on a button: not hidden, not Live TV, A to Z */
+function pickApp(heading, skip, cb) {
+  var list = apps
+    .filter(function (a) {
+      return a.id !== '__live' && !isHidden(a.id) && skip.indexOf(a.id) < 0;
+    })
+    .sort(function (a, b) {
+      return a.title.localeCompare(b.title);
+    });
+  openMenu(
+    heading,
+    list.map(function (a) {
+      return {
+        label: a.title,
+        fn: function () {
+          cb(a);
+        },
+      };
+    })
+  );
+}
+function dockMenu() {
+  var di = dockIds(),
+    items = di.map(function (id, i) {
+      return {
+        label: title(id),
+        stay: true,
+        fn: function () {
+          dockSlotMenu(i);
+        },
+      };
+    });
+  if (di.length < TH.dockN)
+    items.push({
+      label: t('Add an app...'),
+      stay: true,
+      fn: function () {
+        pickApp(t('Add to dock'), di, function (a) {
+          setDock(dockIds().concat(a.id));
+        });
+      },
+    });
+  openMenu(t('Dock'), items);
+}
+function dockSlotMenu(i) {
+  var di = dockIds(),
+    id = di[i],
+    move = function (d) {
+      var x = di.slice();
+      x[i] = x[i + d];
+      x[i + d] = id;
+      setDock(x);
+    },
+    items = [
+      {
+        label: t('Replace with...'),
+        stay: true,
+        fn: function () {
+          pickApp(title(id), [id], function (a) {
+            /* an app that is in the dock already swaps places with this one */
+            var x = di.slice(),
+              j = x.indexOf(a.id);
+            if (j >= 0) x[j] = id;
+            x[i] = a.id;
+            setDock(x);
+          });
+        },
+      },
+    ];
+  if (i > 0)
+    items.push({
+      label: t('Move left'),
+      fn: function () {
+        move(-1);
+      },
+    });
+  if (i < di.length - 1)
+    items.push({
+      label: t('Move right'),
+      fn: function () {
+        move(1);
+      },
+    });
+  items.push({
+    label: t('Remove from dock'),
+    fn: function () {
+      setDock(
+        di.filter(function (x) {
+          return x !== id;
+        })
+      );
+    },
+  });
+  openMenu(title(id), items);
+}
 function topButtonsMenu() {
   var items = shownBar().map(function (o) {
     return {
+      icon: o.icon,
       label: barLabel(o),
-      sub: t('OK to remove'),
+      stay: true,
       fn: function () {
-        removeButton(o);
+        barMenu(o);
       },
     };
   });
   items.push({ label: t('Add a button...'), stay: true, fn: addButtonMenu });
   openMenu(t('Top buttons'), items);
+}
+/* themes come from the service (GET /api/theme/list); choosing one applies it, a theme not on the TV is downloaded first */
+function themeList(then) {
+  api('/api/theme/list').then(
+    function (r) {
+      if (r.error) return toast(r.error);
+      then(r);
+    },
+    function () {
+      toast(t('Could not load the themes'));
+    }
+  );
+}
+function themeCall(path, b) {
+  api(path, b).then(
+    function (r) {
+      if (r.error) return toast(r.error);
+      lastSig = '';
+      load();
+    },
+    function () {
+      toast(t('Could not load the themes'));
+    }
+  );
+}
+function themeMenu() {
+  themeList(function (r) {
+    var cur = (r.current && r.current.id) || 'classic',
+      at = 0,
+      name = function (id) {
+        var n = id;
+        (r.themes || []).forEach(function (x) {
+          if (x.id === id) n = x.name;
+        });
+        return n;
+      },
+      items = (r.themes || []).map(function (x, i) {
+        if (x.id === cur) at = i;
+        return {
+          label: x.name,
+          sub: x.id === cur ? t('Selected') : x.installed || x.id === 'classic' ? '' : t('Downloads when chosen'),
+          fn: function () {
+            if (x.id === cur) return;
+            if (!x.installed) toast(t('Getting the theme...'));
+            themeCall('/api/theme/set', { id: x.id });
+          },
+        };
+      });
+    if (r.previous && r.previous.id) {
+      items.push({ sep: true });
+      items.push({
+        icon: 'restore',
+        label: t('Go back to the previous theme'),
+        sub: name(r.previous.id),
+        fn: function () {
+          themeCall('/api/theme/revert', {});
+        },
+      });
+    }
+    if (r.catalogue && !r.catalogue.ok) toast(t('Could not reach GitHub: showing the themes on this TV'));
+    openMenu(t('Theme'), items, at);
+  });
+}
+function accentMenu() {
+  themeList(function (r) {
+    var cur = (r.current && r.current.accent) || '',
+      at = 0,
+      items = (r.accents || []).map(function (a, i) {
+        if (a.hex === cur) at = i;
+        return {
+          label: t(a.name),
+          sub: a.hex === cur ? t('Selected') : '',
+          fn: function () {
+            themeCall('/api/theme/set', { accent: a.hex });
+          },
+        };
+      });
+    openMenu(t('Accent colour'), items, at);
+  });
 }
 function addButtonMenu() {
   var items = PRESETS.filter(function (p) {
@@ -428,43 +638,34 @@ function addButtonMenu() {
     label: t('An app...'),
     stay: true,
     fn: function () {
-      openMenu(
-        t('Pick an app'),
-        apps
-          .slice()
-          .sort(function (a, b) {
-            return a.title.localeCompare(b.title);
-          })
-          .map(function (a) {
-            return {
-              label: a.title,
-              fn: function () {
-                cfg.topbar = topbar().concat([{ label: a.title, icon: 'grid', app: a.id }]);
-                saveCfg();
-              },
-            };
-          })
-      );
+      pickApp(t('Pick an app'), [], function (a) {
+        cfg.topbar = topbar().concat([{ label: a.title, icon: 'grid', app: a.id }]);
+        saveCfg();
+      });
     },
   });
   openMenu(t('Add a button'), items);
 }
-function hiddenMenu() {
-  var h = (cfg.hidden || []).filter(function (id) {
+function hiddenIds() {
+  return (cfg.hidden || []).filter(function (id) {
     return apps.some(function (a) {
       return a.id === id;
     });
   });
-  if (!h.length) return toast(t('No hidden apps'));
+}
+function hiddenMenu() {
+  var h = hiddenIds();
   openMenu(
-    t('Hidden apps (OK to show again)'),
-    h.map(function (id) {
-      return {
-        label: title(id),
-        fn: function () {
-          unhideApp(id);
-        },
-      };
-    })
+    h.length ? t('Hidden apps (OK to show again)') : t('Hidden apps'),
+    h.length
+      ? h.map(function (id) {
+          return {
+            label: title(id),
+            fn: function () {
+              unhideApp(id);
+            },
+          };
+        })
+      : [{ label: t('No hidden apps'), dim: true }]
   );
 }

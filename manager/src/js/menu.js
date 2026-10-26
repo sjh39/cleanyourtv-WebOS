@@ -12,81 +12,6 @@ function build() {
     rows.push({ label: 'Back', fn: pop });
     return;
   }
-  if (view === 'theme') {
-    var tc = (th && th.current) || { id: 'classic', accent: '' };
-    ((th && th.themes) || []).forEach(function (x) {
-      rows.push({
-        label: x.name,
-        sub: x.id === tc.id ? 'selected' : x.installed ? '' : 'on GitHub',
-        pv: x.preview ? x.id : '',
-        info: {
-          t: x.name,
-          d:
-            x.description +
-            (x.author ? '\n\nBy ' + x.author : '') +
-            (x.installed || x.id === 'classic' ? '' : '\n\nDownloaded from GitHub when you choose it.'),
-        },
-        fn: function () {
-          setTheme({ id: x.id, name: x.name });
-        },
-      });
-    });
-    rows.push({ sep: true });
-    var an = 'Theme default';
-    ((th && th.accents) || []).forEach(function (a) {
-      if (a.hex === tc.accent) an = a.name;
-    });
-    rows.push({
-      label: 'Theme options',
-      sub: 'accent colour \u00B7 ' + an,
-      fn: function () {
-        push('themeopts');
-      },
-    });
-    rows.push({ sep: true });
-    rows.push({ label: 'Back', fn: pop });
-    return;
-  }
-  if (view === 'themeopts') {
-    var to = (th && th.current) || { id: 'classic', accent: '' },
-      an2 = 'Theme default';
-    ((th && th.accents) || []).forEach(function (a) {
-      if (a.hex === to.accent) an2 = a.name;
-    });
-    rows.push({
-      label: 'Accent colour',
-      sub: an2,
-      fn: function () {
-        push('accent');
-      },
-    });
-    rows.push({
-      label: 'Go back to the previous theme',
-      sub: th && th.previous ? th.previous.id : 'nothing to go back to',
-      dim: !(th && th.previous),
-      fn: function () {
-        if (th && th.previous) themeCall('/api/theme/revert', {}, 'Previous theme restored');
-      },
-    });
-    rows.push({ sep: true });
-    rows.push({ label: 'Back', fn: pop });
-    return;
-  }
-  if (view === 'accent') {
-    var ta = (th && th.current && th.current.accent) || '';
-    ((th && th.accents) || []).forEach(function (a) {
-      rows.push({
-        label: a.name,
-        sub: a.hex === ta ? 'selected' : a.hex || '',
-        fn: function () {
-          themeCall('/api/theme/set', { accent: a.hex }, a.name === 'Theme default' ? 'Accent: theme default' : 'Accent: ' + a.name, true);
-        },
-      });
-    });
-    rows.push({ sep: true });
-    rows.push({ label: 'Back', fn: pop });
-    return;
-  }
   if (view === 'channel') {
     var cc = (st && st.channel) || '',
       db = ((tst && tst.builds) || [])[0];
@@ -626,6 +551,18 @@ function build() {
         opt({ pickerMode: o[(o.indexOf(pkMode) + 1) % 3] });
       },
     });
+    rows.push({ sep: true });
+    rows.push({ label: 'Back', fn: pop });
+    return;
+  }
+  if (view === 'home') {
+    rows.push({
+      label: 'Use CleanYourTV as Home',
+      sub: onoff(st.home && st.home.enabled) + ' \u00B7 switching restarts the TV',
+      fn: function () {
+        push('confirm-home');
+      },
+    });
     rows.push({
       label: 'Learn the Home key',
       sub: 'optional · ' + (st.keys && st.keys.home ? 'now: ' + st.keys.home : 'not learned'),
@@ -635,6 +572,85 @@ function build() {
     });
     rows.push({ sep: true });
     rows.push({ label: 'Back', fn: pop });
+    return;
+  }
+  if (view === 'debloat') {
+    DEBLOAT.forEach(function (g) {
+      rows.push({
+        label: g.label,
+        sub: onoff(debloatOn(g.id)) + ' \u00B7 ' + g.what,
+        fn: function () {
+          debloatToggle(g.id);
+        },
+      });
+    });
+    rows.push({ sep: true });
+    var anyOff = DEBLOAT.some(function (g) {
+      return !debloatOn(g.id);
+    });
+    rows.push({
+      label: anyOff ? 'Switch all on' : 'Switch all off',
+      fn: function () {
+        opt(anyOff ? { debloat: true, debloatOff: [] } : { debloat: false, debloatOff: [] });
+      },
+    });
+    rows.push({ sep: true });
+    rows.push({ label: 'Back', fn: pop });
+    return;
+  }
+  if (view === 'more') {
+    rows.push({
+      label: 'Voice',
+      sub: st.voice ? (st.voice.installed ? onoff(st.voice.enabled) : 'not installed') : '',
+      fn: function () {
+        api('/api/voice/status').then(
+          function (v) {
+            vo = v;
+            push('voice');
+            if ((v.job && v.job.state === 'working') || v.listening) voiceRefresh();
+          },
+          function () {
+            banner('The service did not answer', 'err');
+          }
+        );
+      },
+    });
+    rows.push({
+      label: 'Network notifications',
+      sub: onoff(st.notifyApi && st.notifyApi.enabled),
+      fn: function () {
+        api('/api/manager/notify-api').then(
+          function (n) {
+            napi = n;
+            push('notifyapi');
+          },
+          function () {
+            banner('The service did not answer', 'err');
+          }
+        );
+      },
+    });
+    rows.push({ sep: true });
+    rows.push({ label: 'Back', fn: pop });
+    return;
+  }
+  if (view === 'confirm-reset') {
+    rows.push({ label: 'Cancel', fn: pop });
+    rows.push({
+      label: 'Yes, reset Home',
+      sub: 'dock, top buttons, hidden apps, app order and clock go back to the defaults',
+      fn: function () {
+        api('/api/config', {}).then(
+          function () {
+            pop();
+            banner('Home is back to the defaults. Open Home to see it.', 'ok');
+          },
+          function () {
+            banner('The service did not answer', 'err');
+          }
+        );
+      },
+    });
     return;
   }
   var fe = st.frontend,
@@ -699,19 +715,8 @@ function build() {
     label: 'CleanYourTV as Home',
     sub: onoff(st.home && st.home.enabled),
     fn: function () {
-      push('confirm-home');
+      push('home');
     },
-  });
-  rows.push({
-    label: 'Theme',
-    sub: (function () {
-      var n = '';
-      ((th && th.themes) || []).forEach(function (x) {
-        if (th.current && x.id === th.current.id) n = x.name;
-      });
-      return n;
-    })(),
-    fn: openTheme,
   });
   rows.push({ label: 'Live TV', sub: onoff(st.options.liveTv !== false), fn: openLiveTv });
   rows.push({
@@ -721,51 +726,72 @@ function build() {
       push('inputkey');
     },
   });
-  rows.push({ sep: true });
   rows.push({
-    label: 'Voice',
-    sub: st.voice ? (st.voice.installed ? onoff(st.voice.enabled) : 'not installed') : '',
+    label: 'Debloat',
+    sub: (function () {
+      var n = DEBLOAT.filter(function (g) {
+        return debloatOn(g.id);
+      }).length;
+      return n === DEBLOAT.length ? 'on' : n ? n + ' of ' + DEBLOAT.length + ' on' : 'off';
+    })(),
     fn: function () {
-      api('/api/voice/status').then(
-        function (v) {
-          vo = v;
-          push('voice');
-          if ((v.job && v.job.state === 'working') || v.listening) voiceRefresh();
-        },
-        function () {
-          banner('The service did not answer', 'err');
-        }
-      );
+      push('debloat');
     },
   });
   rows.push({
-    label: 'Network notifications',
-    sub: onoff(st.notifyApi && st.notifyApi.enabled),
+    label: 'More',
+    sub: 'voice, network notifications',
     fn: function () {
-      api('/api/manager/notify-api').then(
-        function (n) {
-          napi = n;
-          push('notifyapi');
-        },
-        function () {
-          banner('The service did not answer', 'err');
-        }
-      );
-    },
-  });
-  rows.push({
-    label: 'Debloat LG’s ads and telemetry',
-    sub: onoff(st.options.debloat),
-    fn: function () {
-      opt({ debloat: !st.options.debloat });
+      push('more');
     },
   });
   rows.push({ sep: true });
   rows.push({ label: 'Share log', sub: 'QR code for your phone', fn: openShare });
   rows.push({
+    label: 'Reset Home customisation',
+    fn: function () {
+      push('confirm-reset');
+    },
+  });
+  rows.push({
     label: 'Uninstall',
     fn: function () {
       push('confirm-uninstall');
     },
+  });
+}
+
+/* the debloat's four groups (scripts/debloat-stop.sh); options.debloatOff lists the ones switched off */
+var DEBLOAT = [
+  { id: 'ads', label: 'Ads', what: 'ad services and ad servers' },
+  { id: 'tracking', label: 'Viewing tracking (LivePlus)', what: 'acr2' },
+  { id: 'logs', label: 'Telemetry logs', what: 'remotelogger, service-logger' },
+  { id: 'suggestions', label: 'Suggestions and nudges', what: 'contentminer, nudge, sportsalarm' },
+];
+function debloatOn(id) {
+  var o = st.options || {};
+  return o.debloat !== false && (o.debloatOff || []).indexOf(id) < 0;
+}
+/* switching the last group off switches the debloat off; one group on while it is off switches it on with only that group */
+function debloatToggle(id) {
+  var o = st.options || {},
+    off = (o.debloatOff || []).slice();
+  if (debloatOn(id)) {
+    off.push(id);
+    return opt(off.length >= DEBLOAT.length ? { debloat: false, debloatOff: [] } : { debloatOff: off });
+  }
+  if (o.debloat === false)
+    return opt({
+      debloat: true,
+      debloatOff: DEBLOAT.map(function (g) {
+        return g.id;
+      }).filter(function (g) {
+        return g !== id;
+      }),
+    });
+  opt({
+    debloatOff: off.filter(function (g) {
+      return g !== id;
+    }),
   });
 }

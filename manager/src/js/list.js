@@ -39,19 +39,6 @@ function draw() {
     el[i].querySelector('.lb').textContent = r.label;
     if (r.sub) el[i].querySelector('.st').textContent = r.sub;
   });
-  var pvEl = $('pv'),
-    pvId = rows[idx] && rows[idx].pv;
-  if (pvId) {
-    var pu = API + '/api/theme/preview/' + pvId;
-    if (pvEl.getAttribute('data-id') !== pvId) {
-      pvEl.setAttribute('data-id', pvId);
-      pvEl.src = pu;
-    }
-    pvEl.style.display = 'block';
-  } else {
-    pvEl.style.display = 'none';
-    pvEl.removeAttribute('data-id');
-  }
   var inf = infoFor(rows[idx]),
     ie = $('info');
   ie.textContent = '';

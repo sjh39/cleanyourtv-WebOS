@@ -104,58 +104,6 @@ function openLivePair() {
     }
   );
 }
-function openTheme() {
-  banner('Loading themes\u2026', 'work');
-  api('/api/theme/list').then(
-    function (r) {
-      if (r.error) {
-        banner(r.error, 'err');
-        return;
-      }
-      banner(
-        r.catalogue && !r.catalogue.ok ? 'Could not reach GitHub (' + r.catalogue.error + '): showing the themes on this TV.' : '',
-        r.catalogue && !r.catalogue.ok ? 'err' : ''
-      );
-      th = r;
-      push('theme');
-      for (var k = 0; k < rows.length; k++)
-        if (rows[k].sub && /^selected/.test(rows[k].sub)) {
-          idx = k;
-          draw();
-          break;
-        }
-    },
-    function () {
-      banner('The service did not answer', 'err');
-    }
-  );
-}
-function setTheme(b) {
-  var n = b.name;
-  delete b.name;
-  banner('Getting ' + n + '\u2026', 'work');
-  themeCall('/api/theme/set', b, n + ' applied. Open Home to see it.');
-}
-function themeCall(path, b, msg, back) {
-  api(path, b, 60000).then(
-    function (r) {
-      if (r.error) {
-        banner(r.error, 'err');
-        return;
-      }
-      th = r;
-      banner(msg, 'ok');
-      if (back) pop();
-      else {
-        build();
-        draw();
-      }
-    },
-    function () {
-      banner('The service did not answer', 'err');
-    }
-  );
-}
 function openChannel() {
   banner('Looking for the dev build\u2026', 'work');
   api('/api/manager/tests').then(

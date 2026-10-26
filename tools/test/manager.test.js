@@ -107,4 +107,34 @@ run(async () => {
   );
   fs.writeFileSync(file, '[1,2]');
   ok(JSON.stringify(c.get()) === '{}' && c.options().inputKey === true, 'a broken config.json reads as empty, with the defaults');
+
+  // the debloat's groups: switching one off while the debloat is on undoes only that group; switching it on again applies only it
+  const exec = req('exec'),
+    realSh = exec.sh,
+    ran = [];
+  exec.sh = async c => {
+    ran.push(c);
+    return { ok: true, out: '' };
+  };
+  r = await ask('options', 'POST', { debloatOff: ['logs', 'nonsense', 'logs'] });
+  ok(
+    r.j.options.debloat === true &&
+      JSON.stringify(r.j.options.debloatOff) === '["logs"]' &&
+      ran.length === 1 &&
+      /debloat-undo\.sh logs$/.test(ran[0]),
+    'a debloat group switched off is stored (known names, once) and only that group is undone: ' + ran.join(' | ')
+  );
+  r = await ask('options', 'POST', { debloatOff: ['tracking'] });
+  ok(
+    ran.length === 3 && /debloat-undo\.sh tracking$/.test(ran[1]) && /debloat-stop\.sh logs$/.test(ran[2]),
+    'switching groups undoes the newly off ones and applies the ones switched on again: ' + ran.slice(1).join(' | ')
+  );
+  r = await ask('options', 'POST', { debloat: false, debloatOff: [] });
+  ok(ran.length === 4 && /debloat-undo\.sh$/.test(ran[3]), 'the debloat switched off undoes every group');
+  r = await ask('options', 'POST', { debloat: true, debloatOff: ['ads', 'logs', 'suggestions'] });
+  ok(
+    ran.length === 5 && /debloat-stop\.sh$/.test(ran[4]) && JSON.stringify(conf.options().debloatOff) === '["ads","logs","suggestions"]',
+    'switched on with groups off: the groups are stored before debloat-stop.sh reads them'
+  );
+  exec.sh = realSh;
 });

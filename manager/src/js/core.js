@@ -9,7 +9,6 @@ var kFlow = 'input',
   SVC = '/media/developer/apps/usr/palm/services/com.cleanyourtv.manager.service';
 var napi = null,
   lv = null,
-  th = null,
   vo = null,
   mdl = [],
   agl = [],

@@ -8,16 +8,25 @@ var INFO = {
   'Update channel':
     'Stable releases are what most people want: at most one a day, made from the dev builds. Dev builds come with every change and can be less finished; choose Dev here, then use the Launcher and Service rows to install it. Going back to Stable offers the latest release again.',
   'Go back to launcher': 'Swaps the previous launcher version back in. The newer one stays available as an update.',
-  'CleanYourTV as Home':
-    'On: the Home button opens this launcher. Off: LG\u2019s own Home. Switching restarts the TV (about a minute); the service keeps running either way.',
+  'CleanYourTV as Home': 'Whether this launcher is Home, and learning the Home key.',
   'Debloat LG\u2019s ads and telemetry':
     'Stops LG\u2019s ad, recommendation and telemetry services and blocks a few ad servers. Nothing is uninstalled, and it only applies while this launcher is Home.',
+  'Debloat':
+    'Stops LG\u2019s ad, tracking, telemetry and suggestion services, in four groups you can switch separately. Nothing is uninstalled, and it only applies while this launcher is Home.',
+  'Ads': 'Keeps admanager and adoverlay-service from starting and points three LG ad servers at nothing in /etc/hosts.',
+  'Viewing tracking (LivePlus)':
+    'Keeps acr2 from starting: the service that recognises what is on screen (LG calls it LivePlus) and reports it.',
+  'Telemetry logs': 'Stops remotelogger and service-logger, which collect logs and send them to LG.',
+  'Suggestions and nudges': 'Stops contentminer and nudge (recommendations and pop-up tips) and keeps sportsalarm from starting.',
+  'Switch all on': 'Switches every group on.',
+  'Switch all off': 'Switches the debloat off: the services start again and the hosts lines are removed.',
+  'More': 'Voice and network notifications.',
+  'Reset Home customisation':
+    'Puts the dock, the top buttons, hidden apps, the app order and the clock back to the defaults. The theme stays.',
+  'Yes, reset Home': 'The launcher\u2019s own settings go back to the defaults. Apps, the theme and everything in this app stay.',
+  'Use CleanYourTV as Home':
+    'On: the Home button opens this launcher. Off: LG\u2019s own Home. Switching restarts the TV (about a minute); the service keeps running either way.',
 
-  'Theme':
-    'Choose how the home screen looks: colours, the size of tiles and text, the number of columns, the clock, the ambient glow, animation speed and a wallpaper. Themes are small data files bundled with the package; the accent colour can be changed on top of any of them.',
-  'Theme options': 'More choices for the theme: the accent colour, and going back to the previous theme.',
-  'Accent colour':
-    'The colour of the focus ring and of the highlighted button or menu row. \u201CTheme default\u201D uses the theme\u2019s own colour.',
   'Network notifications':
     'Lets other devices on your network send picture notifications to this TV with a POST request and a secret token. Off by default.',
   'Accept notifications from the network':
@@ -75,7 +84,7 @@ var INFO = {
   'Input key shows':
     'How the Input button shows the Inputs. Over the running app, ready in the background: instant, tested on webOS 25. Over the running app, started when pressed: nothing runs hidden, so it cannot keep the remote; the default on older webOS, where the background one showed a loading circle. The launcher\u2019s Inputs list: the TV goes to our Home (needs CleanYourTV as Home; otherwise the key stays with LG). Choose to go to the next one.',
   'Learn the Home key': 'Optional. Records the Home button\u2019s code. The Home key keeps working exactly as before.',
-  'Back': 'Back to the main list.',
+  'Back': 'Back to the previous list.',
   'Cancel': 'Nothing changes.',
   'Yes, remove CleanYourTV': 'Deletes the apps, the boot scripts and the settings, then restarts the TV.',
   'Yes, use CleanYourTV as Home': 'Restarts the TV; this launcher is Home after it starts.',
@@ -93,7 +102,7 @@ function infoFor(r) {
   var k = r.label.replace(/ [0-9][0-9.]*$/, '');
   if (k === 'Check for updates' && offline)
     return 'Works without the service: looks for a newer package and installs it through the root service.';
-  if (k === 'CleanYourTV as Home' && st.home && st.home.fullhome)
+  if (k === 'Use CleanYourTV as Home' && st.home && st.home.fullhome)
     return {
       t: k,
       d:

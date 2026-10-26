@@ -4,16 +4,16 @@ A theme changes how the home screen looks: colours, the size of tiles and text, 
 the speed of animations and a wallpaper. Themes apply to the launcher's home screen (dock, top shelf, grid, top buttons and menus).
 Live TV, the Inputs picker and the notification cards keep their own look.
 
-In the manager app, **Theme** lists the themes with a screenshot and a description of the highlighted one. Choosing one applies it; the
-home screen shows it the next time you open Home. **Theme options** holds the **Accent colour** (the colour of the focus ring and of the
-highlighted button or menu row, on top of any theme) and **Go back to the previous theme**.
+In the launcher, **Customise** > **Theme** lists the themes; choosing one applies it at once (a theme that is not on the TV yet is
+downloaded first). **Go back to the previous theme** is at the bottom of the list. **Customise** > **Accent colour** sets the colour of
+the focus ring and of the highlighted button or menu row, on top of any theme. The screenshots are on this page.
 
 ## Where the themes come from
 
 Themes are not part of the service. They are read from the [`themes/`](https://github.com/lasharor/cleanyourtv-WebOS/tree/main/themes)
 folder of the GitHub repository (the `main` branch):
 
-- The manager downloads `themes/index.json` (the list) and the screenshots when you open **Theme**.
+- The service downloads `themes/index.json` (the list) when you open **Theme**.
 - Choosing a theme downloads its `theme.json` and its wallpaper to the TV (`/media/developer/cleanyourtv/themes/<id>/`) and keeps them,
   so it keeps working offline. Choosing it again downloads the latest version. If GitHub cannot be reached, the list shows the themes
   that are already on the TV and says why.
@@ -55,8 +55,7 @@ Themes live in the repository, so a new one is a pull request:
 1. Copy a folder from [`themes/`](https://github.com/lasharor/cleanyourtv-WebOS/tree/main/themes), for example `classic`, to `themes/<id>/`.
    The id is lower-case letters, digits and `-`.
 2. Edit `theme.json`; the rest keeps its default, or the value of the theme named in `"extends"`.
-3. Add `preview.jpg`: a screenshot of the home screen with your theme (16:9, about 800 px wide, at most 600 KB). The TV shows it in the
-   theme list.
+3. Add `preview.jpg`: a screenshot of the home screen with your theme (16:9, about 800 px wide, at most 600 KB).
 4. If it uses a wallpaper, add the image to the same folder (`.jpg`, `.png` or `.webp`, at most 1.5 MB, 1920 x 1080) and name it in
    `effects.wallpaper`. A typeface goes in the folder too, named in `type.fontFile`, with its licence file. A wallpaper or typeface
    must be your own work or under a licence that allows redistribution; say which in the pull request.

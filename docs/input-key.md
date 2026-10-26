@@ -50,7 +50,7 @@ longer controlled a set-top box and eARC stopped working (issue 23).
 Remotes differ. In the manager app, **Input key** > **Learn the Input key** reads the code of the button you press and tests that
 the picker opens. **Clear** restores the default.
 
-The switch in the same menu removes the bind and gives the button back to LG's own picker. **Learn the Home key** is optional.
+The switch in the same menu removes the bind and gives the button back to LG's own picker. The optional **Learn the Home key** is under **CleanYourTV as Home**.
 
 The Guide button can be bound the same way; that is part of [Live TV](live-tv.md#the-guide-button) (manager app > **Live TV** > **Learn the Guide key**).
 

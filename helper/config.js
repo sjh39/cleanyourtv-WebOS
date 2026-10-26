@@ -1,6 +1,6 @@
 // The settings in config.json, for every part of the service. Read and change them only through this module:
 //   config.get()                 a copy of everything
-//   config.options()             {debloat, inputKey, liveTv} with their defaults
+//   config.options()             {debloat, inputKey, liveTv} with their defaults (and debloatOff, the debloat groups switched off)
 //   config.keys()                the learned remote buttons with their defaults
 //   config.update(source, fn)    fn changes a copy, which is then written at once (atomically). The read, the change and the write
 //                                happen in one go, so two parts of the service can never overwrite each other's settings.
