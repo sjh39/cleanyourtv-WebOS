@@ -62,4 +62,28 @@ run(async () => {
         .join() === 'en100,nl90',
     'a TV language without translations shows English; the Language list has every language with how complete it is'
   );
+
+  // the service's phone pages: the phone's language first, then the one chosen in the manager, then English
+  const I = require(path.join(root, 'helper', 'i18n.js'));
+  const req = al => ({ headers: al === undefined ? {} : { 'accept-language': al } });
+  ok(
+    I.lang(req('nl-NL,nl;q=0.9,en;q=0.8'), '') === 'nl' &&
+      I.lang(req('ja-JP,de;q=0.7'), '') === 'de' &&
+      I.lang(req('ja-JP'), 'fr') === 'fr' &&
+      I.lang(req(), '') === 'en' &&
+      I.lang(req('en-GB,nl;q=0.5'), '') === 'en',
+    "a phone page picks the phone's language, then the manager's choice, then English"
+  );
+  ok(
+    I.tr('nl', 'Upload photos') === 'Foto’s uploaden' &&
+      I.tr('de', 'Installing launcher 1.5.4') === 'Launcher 1.5.4 wird installiert' &&
+      I.tr('en', 'Upload photos') === 'Upload photos',
+    'the service translates whole texts and templates'
+  );
+  const sc = I.script('nl', "t('Wrong code.');fm('Photo %d of %d · sending',1,2)");
+  ok(
+    /var I18N = \{"nl":/.test(sc) && /Verkeerde code/.test(sc) && /setLang\("nl"\)/.test(sc) && !/Foto’s uploaden/.test(sc),
+    "a phone page's script gets only the translations it uses"
+  );
+  ok(I.script('en', '').indexOf('var I18N = {}') >= 0, 'in English the page carries no translations');
 });

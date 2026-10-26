@@ -17,6 +17,19 @@ const PAGES = [
   ['manager/src', 'manager/app/index.html'],
   ['picker/app/index.html', 'picker/app/index.html'],
 ];
+// the manager shows the service's own messages (update steps, sync errors): it carries the translations of texts in helper/ too
+const EXTRA = { 'manager/src': ['helper'] };
+const extraText = src =>
+  (EXTRA[src] || [])
+    .map(d =>
+      fs
+        .readdirSync(path.join(root, d))
+        .filter(f => /\.js$/.test(f))
+        .sort()
+        .map(f => fs.readFileSync(path.join(root, d, f), 'utf8'))
+        .join('\n')
+    )
+    .join('\n');
 const I18N = path.join(root, 'i18n');
 
 // ---- translations: every i18n/<language>.json except en.json, which lists all the English texts ----
@@ -86,7 +99,7 @@ function build(src) {
     })
     .join('\n');
   const parts = page.split(/^@i18n$/m);
-  return (parts.length === 2 ? parts[0] + i18nScript(parts[0] + parts[1]) + parts[1] : page) + '\n';
+  return (parts.length === 2 ? parts[0] + i18nScript(parts[0] + parts[1] + '\n' + extraText(src)) + parts[1] : page) + '\n';
 }
 
 if (require.main === module) {

@@ -20,7 +20,15 @@ function pageText() {
       const f = path.join(root, p[1]);
       const s = fs.existsSync(f) ? fs.readFileSync(f, 'utf8') : '';
       return s.replace(/var I18N = .*;\n/, '');
-    }).join('\n')
+    })
+      .concat(
+        // the service's phone pages and messages
+        fs
+          .readdirSync(path.join(root, 'helper'))
+          .filter(f => /\.js$/.test(f))
+          .map(f => fs.readFileSync(path.join(root, 'helper', f), 'utf8'))
+      )
+      .join('\n')
   );
 }
 function report() {

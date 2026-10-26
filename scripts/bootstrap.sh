@@ -111,6 +111,7 @@ backup() {
 # ---- the service files ----
 copy_files() {
   cp $S/helper/*.js $D/
+  [ -d $S/i18n ] && { mkdir -p $D/i18n; cp $S/i18n/* $D/i18n/; }   # the translations, for the phone pages (helper/i18n.js)
   if [ -f $S/BUILD ]; then cp $S/BUILD $D/BUILD; else rm -f $D/BUILD; fi   # the commit of a test build
   cp $S/scripts/* $D/
   mkdir -p $D/inputhook && cp $S/inputhook/* $D/inputhook/ && chmod 755 $D/inputhook/ezinject

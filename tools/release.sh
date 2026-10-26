@@ -13,7 +13,7 @@ cd "$(dirname "$0")/.."
 OUT="${GITHUB_OUTPUT:-/dev/stdout}"
 DRY="${CYTV_DRY:-}"
 NOTES="${RUNNER_TEMP:-/tmp}/release-notes.md"
-PKG="app manager notify picker helper scripts voice third-party ipk themes assets compat.json config.example.json uninstall.sh THIRD-PARTY.md LICENSE"
+PKG="app manager notify picker helper i18n scripts voice third-party ipk themes assets compat.json config.example.json uninstall.sh THIRD-PARTY.md LICENSE"
 say() { echo "[release] $*" >&2; }
 
 last=$(git tag -l 'v*' --sort=-v:refname | head -1)

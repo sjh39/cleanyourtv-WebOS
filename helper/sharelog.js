@@ -8,7 +8,8 @@ const http = require('http'),
   crypto = require('crypto');
 const P = require('./paths'),
   exec = require('./exec'),
-  web = require('./web');
+  web = require('./web'),
+  i18n = require('./i18n');
 const D = P.D,
   SVC = P.SERVICE_DIR,
   SETUPLOG = P.SETUP_LOG;
@@ -137,18 +138,41 @@ function report() {
 
 // ---- server ----
 const lanIp = () => web.lanIp() || '127.0.0.1';
-const page = text =>
-  '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CleanYourTV report</title>' +
-  '<style>body{margin:0;padding:16px;font:16px/1.4 -apple-system,Helvetica,Arial,sans-serif;background:#111;color:#eee}h1{font-size:20px;margin:0 0 8px}p{margin:0 0 12px;color:#bbb}' +
-  'button{font:inherit;font-weight:600;padding:12px 18px;margin:0 8px 12px 0;border:0;border-radius:10px;background:#f5f6f8;color:#111}textarea{width:100%;height:60vh;box-sizing:border-box;background:#000;color:#ddd;border:1px solid #333;border-radius:8px;padding:10px;font:12px/1.35 ui-monospace,Menlo,monospace}</style></head><body>' +
-  '<h1>CleanYourTV report</h1><p>Tap <b>Copy</b>, then paste it into your message. Addresses and URL paths are masked. This page closes ten minutes after it was opened on the TV.</p>' +
-  '<button id="c">Copy</button><button id="s">Select all</button><span id="m"></span><textarea id="t" readonly></textarea>' +
-  '<script>var t=document.getElementById("t");t.value=' +
-  JSON.stringify(text).replace(/</g, '\\u003c') +
-  ';' +
-  'document.getElementById("s").onclick=function(){t.focus();t.select();t.setSelectionRange(0,t.value.length)};' +
-  'document.getElementById("c").onclick=function(){t.focus();t.select();t.setSelectionRange(0,t.value.length);var ok=false;try{ok=document.execCommand("copy")}catch(e){}' +
-  'document.getElementById("m").textContent=ok?"Copied":"Press and hold the text, then choose Copy"};</script></body></html>';
+// the page around the report is in the phone's language (i18n.js); the report itself stays English, for the people who read the bug report
+const page = (text, lang) => {
+  const T = x => web.esc(i18n.tr(lang, x));
+  return (
+    '<!doctype html><html lang="' +
+    lang +
+    '"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' +
+    T('CleanYourTV report') +
+    '</title>' +
+    '<style>body{margin:0;padding:16px;font:16px/1.4 -apple-system,Helvetica,Arial,sans-serif;background:#111;color:#eee}h1{font-size:20px;margin:0 0 8px}p{margin:0 0 12px;color:#bbb}' +
+    'button{font:inherit;font-weight:600;padding:12px 18px;margin:0 8px 12px 0;border:0;border-radius:10px;background:#f5f6f8;color:#111}textarea{width:100%;height:60vh;box-sizing:border-box;background:#000;color:#ddd;border:1px solid #333;border-radius:8px;padding:10px;font:12px/1.35 ui-monospace,Menlo,monospace}</style></head><body>' +
+    '<h1>' +
+    T('CleanYourTV report') +
+    '</h1><p>' +
+    T(
+      'Tap Copy, then paste it into your message. Addresses and URL paths are masked. This page closes ten minutes after it was opened on the TV.'
+    ) +
+    '</p>' +
+    '<button id="c">' +
+    T('Copy') +
+    '</button><button id="s">' +
+    T('Select all') +
+    '</button><span id="m"></span><textarea id="t" readonly></textarea>' +
+    '<script>var t=document.getElementById("t");t.value=' +
+    JSON.stringify(text).replace(/</g, '\\u003c') +
+    ';' +
+    'document.getElementById("s").onclick=function(){t.focus();t.select();t.setSelectionRange(0,t.value.length)};' +
+    'document.getElementById("c").onclick=function(){t.focus();t.select();t.setSelectionRange(0,t.value.length);var ok=false;try{ok=document.execCommand("copy")}catch(e){}' +
+    'document.getElementById("m").textContent=ok?' +
+    JSON.stringify(i18n.tr(lang, 'Copied')) +
+    ':' +
+    JSON.stringify(i18n.tr(lang, 'Press and hold the text, then choose Copy')) +
+    '};</script></body></html>'
+  );
+};
 
 function main() {
   try {
@@ -161,7 +185,7 @@ function main() {
     const u = req.url.split('?')[0];
     if (u === '/' + token) {
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' });
-      return res.end(page(text));
+      return res.end(page(text, i18n.lang(req, '')));
     }
     if (u === '/' + token + '.txt') {
       res.writeHead(200, { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' });

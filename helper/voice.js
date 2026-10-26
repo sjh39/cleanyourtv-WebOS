@@ -17,7 +17,8 @@ const answers = require('./answers'),
 const P = require('./paths'),
   exec = require('./exec'),
   fetch = require('./fetch'),
-  web = require('./web');
+  web = require('./web'),
+  i18n = require('./i18n');
 const D = P.D,
   V = D + '/voice',
   LIB = V + '/lib',
@@ -521,36 +522,37 @@ let pair = null,
   pairedAt = 0;
 const esc = web.esc,
   lanIp = web.lanIp;
-function pairPage(msg, done, list, token) {
+function pairPage(msg, done, list, token, lang) {
+  const T = x => esc(i18n.tr(lang, x)); // the phone's language (i18n.js)
   const l = llmCfg(),
     c = cfg(),
     ha = haCfg();
   const opts = (list || [])
     .map(m => `<option value="${esc(m.id)}">${esc(m.name)}${m.price != null ? ' · $' + m.price + '/M' : ''}</option>`)
     .join('');
-  return `<!doctype html><meta name=viewport content="width=device-width,initial-scale=1"><title>Voice setup</title>
+  return `<!doctype html><html lang=${lang}><meta name=viewport content="width=device-width,initial-scale=1"><title>${T('Voice setup')}</title>
 <style>body{font:18px system-ui,sans-serif;background:#111;color:#eee;max-width:560px;margin:32px auto;padding:0 18px}label{display:block;color:#aaa;font-size:15px;margin-top:14px}input,textarea,select,button{font:inherit;width:100%;box-sizing:border-box;padding:12px;margin:6px 0;border-radius:10px;border:1px solid #444;background:#1b1b1f;color:#eee}button{background:#f5f6f8;color:#111;font-weight:600;margin-top:20px}.m{padding:12px;border-radius:10px;background:#1f2a1f}small{color:#888}h2{margin:0 0 8px}.c{display:flex;gap:10px;align-items:center}.c input{width:auto;margin:0}</style>
-<h2>Voice setup</h2>${msg ? `<p class=m>${esc(msg)}</p>` : ''}${
+<h2>${T('Voice setup')}</h2>${msg ? `<p class=m>${T(msg)}</p>` : ''}${
     done
       ? ''
       : `<form method=post action="/${token}/save">
-<label>OpenRouter key ${l.key ? '(one is saved; leave empty to keep it)' : ''}</label><input name=key type=password autocomplete=off placeholder="sk-or-...">
-<label>Model <small>choose from the list or type any OpenRouter model name</small></label><input name=model list=ml value="${esc(l.model)}" autocomplete=off><datalist id=ml>${opts}</datalist>
-<label class=c><input type=checkbox name=enabled value=1 ${l.enabled ? 'checked' : ''}> Answer with the AI</label>
-<label>Instructions for the AI <small>(empty: short plain answers)</small></label><textarea name=system rows=3>${esc(l.system)}</textarea>
-<label>Home Assistant address <small>(optional, Assist)</small></label><input name=haurl type=url placeholder="http://homeassistant.local:8123" value="${esc(ha.url)}">
-<label>Home Assistant access token <small>(a long-lived token from your profile page${ha.token ? '; one is saved, leave empty to keep it' : ''})</small></label><input name=hatoken type=password autocomplete=off>
-<label class=c><input type=checkbox name=hass value=1 ${ha.selfSigned ? 'checked' : ''}> Accept a self-signed certificate</label>
-<label>Which answers first</label><select name=haroute>${[
+<label>${T('OpenRouter key')} ${l.key ? T('(one is saved; leave empty to keep it)') : ''}</label><input name=key type=password autocomplete=off placeholder="sk-or-...">
+<label>${T('Model')} <small>${T('choose from the list or type any OpenRouter model name')}</small></label><input name=model list=ml value="${esc(l.model)}" autocomplete=off><datalist id=ml>${opts}</datalist>
+<label class=c><input type=checkbox name=enabled value=1 ${l.enabled ? 'checked' : ''}> ${T('Answer with the AI')}</label>
+<label>${T('Instructions for the AI')} <small>${T('(empty: short plain answers)')}</small></label><textarea name=system rows=3>${esc(l.system)}</textarea>
+<label>${T('Home Assistant address')} <small>${T('(optional, Assist)')}</small></label><input name=haurl type=url placeholder="http://homeassistant.local:8123" value="${esc(ha.url)}">
+<label>${T('Home Assistant access token')} <small>(${T('a long-lived token from your profile page')}${ha.token ? '; ' + T('one is saved, leave empty to keep it') : ''})</small></label><input name=hatoken type=password autocomplete=off>
+<label class=c><input type=checkbox name=hass value=1 ${ha.selfSigned ? 'checked' : ''}> ${T('Accept a self-signed certificate')}</label>
+<label>${T('Which answers first')}</label><select name=haroute>${[
           ['ha-first', 'Home Assistant first, then the AI'],
           ['ha-only', 'Home Assistant only'],
           ['ai-only', 'The AI only'],
         ]
-          .map(x => `<option value="${x[0]}"${ha.route === x[0] ? ' selected' : ''}>${x[1]}</option>`)
+          .map(x => `<option value="${x[0]}"${ha.route === x[0] ? ' selected' : ''}>${T(x[1])}</option>`)
           .join('')}</select>
-<label>Send the text to your own server <small>(optional)</small></label><input name=url type=url placeholder="http://..." value="${esc(c.url)}">
-<label>Server token <small>(optional${c.token ? '; one is saved, leave empty to keep it' : ''})</small></label><input name=token type=password autocomplete=off>
-<button>Save</button></form>`
+<label>${T('Send the text to your own server')} <small>${T('(optional)')}</small></label><input name=url type=url placeholder="http://..." value="${esc(c.url)}">
+<label>${T('Server token')} <small>(${T('optional')}${c.token ? '; ' + T('one is saved, leave empty to keep it') : ''})</small></label><input name=token type=password autocomplete=off>
+<button>${T('Save')}</button></form>`
   }`;
 }
 function startPair() {
@@ -565,7 +567,8 @@ function startPair() {
     };
     if (++hits > 120) return send(429, 'Too many requests');
     const p = req.url.split('?')[0];
-    if (req.method === 'GET' && p === '/' + token) return send(200, pairPage('', false, list, token));
+    const lg = i18n.lang(req, ctx.config.get().lang);
+    if (req.method === 'GET' && p === '/' + token) return send(200, pairPage('', false, list, token, lg));
     if (req.method === 'POST' && p === '/' + token + '/save') {
       let b = '';
       req.on('data', c => {
@@ -584,9 +587,9 @@ function startPair() {
         if (f.get('token')) set.token = f.get('token');
         if (!set.url) set.url = '';
         const err = applySet(set);
-        if (err) return send(400, pairPage(err, false, list, token));
+        if (err) return send(400, pairPage(err, false, list, token, lg));
         pairedAt = Date.now();
-        send(200, pairPage('Saved. You can close this page.', true, [], token));
+        send(200, pairPage('Saved. You can close this page.', true, [], token, lg));
         setTimeout(stopPair, 2000);
       });
       return;

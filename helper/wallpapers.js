@@ -14,6 +14,7 @@ const fs = require('fs'),
   crypto = require('crypto');
 const P = require('./paths'),
   web = require('./web'),
+  i18n = require('./i18n'),
   fetch = require('./fetch'),
   nc = require('./netcompat');
 
@@ -410,7 +411,7 @@ function create(ctx) {
       };
     if (req.method === 'GET' && u === '/') {
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' });
-      return res.end(PHONE_PAGE);
+      return res.end(phonePage(i18n.lang(req, config.get().lang)));
     }
     if (u.indexOf('/api/') !== 0) return web.notFound(res);
     if (req.headers['x-code'] !== code) {
@@ -518,8 +519,55 @@ function create(ctx) {
 }
 
 // the phone page: two actions, Upload photos and Configure Immich. Plain script for iOS Safari and Android Chrome; photos are scaled in
-// the browser (to 3840 or 1920 pixels on the long side) before they are sent, which also turns an iPhone's HEIC into JPEG.
-const PHONE_PAGE = `<!doctype html><html lang=en><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Wallpapers</title>
+// the browser (to 3840 or 1920 pixels on the long side) before they are sent, which also turns an iPhone's HEIC into JPEG. It is in the
+// phone's language: the fixed text is translated here, the script's own texts by t() with the translations it uses (i18n.js).
+const PHONE_JS = `var code='',S={},MAX=3840,$=function(i){return document.getElementById(i)};
+/* a text in the page's language with its %s / %d filled in, in order */
+function fm(s){var a=arguments,n=1;return t(s).replace(/%[sd]/g,function(){return a[n++]})}
+function api(p,b,ct){return new Promise(function(ok,no){var x=new XMLHttpRequest();x.open(b===undefined?'GET':'POST','/api/'+p);x.setRequestHeader('x-code',code);
+ if(ct)x.setRequestHeader('content-type',ct);x.onload=function(){var j={};try{j=JSON.parse(x.responseText)}catch(e){}if(x.status===403){showLogin(t('Wrong code.'));no(j)}else ok(j)};x.onerror=function(){no({error:t('The TV did not answer. Is the phone on the same Wi-Fi?')})};
+ x.send(b===undefined?null:(ct?b:JSON.stringify(b)))})}
+function msg(t,e){$('msg').innerHTML=t?'<p class="m'+(e?' e':'')+'"></p>':'';if(t)$('msg').firstChild.textContent=t}
+function showLogin(t){$('login').className='';$('main').className='hide';$('sum').textContent=t||''}
+function ago(x){if(!x)return t('never');var m=Math.round((Date.now()-x)/60000);return m<1?t('just now'):m<60?fm('%d min ago',m):m<1440?fm('%d h ago',Math.round(m/60)):fm('%d days ago',Math.round(m/1440))}
+function state(){return api('state').then(function(s){S=s;MAX=s.size==='hd'?1920:3840;$('login').className='hide';$('main').className='';
+ $('sum').textContent=fm('Local uploads: %d · Immich: %d · Total: %d photos (%d of 150 MB)',s.uploads,s.immich.photos,s.total,Math.round(s.bytes/1048576));
+ $('un').textContent=fm('%d of %d',s.uploads,s.limits.uploads);var g='';(s.uploadsList||[]).forEach(function(id){g+='<div class=ph><img loading=lazy src="" data-s="u/'+id+'"><button data-d="'+id+'">×</button></div>'});$('ug').innerHTML=g;thumbs($('ug'));
+ var i=s.immich;$('iu').value=$('iu').value||i.url;$('ik').placeholder=i.keyHint?fm('API key (saved: %s; leave empty to keep)',i.keyHint):t('API key');
+ $('ist').innerHTML='';var p=document.createElement('p');p.textContent=i.configured?(i.state==='syncing'?fm('Syncing… %d new',i.done):fm('Last sync: %s',ago(i.lastSync))+' · '+fm('%d photos from %d albums',i.photos,i.albums))+(i.error?' · '+t(i.error):''):t('Not connected.');$('ist').appendChild(p);
+ $('isy').className=$('idc').className=i.configured?'':'hide';if(i.state==='syncing')setTimeout(state,3000)})}
+function thumbs(el){[].forEach.call(el.querySelectorAll('img[data-s]'),function(im){var x=new XMLHttpRequest();x.open('GET','/api/photo/'+im.getAttribute('data-s'));x.setRequestHeader('x-code',code);x.responseType='blob';
+ x.onload=function(){if(x.status===200)im.src=URL.createObjectURL(x.response)};x.send()})}
+/* scale in the browser: the long side to MAX pixels, JPEG; a file the browser cannot draw is sent as it is when it is small enough */
+function scaled(file){return new Promise(function(ok){var u=URL.createObjectURL(file),im=new Image();im.onload=function(){var w=im.naturalWidth,h=im.naturalHeight,k=Math.min(1,MAX/Math.max(w,h));
+ var c=document.createElement('canvas');c.width=Math.round(w*k);c.height=Math.round(h*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);c.toBlob(function(b){ok(b||file)},'image/jpeg',0.9)};
+ im.onerror=function(){URL.revokeObjectURL(u);ok(file)};im.src=u})}
+function upload(files){var list=[].slice.call(files),n=0,okN=0,errs=[];$('prog').className='';msg('');
+ (function next(){if(n>=list.length){$('prog').className='hide';msg(fm('%d of %d photos uploaded.',okN,list.length)+(errs.length?' '+errs[0]:''),!!errs.length&&!okN);state();return}
+  var f=list[n];$('pt').textContent=fm('Photo %d of %d · preparing',n+1,list.length);$('pb').style.width=Math.round(n/list.length*100)+'%';
+  scaled(f).then(function(b){var x=new XMLHttpRequest();x.open('POST','/api/upload');x.setRequestHeader('x-code',code);x.setRequestHeader('content-type',b.type||'application/octet-stream');
+   x.upload.onprogress=function(e){if(e.lengthComputable)$('pb').style.width=Math.round((n+e.loaded/e.total)/list.length*100)+'%';$('pt').textContent=fm('Photo %d of %d · sending',n+1,list.length)};
+   x.onload=function(){var j={};try{j=JSON.parse(x.responseText)}catch(e){}if(x.status===200)okN++;else errs.push((f.name||t('A photo'))+': '+t(j.error||'refused'));n++;next()};
+   x.onerror=function(){errs.push(t('The TV did not answer.'));n++;next()};x.send(b)})})()}
+$('f').onchange=function(){if(this.files.length)upload(this.files);this.value=''};
+$('ug').onclick=function(e){var d=e.target.getAttribute('data-d');if(d)api('upload/delete',{id:d}).then(state)};
+$('tu').onclick=function(){$('tu').className='on';$('ti').className='';$('up').className='';$('im').className='hide'};
+$('ti').onclick=function(){$('ti').className='on';$('tu').className='';$('im').className='';$('up').className='hide';if(S.immich&&S.immich.configured){loadAlbums();loadPhotos()}};
+function loadAlbums(){api('immich/albums',{}).then(function(r){if(r.error)return msg(t(r.error),1);var h='';(r.albums||[]).forEach(function(a){h+='<label class=al><input type=checkbox value="'+a.id+'"'+(a.on?' checked':'')+'><span></span><small>'+a.count+'</small></label>'});
+ $('al').innerHTML=h;var sp=$('al').querySelectorAll('span');(r.albums||[]).forEach(function(a,i){sp[i].textContent=a.name});$('albox').className=''},function(e){msg(e.error||t('Could not read the albums'),1)})}
+function loadPhotos(){api('immich/photos',{}).then(function(r){var ps=r.photos||[];$('iphb').className=ps.length?'':'hide';var g='';ps.forEach(function(p){g+='<div class="ph'+(p.hidden?' off':'')+'" data-h="'+p.id+'"><img loading=lazy src="" data-s="i/'+p.id+'"></div>'});$('ipg').innerHTML=g;thumbs($('ipg'))})}
+$('ipg').onclick=function(e){var t=e.target.closest('[data-h]');if(!t)return;var off=!/off/.test(t.className);api('immich/hide',{id:t.getAttribute('data-h'),hidden:off}).then(function(){t.className='ph'+(off?' off':'');state()})};
+$('ic').onclick=function(){msg(t('Connecting…'));api('immich/connect',{url:$('iu').value,key:$('ik').value}).then(function(r){if(r.error)return msg(t(r.error),1);$('ik').value='';msg(t('Connected to Immich.'));state().then(loadAlbums)})};
+$('as').onclick=function(){var ids=[].map.call($('al').querySelectorAll('input:checked'),function(i){return i.value});api('immich/albums',{ids:ids}).then(function(){msg(t('Albums saved. Syncing…'));setTimeout(state,1500);setTimeout(loadPhotos,8000)})};
+$('isy').onclick=function(){api('immich/sync',{}).then(function(){msg(t('Syncing…'));setTimeout(state,1500)})};
+$('idc').onclick=function(){if(confirm(t('Disconnect Immich? Its photos are removed from the TV.')))api('immich/disconnect',{}).then(function(){$('albox').className='hide';$('iphb').className='hide';msg(t('Immich disconnected.'));state()})};
+$('go').onclick=function(){code=$('code').value.trim();state().catch(function(){})};
+code=(location.hash||'').slice(1);if(/^\\d{6}$/.test(code))state().catch(function(){});else showLogin();
+`;
+function phonePage(lang) {
+  const T = s => web.esc(i18n.tr(lang, s));
+  return (
+    `<!doctype html><html lang=${lang}><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Wallpapers</title>
 <style>*{box-sizing:border-box}body{font:17px -apple-system,system-ui,sans-serif;background:#0d0e12;color:#eee;margin:0;padding:20px 16px 60px;max-width:640px;margin:0 auto}
 h1{font-size:26px;margin:4px 0 4px}h2{font-size:20px;margin:28px 0 10px}p{color:#aaa;margin:6px 0}.m{padding:12px 14px;border-radius:12px;background:#1d2a1f;margin:12px 0}.m.e{background:#3a1717}
 button,input,label.b{font:inherit;display:block;width:100%;padding:14px;border-radius:12px;border:1px solid #333;background:#1a1b21;color:#eee;margin:8px 0;text-align:center}
@@ -529,63 +577,28 @@ button.p,label.b{background:#f5f6f8;color:#111;font-weight:600;border:0}input{te
 .ph img{width:100%;height:100%;object-fit:cover;display:block}.ph button{position:absolute;right:4px;top:4px;width:32px;height:32px;padding:0;margin:0;border-radius:16px;background:rgba(0,0,0,.7);border:0;color:#fff}
 .ph.off img{opacity:.3}.al{display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;background:#1a1b21;margin:6px 0}.al input{width:22px;height:22px;margin:0}
 .bar{height:8px;border-radius:4px;background:#333;overflow:hidden;margin:8px 0}.bar i{display:block;height:100%;width:0;background:#f5f6f8}small{color:#888}</style>
-<h1>Wallpapers</h1><p id=sum>Connecting to the TV…</p>
-<div id=login class=hide><p>Enter the code shown on the TV.</p><input id=code inputmode=numeric autocomplete=one-time-code><button class=p id=go>Continue</button></div>
+<h1>Wallpapers</h1><p id=sum>${T('Connecting to the TV…')}</p>
+<div id=login class=hide><p>${T('Enter the code shown on the TV.')}</p><input id=code inputmode=numeric autocomplete=one-time-code><button class=p id=go>${T('Continue')}</button></div>
 <div id=main class=hide>
-<div class=tabs><button id=tu class=on>Upload photos</button><button id=ti>Configure Immich</button></div>
+<div class=tabs><button id=tu class=on>${T('Upload photos')}</button><button id=ti>${T('Configure Immich')}</button></div>
 <div id=msg></div>
-<section id=up><label class=b for=f>Choose photos</label><input id=f type=file accept="image/*" multiple class=hide>
+<section id=up><label class=b for=f>${T('Choose photos')}</label><input id=f type=file accept="image/*" multiple class=hide>
 <div id=prog class=hide><div class=bar><i id=pb></i></div><p id=pt></p></div>
-<h2>Uploaded <small id=un></small></h2><div class=grid id=ug></div></section>
+<h2>${T('Uploaded')} <small id=un></small></h2><div class=grid id=ug></div></section>
 <section id=im class=hide>
-<p>Use an API key from Immich (Account settings > API keys) with album.read and asset.read/view permissions.</p>
-<input id=iu type=url placeholder="https://immich.example.com" autocomplete=off><input id=ik type=password placeholder="API key" autocomplete=off>
-<button class=p id=ic>Test connection and save</button>
-<div id=albox class=hide><h2>Albums</h2><div id=al></div><button class=p id=as>Save albums and sync</button></div>
+<p>${T('Use an API key from Immich (Account settings > API keys) with album.read and asset.read/view permissions.')}</p>
+<input id=iu type=url placeholder="https://immich.example.com" autocomplete=off><input id=ik type=password placeholder="${T('API key')}" autocomplete=off>
+<button class=p id=ic>${T('Test connection and save')}</button>
+<div id=albox class=hide><h2>${T('Albums')}</h2><div id=al></div><button class=p id=as>${T('Save albums and sync')}</button></div>
 <div id=ist></div>
-<div id=iphb class=hide><h2>Synced photos <small>tap to hide or show one</small></h2><div class=grid id=ipg></div></div>
-<button id=isy>Sync now</button><button id=idc>Disconnect Immich</button></section></div>
-<script>
-var code='',S={},MAX=3840,$=function(i){return document.getElementById(i)};
-function api(p,b,ct){return new Promise(function(ok,no){var x=new XMLHttpRequest();x.open(b===undefined?'GET':'POST','/api/'+p);x.setRequestHeader('x-code',code);
- if(ct)x.setRequestHeader('content-type',ct);x.onload=function(){var j={};try{j=JSON.parse(x.responseText)}catch(e){}if(x.status===403){showLogin('Wrong code.');no(j)}else ok(j)};x.onerror=function(){no({error:'The TV did not answer. Is the phone on the same Wi-Fi?'})};
- x.send(b===undefined?null:(ct?b:JSON.stringify(b)))})}
-function msg(t,e){$('msg').innerHTML=t?'<p class="m'+(e?' e':'')+'"></p>':'';if(t)$('msg').firstChild.textContent=t}
-function showLogin(t){$('login').className='';$('main').className='hide';$('sum').textContent=t||''}
-function ago(t){if(!t)return 'never';var m=Math.round((Date.now()-t)/60000);return m<1?'just now':m<60?m+' min ago':m<1440?Math.round(m/60)+' h ago':Math.round(m/1440)+' days ago'}
-function state(){return api('state').then(function(s){S=s;MAX=s.size==='hd'?1920:3840;$('login').className='hide';$('main').className='';
- $('sum').textContent='Local uploads: '+s.uploads+' · Immich: '+s.immich.photos+' · Total: '+s.total+' photos ('+Math.round(s.bytes/1048576)+' of 150 MB)';
- $('un').textContent=s.uploads+' of '+s.limits.uploads;var g='';(s.uploadsList||[]).forEach(function(id){g+='<div class=ph><img loading=lazy src="" data-s="u/'+id+'"><button data-d="'+id+'">×</button></div>'});$('ug').innerHTML=g;thumbs($('ug'));
- var i=s.immich;$('iu').value=$('iu').value||i.url;$('ik').placeholder=i.keyHint?'API key (saved: '+i.keyHint+'; leave empty to keep)':'API key';
- $('ist').innerHTML='';var p=document.createElement('p');p.textContent=i.configured?(i.state==='syncing'?'Syncing… '+i.done+' new':'Last sync: '+ago(i.lastSync)+' · '+i.photos+' photos from '+i.albums+' albums')+(i.error?' · '+i.error:''):'Not connected.';$('ist').appendChild(p);
- $('isy').className=$('idc').className=i.configured?'':'hide';if(i.state==='syncing')setTimeout(state,3000)})}
-function thumbs(el){[].forEach.call(el.querySelectorAll('img[data-s]'),function(im){var x=new XMLHttpRequest();x.open('GET','/api/photo/'+im.getAttribute('data-s'));x.setRequestHeader('x-code',code);x.responseType='blob';
- x.onload=function(){if(x.status===200)im.src=URL.createObjectURL(x.response)};x.send()})}
-/* scale in the browser: the long side to MAX pixels, JPEG; a file the browser cannot draw is sent as it is when it is small enough */
-function scaled(file){return new Promise(function(ok){var u=URL.createObjectURL(file),im=new Image();im.onload=function(){var w=im.naturalWidth,h=im.naturalHeight,k=Math.min(1,MAX/Math.max(w,h));
- var c=document.createElement('canvas');c.width=Math.round(w*k);c.height=Math.round(h*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);c.toBlob(function(b){ok(b||file)},'image/jpeg',0.9)};
- im.onerror=function(){URL.revokeObjectURL(u);ok(file)};im.src=u})}
-function upload(files){var list=[].slice.call(files),n=0,okN=0,errs=[];$('prog').className='';msg('');
- (function next(){if(n>=list.length){$('prog').className='hide';msg(okN+' of '+list.length+' photos uploaded.'+(errs.length?' '+errs[0]:''),!!errs.length&&!okN);state();return}
-  var f=list[n];$('pt').textContent='Photo '+(n+1)+' of '+list.length+' · preparing';$('pb').style.width=Math.round(n/list.length*100)+'%';
-  scaled(f).then(function(b){var x=new XMLHttpRequest();x.open('POST','/api/upload');x.setRequestHeader('x-code',code);x.setRequestHeader('content-type',b.type||'application/octet-stream');
-   x.upload.onprogress=function(e){if(e.lengthComputable)$('pb').style.width=Math.round((n+e.loaded/e.total)/list.length*100)+'%';$('pt').textContent='Photo '+(n+1)+' of '+list.length+' · sending'};
-   x.onload=function(){var j={};try{j=JSON.parse(x.responseText)}catch(e){}if(x.status===200)okN++;else errs.push((f.name||'A photo')+': '+(j.error||'refused'));n++;next()};
-   x.onerror=function(){errs.push('The TV did not answer.');n++;next()};x.send(b)})})()}
-$('f').onchange=function(){if(this.files.length)upload(this.files);this.value=''};
-$('ug').onclick=function(e){var d=e.target.getAttribute('data-d');if(d)api('upload/delete',{id:d}).then(state)};
-$('tu').onclick=function(){$('tu').className='on';$('ti').className='';$('up').className='';$('im').className='hide'};
-$('ti').onclick=function(){$('ti').className='on';$('tu').className='';$('im').className='';$('up').className='hide';if(S.immich&&S.immich.configured){loadAlbums();loadPhotos()}};
-function loadAlbums(){api('immich/albums',{}).then(function(r){if(r.error)return msg(r.error,1);var h='';(r.albums||[]).forEach(function(a){h+='<label class=al><input type=checkbox value="'+a.id+'"'+(a.on?' checked':'')+'><span></span><small>'+a.count+'</small></label>'});
- $('al').innerHTML=h;var sp=$('al').querySelectorAll('span');(r.albums||[]).forEach(function(a,i){sp[i].textContent=a.name});$('albox').className=''},function(e){msg(e.error||'Could not read the albums',1)})}
-function loadPhotos(){api('immich/photos',{}).then(function(r){var ps=r.photos||[];$('iphb').className=ps.length?'':'hide';var g='';ps.forEach(function(p){g+='<div class="ph'+(p.hidden?' off':'')+'" data-h="'+p.id+'"><img loading=lazy src="" data-s="i/'+p.id+'"></div>'});$('ipg').innerHTML=g;thumbs($('ipg'))})}
-$('ipg').onclick=function(e){var t=e.target.closest('[data-h]');if(!t)return;var off=!/off/.test(t.className);api('immich/hide',{id:t.getAttribute('data-h'),hidden:off}).then(function(){t.className='ph'+(off?' off':'');state()})};
-$('ic').onclick=function(){msg('Connecting…');api('immich/connect',{url:$('iu').value,key:$('ik').value}).then(function(r){if(r.error)return msg(r.error,1);$('ik').value='';msg('Connected to Immich.');state().then(loadAlbums)})};
-$('as').onclick=function(){var ids=[].map.call($('al').querySelectorAll('input:checked'),function(i){return i.value});api('immich/albums',{ids:ids}).then(function(){msg('Albums saved. Syncing…');setTimeout(state,1500);setTimeout(loadPhotos,8000)})};
-$('isy').onclick=function(){api('immich/sync',{}).then(function(){msg('Syncing…');setTimeout(state,1500)})};
-$('idc').onclick=function(){if(confirm('Disconnect Immich? Its photos are removed from the TV.'))api('immich/disconnect',{}).then(function(){$('albox').className='hide';$('iphb').className='hide';msg('Immich disconnected.');state()})};
-$('go').onclick=function(){code=$('code').value.trim();state().catch(function(){})};
-code=(location.hash||'').slice(1);if(/^\\d{6}$/.test(code))state().catch(function(){});else showLogin();
-</script></html>`;
+<div id=iphb class=hide><h2>${T('Synced photos')} <small>${T('tap to hide or show one')}</small></h2><div class=grid id=ipg></div></div>
+<button id=isy>${T('Sync now')}</button><button id=idc>${T('Disconnect Immich')}</button></section></div>
+` +
+    i18n.script(lang, PHONE_JS) +
+    '<script>' +
+    PHONE_JS +
+    '</script></html>'
+  );
+}
 
 module.exports = { create, imageType, LIMITS, PAIR_PORT };

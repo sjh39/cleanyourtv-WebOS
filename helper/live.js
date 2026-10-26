@@ -8,7 +8,8 @@ const nc = require('./netcompat'),
   { URL, URLSearchParams } = nc;
 const P = require('./paths'),
   fetch = require('./fetch'),
-  web = require('./web');
+  web = require('./web'),
+  i18n = require('./i18n');
 const DIR = P.LIVE;
 const SETTINGS = DIR + '/settings.json',
   PLAYLIST = DIR + '/playlist.json',
@@ -523,17 +524,21 @@ async function refresh(force) {
 let pair = null;
 const lanIp = web.lanIp,
   esc = web.esc;
-const page = (msg, ok) => `<!doctype html><meta name=viewport content="width=device-width,initial-scale=1"><title>Live TV setup</title>
+// in the phone's language (i18n.js); msg is English and translated here too
+const page = (msg, ok, lang) => {
+  const T = x => esc(i18n.tr(lang, x));
+  return `<!doctype html><html lang=${lang}><meta name=viewport content="width=device-width,initial-scale=1"><title>${T('Live TV setup')}</title>
 <style>body{font:18px system-ui,sans-serif;background:#111;color:#eee;max-width:560px;margin:40px auto;padding:0 18px}input,button{font:inherit;width:100%;box-sizing:border-box;padding:12px;margin:6px 0 14px;border-radius:10px;border:1px solid #444;background:#1b1b1b;color:#eee}button{background:#f5f6f8;color:#111;font-weight:600;border:0}.m{padding:12px;border-radius:10px;background:${ok ? '#14361f' : '#3a1717'}}</style>
-<h2>Live TV setup</h2>${msg ? `<p class=m>${esc(msg)}</p>` : ''}${
-  ok
-    ? ''
-    : `<form method=post action=/set>
-<label>Code shown on the TV</label><input name=code inputmode=numeric autocomplete=off required>
-<label>Playlist address (M3U)</label><input name=playlist type=url placeholder="http://..." required>
-<label>Guide address (XMLTV, optional)</label><input name=epg type=url placeholder="leave empty to use the playlist's">
-<button>Save</button></form>`
-}`;
+<h2>${T('Live TV setup')}</h2>${msg ? `<p class=m>${T(msg)}</p>` : ''}${
+    ok
+      ? ''
+      : `<form method=post action=/set>
+<label>${T('Code shown on the TV')}</label><input name=code inputmode=numeric autocomplete=off required>
+<label>${T('Playlist address (M3U)')}</label><input name=playlist type=url placeholder="http://..." required>
+<label>${T('Guide address (XMLTV, optional)')}</label><input name=epg type=url placeholder="${T("leave empty to use the playlist's")}">
+<button>${T('Save')}</button></form>`
+  }`;
+};
 function startPairing() {
   stopPairing();
   const code = String(nc.randomInt(100000, 1000000));
@@ -543,7 +548,8 @@ function startPairing() {
       res.writeHead(c, { 'content-type': 'text/html; charset=utf-8' });
       res.end(html);
     };
-    if (req.method === 'GET') return send(200, page('', false));
+    const lg = i18n.lang(req, '');
+    if (req.method === 'GET') return send(200, page('', false, lg));
     if (req.method === 'POST' && req.url === '/set') {
       let b = '';
       req.on('data', c => {
@@ -554,22 +560,22 @@ function startPairing() {
         const f = new URLSearchParams(b);
         if (f.get('code') !== code) {
           if (++bad >= 5) stopPairing();
-          return send(403, page('Wrong code.', false));
+          return send(403, page('Wrong code.', false, lg));
         }
         const url = (f.get('playlist') || '').trim(),
           epgUrl = (f.get('epg') || '').trim();
-        if (!/^https?:\/\//i.test(url)) return send(400, page('The playlist address must start with http:// or https://', false));
+        if (!/^https?:\/\//i.test(url)) return send(400, page('The playlist address must start with http:// or https://', false, lg));
         settings = { playlistUrl: url, epgUrl: /^https?:\/\//i.test(epgUrl) ? epgUrl : '' };
         writeJson(SETTINGS, settings);
         playlist = null;
         epg = null;
         refresh(true);
-        send(200, page('Saved. The TV is loading your channels now; you can close this page.', true));
+        send(200, page('Saved. The TV is loading your channels now; you can close this page.', true, lg));
         setTimeout(stopPairing, 2000);
       });
       return;
     }
-    send(404, page('Not found', false));
+    send(404, page('Not found', false, lg));
   });
   srv.on('error', () => {
     pair = null;
