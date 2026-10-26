@@ -12,6 +12,7 @@ const P = require('./paths'),
   { LAUNCHER_KEYS } = require('./config');
 
 const HALF_LIFE = 30 * 24 * 3600 * 1000; // usage counts halve every 30 days
+const WALL_SECS = [0, 10, 30, 60, 180, 300, 900, 3600]; // the photo-change intervals Customise > Wallpapers offers
 const HOME = 'com.webos.app.home';
 
 function create(ctx) {
@@ -164,9 +165,12 @@ function create(ctx) {
     if (b.sort === 'usage' || b.sort === 'alpha') out.sort = b.sort;
     if (['auto', '24', '12'].includes(b.clock)) out.clock = b.clock;
     if (b.runDots === true) out.runDots = true; // the green dot on open apps (off unless switched on)
-    // Wallpapers in the launcher: on or off, and how often the photo changes (minutes; 0: each time Home opens)
-    if (b.wall && typeof b.wall === 'object')
-      out.wall = { on: b.wall.on === true, every: [0, 5, 15, 60].indexOf(b.wall.every) >= 0 ? b.wall.every : 15 };
+    // Wallpapers in the launcher: on or off, and how often the photo changes
+    if (b.wall && typeof b.wall === 'object') {
+      // secs: how often the photo changes while Home is shown, in seconds (0: each time Home opens); "every" (minutes) came before it
+      const secs = typeof b.wall.secs === 'number' ? b.wall.secs : typeof b.wall.every === 'number' ? b.wall.every * 60 : 900;
+      out.wall = { on: b.wall.on === true, secs: WALL_SECS.indexOf(secs) >= 0 ? secs : 900 };
+    }
     if (Array.isArray(b.topbar))
       out.topbar = b.topbar
         .slice(0, 12)

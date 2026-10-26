@@ -543,26 +543,36 @@ function customizeMenu() {
 /* Wallpapers: switched on here and how often the photo changes; the photos are added in the manager (uploads from a phone, Immich) */
 function wallMenu() {
   openBuilt(t('Wallpapers'), function () {
-    var w = cfg.wall || { on: false, every: 15 },
-      e = w.every == null ? 15 : w.every,
+    var w = cfg.wall || { on: false },
+      e = wallSecs(),
       n = +String((cfg.wallpapers && cfg.wallpapers.stamp) || '0').split(':')[0] || 0,
-      EV = [0, 5, 15, 60];
+      EV = [0, 10, 30, 60, 180, 300, 900, 3600],
+      name = function (x) {
+        return !x
+          ? t('Each time Home opens')
+          : x < 60
+            ? t('Every %s s').replace('%s', x)
+            : x === 60
+              ? t('Every minute')
+              : t('Every %s min').replace('%s', x / 60);
+      };
     return [
       {
         label: t('Use Wallpapers'),
         sub: (w.on ? t('On') : t('Off')) + ' \u00B7 ' + (n ? t('%s photos').replace('%s', n) : t('no photos yet')),
         stay: true,
         fn: function () {
-          cfg.wall = { on: !w.on, every: e };
+          cfg.wall = { on: !w.on, secs: e };
           saveCfg();
         },
       },
       {
         label: t('New photo'),
-        sub: e ? t('Every %s min').replace('%s', e) : t('Each time Home opens'),
+        sub: name(e),
         stay: true,
         fn: function () {
-          cfg.wall = { on: !!w.on, every: EV[(EV.indexOf(e) + 1) % EV.length] };
+          var k = EV.indexOf(e);
+          cfg.wall = { on: !!w.on, secs: EV[(k < 0 ? 6 : k + 1) % EV.length] };
           saveCfg();
         },
       },

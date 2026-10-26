@@ -73,6 +73,15 @@ run(async () => {
   const on = config.get().runDots === true;
   await call(apps, '/api/config', 'POST', { dock: ['a.one'], runDots: 'yes' });
   ok(on && config.get().runDots === undefined, 'the green dot on open apps is off by default and saved only when switched on');
+  await call(apps, '/api/config', 'POST', { wall: { on: true, secs: 10 } });
+  const w10 = config.get().wall;
+  await call(apps, '/api/config', 'POST', { wall: { on: true, every: 5 } });
+  const wOld = config.get().wall;
+  await call(apps, '/api/config', 'POST', { wall: { on: false, secs: 7 } });
+  ok(
+    w10.on && w10.secs === 10 && wOld.secs === 300 && config.get().wall.secs === 900,
+    "Wallpapers: the photo interval is saved in seconds (10 s up to an hour), an older launcher's minutes are converted, an unknown value becomes 15 min"
+  );
 
   config.update('test', c => {
     c.dock = ['a.one', 'com.webos.app.hdmi2'];

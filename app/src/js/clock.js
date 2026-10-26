@@ -85,6 +85,8 @@ var TX = {
     'No hidden apps. To hide one, hold OK on it on Home and choose Hide app.':
       'Geen verborgen apps. Houd OK ingedrukt op een app op Home en kies App verbergen.',
     'OK shows an app on Home again.': 'OK zet een app weer op Home.',
+    'Every %s s': 'Elke %s s',
+    'Every minute': 'Elke minuut',
   },
   de: {
     'Running apps': 'Geöffnete Apps',
@@ -169,6 +171,8 @@ var TX = {
     'No hidden apps. To hide one, hold OK on it on Home and choose Hide app.':
       'Keine ausgeblendeten Apps. Zum Ausblenden OK auf der App gedrückt halten und App ausblenden wählen.',
     'OK shows an app on Home again.': 'OK zeigt eine App wieder auf Home.',
+    'Every %s s': 'Alle %s s',
+    'Every minute': 'Jede Minute',
   },
   fr: {
     'Running apps': 'Apps ouvertes',
@@ -253,6 +257,8 @@ var TX = {
     'No hidden apps. To hide one, hold OK on it on Home and choose Hide app.':
       'Aucune app masquée. Pour en masquer une, maintenez OK dessus sur l’accueil et choisissez Masquer l’app.',
     'OK shows an app on Home again.': 'OK remet une app sur l’accueil.',
+    'Every %s s': 'Toutes les %s s',
+    'Every minute': 'Toutes les minutes',
   },
   es: {
     'Running apps': 'Apps abiertas',
@@ -337,6 +343,8 @@ var TX = {
     'No hidden apps. To hide one, hold OK on it on Home and choose Hide app.':
       'No hay apps ocultas. Para ocultar una, mantén OK sobre ella en Inicio y elige Ocultar app.',
     'OK shows an app on Home again.': 'OK vuelve a poner una app en Inicio.',
+    'Every %s s': 'Cada %s s',
+    'Every minute': 'Cada minuto',
   },
 };
 var TXL = {

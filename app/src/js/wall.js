@@ -1,6 +1,11 @@
 /* ---------- Wallpapers: the service's photos (uploads and Immich, GET /api/wallpapers/list) behind Home instead of the theme's
-   background. A random photo each time Home opens and every cfg.wall.every minutes (0: only when Home opens), cross-faded between two
+   background. A random photo each time Home opens and every cfg.wall.secs seconds (0: only when Home opens), cross-faded between two
    layers (opacity only). Darkened like a theme's wallpaper. Off, or no photos: the theme as it is. ---------- */
+/* seconds between photos; settings saved before 1.6.10 hold minutes in "every" */
+function wallSecs() {
+  var w = cfg.wall || {};
+  return typeof w.secs === 'number' ? w.secs : typeof w.every === 'number' ? w.every * 60 : 900;
+}
 var WALL = (function () {
   var list = [],
     stamp = '',
@@ -54,8 +59,8 @@ var WALL = (function () {
   }
   function arm() {
     clearInterval(timer);
-    var m = (cfg.wall && cfg.wall.every) || 0;
-    if (m > 0 && list.length > 1) timer = setInterval(next, m * 60000);
+    var sec = wallSecs();
+    if (sec > 0 && list.length > 1) timer = setInterval(next, sec * 1000);
   }
   function off() {
     clearInterval(timer);
