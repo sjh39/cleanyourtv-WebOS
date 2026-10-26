@@ -48,7 +48,7 @@ run(async () => {
   const config = memoryConfig({});
   const wp = W.create({ config });
   let r = await call(wp, '/api/wallpapers/status');
-  ok(r.j.total === 0 && r.j.size === '4k' && !r.j.immich.configured, 'no photos at first; the picture size is 4K');
+  ok(r.j.total === 0 && r.j.size === 'hd' && !r.j.immich.configured, 'no photos at first; the picture size is Full HD');
 
   // ---- the phone page ----
   r = await call(wp, '/api/wallpapers/pair', 'POST', {});
@@ -130,6 +130,7 @@ run(async () => {
     r.j.immich.configured && r.j.immich.keyHint === '…1234' && JSON.stringify(r.j).indexOf('secret-key') < 0,
     'the status shows the last four characters of the key only'
   );
+  await call(wp, '/api/wallpapers/set', 'POST', { size: '4k' }); // 4K: the full-size picture, else the original, else the preview
   p = await phone('POST', '/api/immich/albums', { ids: ['bbbbbbbb-0000-0000-0000-000000000001'] }, code);
   await wp.sync();
   r = await call(wp, '/api/wallpapers/status');

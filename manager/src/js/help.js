@@ -31,7 +31,7 @@ var INFO = {
   'Total': 'Every photo Wallpapers can show, and the space they use on the TV (at most 150 MB).',
   'Sync now': 'Downloads new and changed photos from the chosen albums now and removes the ones that left them.',
   'Picture size':
-    '4K keeps photos at 3840 pixels, Full HD at 1920 (more photos fit in 150 MB). It applies to new uploads and to the next Immich sync.',
+    'Full HD (the default) keeps photos at 1920 pixels, the size Home is drawn at; 4K at 3840, which uses about four times the space. It applies to new uploads and to the next Immich sync.',
   'Remove all uploads': 'Deletes every uploaded photo from the TV. Immich photos stay.',
   'Disconnect Immich': 'Forgets the address and the key and deletes the Immich photos from the TV. Uploads stay.',
   'Reset Home customisation':

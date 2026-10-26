@@ -2,7 +2,7 @@
 //   D/wallpapers/upload/<random>.jpg   photos uploaded from a phone (the phone page scales them before sending)
 //   D/wallpapers/immich/<asset id>.jpg photos from chosen Immich albums, downloaded by a sync and kept, so showing one never needs Immich
 // D/wallpapers/index.json says what each file is (source, size, Immich checksum); only files listed there are ever deleted.
-// The settings are the wallpapers section of config.json: {size: '4k'|'hd', immich: {url, key, albums: [ids], hidden: [asset ids]}}.
+// The settings are the wallpapers section of config.json: {size: 'hd'|'4k' (Full HD is the default), immich: {url, key, albums: [ids], hidden: [asset ids]}}.
 // The Immich key never leaves the service: status() shows its last four characters only, and it is not logged.
 // API (loopback, our apps): GET /api/wallpapers/status, GET /api/wallpapers/list, GET /api/wallpapers/photo/<u|i>/<id>,
 // POST /api/wallpapers/set {size}, POST /api/wallpapers/pair, POST /api/wallpapers/sync, POST /api/wallpapers/remove-uploads,
@@ -39,11 +39,11 @@ const MIME = { jpg: 'image/jpeg', png: 'image/png', webp: 'image/webp' };
 
 function create(ctx) {
   const config = ctx.config;
-  const cfg = () => Object.assign({ size: '4k' }, config.get().wallpapers || {});
+  const cfg = () => Object.assign({ size: 'hd' }, config.get().wallpapers || {});
   const icfg = () => Object.assign({ url: '', key: '', albums: [], hidden: [] }, cfg().immich || {});
   const setCfg = fn =>
     config.update('wallpapers', c => {
-      c.wallpapers = Object.assign({ size: '4k' }, c.wallpapers || {});
+      c.wallpapers = Object.assign({ size: 'hd' }, c.wallpapers || {});
       fn(c.wallpapers);
     });
 
@@ -239,7 +239,7 @@ function create(ctx) {
           delete cur[id];
         }
       saveIdx();
-      const size = cfg().size === 'hd' ? 'hd' : '4k';
+      const size = cfg().size === '4k' ? '4k' : 'hd';
       let full = false,
         failed = 0;
       for (const w of keep) {
@@ -298,7 +298,7 @@ function create(ctx) {
     const ic = icfg(),
       s = idx().sync;
     return {
-      size: cfg().size === 'hd' ? 'hd' : '4k',
+      size: cfg().size === '4k' ? '4k' : 'hd',
       uploads: idx().upload.length,
       immich: {
         configured: !!(ic.url && ic.key),
@@ -497,7 +497,7 @@ function create(ctx) {
 }
 
 // the phone page: two actions, Upload photos and Configure Immich. Plain script for iOS Safari and Android Chrome; photos are scaled in
-// the browser (to 3840 or 1920 pixels on the long side) before they are sent, which also turns an iPhone's HEIC into JPEG.
+// the browser (to 1920 or 3840 pixels on the long side) before they are sent, which also turns an iPhone's HEIC into JPEG.
 const PHONE_PAGE = `<!doctype html><html lang=en><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Wallpapers</title>
 <style>*{box-sizing:border-box}body{font:17px -apple-system,system-ui,sans-serif;background:#0d0e12;color:#eee;margin:0;padding:20px 16px 60px;max-width:640px;margin:0 auto}
 h1{font-size:26px;margin:4px 0 4px}h2{font-size:20px;margin:28px 0 10px}p{color:#aaa;margin:6px 0}.m{padding:12px 14px;border-radius:12px;background:#1d2a1f;margin:12px 0}.m.e{background:#3a1717}
@@ -525,14 +525,14 @@ button.p,label.b{background:#f5f6f8;color:#111;font-weight:600;border:0}input{te
 <div id=iphb class=hide><h2>Synced photos <small>tap to hide or show one</small></h2><div class=grid id=ipg></div></div>
 <button id=isy>Sync now</button><button id=idc>Disconnect Immich</button></section></div>
 <script>
-var code='',S={},MAX=3840,$=function(i){return document.getElementById(i)};
+var code='',S={},MAX=1920,$=function(i){return document.getElementById(i)};
 function api(p,b,ct){return new Promise(function(ok,no){var x=new XMLHttpRequest();x.open(b===undefined?'GET':'POST','/api/'+p);x.setRequestHeader('x-code',code);
  if(ct)x.setRequestHeader('content-type',ct);x.onload=function(){var j={};try{j=JSON.parse(x.responseText)}catch(e){}if(x.status===403){showLogin('Wrong code.');no(j)}else ok(j)};x.onerror=function(){no({error:'The TV did not answer. Is the phone on the same Wi-Fi?'})};
  x.send(b===undefined?null:(ct?b:JSON.stringify(b)))})}
 function msg(t,e){$('msg').innerHTML=t?'<p class="m'+(e?' e':'')+'"></p>':'';if(t)$('msg').firstChild.textContent=t}
 function showLogin(t){$('login').className='';$('main').className='hide';$('sum').textContent=t||''}
 function ago(t){if(!t)return 'never';var m=Math.round((Date.now()-t)/60000);return m<1?'just now':m<60?m+' min ago':m<1440?Math.round(m/60)+' h ago':Math.round(m/1440)+' days ago'}
-function state(){return api('state').then(function(s){S=s;MAX=s.size==='hd'?1920:3840;$('login').className='hide';$('main').className='';
+function state(){return api('state').then(function(s){S=s;MAX=s.size==='4k'?3840:1920;$('login').className='hide';$('main').className='';
  $('sum').textContent='Local uploads: '+s.uploads+' · Immich: '+s.immich.photos+' · Total: '+s.total+' photos ('+Math.round(s.bytes/1048576)+' of 150 MB)';
  $('un').textContent=s.uploads+' of '+s.limits.uploads;var g='';(s.uploadsList||[]).forEach(function(id){g+='<div class=ph><img loading=lazy src="" data-s="u/'+id+'"><button data-d="'+id+'">×</button></div>'});$('ug').innerHTML=g;thumbs($('ug'));
  var i=s.immich;$('iu').value=$('iu').value||i.url;$('ik').placeholder=i.keyHint?'API key (saved: '+i.keyHint+'; leave empty to keep)':'API key';
