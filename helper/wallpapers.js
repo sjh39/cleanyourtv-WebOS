@@ -165,17 +165,21 @@ function create(ctx) {
   }
 
   // ---- the sync: new or changed photos are downloaded, photos no longer wanted are deleted (only files the index lists) ----
-  let syncing = null;
+  let syncing = null,
+    again = false;
+  // one sync at a time; a request during a sync (new albums chosen, Sync now) runs it once more afterwards, within the same promise
   function sync() {
-    if (!syncing)
-      syncing = doSync().then(
-        () => {
-          syncing = null;
-        },
-        () => {
-          syncing = null;
-        }
-      );
+    if (syncing) {
+      again = true;
+      return syncing;
+    }
+    syncing = (async () => {
+      do {
+        again = false;
+        await doSync().catch(() => {});
+      } while (again);
+      syncing = null;
+    })();
     return syncing;
   }
   async function download(id, mime, size) {
@@ -207,6 +211,26 @@ function create(ctx) {
     unlink(tmp);
     throw last || new Error('download failed');
   }
+  // an album's photos. Up to Immich 1.x the album itself lists them; newer servers (2.x, 3.x) leave them out, so they are searched by
+  // album (POST /api/search/metadata), a page at a time
+  async function albumAssets(id) {
+    const al = await immich('/albums/' + encodeURIComponent(id) + '?withoutAssets=false');
+    if (Array.isArray(al.assets)) return al.assets;
+    let out = [],
+      page = 1;
+    for (let n = 0; page && n < 20; n++) {
+      const r = await immich('/search/metadata', null, {
+        method: 'POST',
+        headers: { 'x-api-key': icfg().key, Accept: 'application/json', 'content-type': 'application/json' },
+        body: JSON.stringify({ albumIds: [id], type: 'IMAGE', size: 250, page }),
+      });
+      const items = (r.assets && r.assets.items) || [];
+      out = out.concat(items);
+      page = r.assets && r.assets.nextPage ? +r.assets.nextPage : 0;
+      if (out.length >= LIMITS.immich * 2) break;
+    }
+    return out;
+  }
   async function doSync() {
     const ic = icfg(),
       st = idx().sync;
@@ -220,14 +244,14 @@ function create(ctx) {
       const want = [],
         seen = {};
       for (const a of ic.albums) {
-        const al = await immich('/albums/' + encodeURIComponent(a) + '?withoutAssets=false');
-        for (const x of al.assets || [])
-          if (x && ASSET.test(x.id) && x.type === 'IMAGE' && !x.isTrashed && !seen[x.id]) {
+        for (const x of await albumAssets(a))
+          if (x && ASSET.test(x.id) && x.type === 'IMAGE' && !x.isTrashed && x.visibility !== 'hidden' && !seen[x.id]) {
             seen[x.id] = 1;
             want.push({ id: x.id, sum: x.checksum || '', mime: x.originalMimeType || '', at: Date.parse(x.fileCreatedAt || '') || 0 });
           }
       }
       want.sort((a, b) => b.at - a.at);
+      if (!want.length && ic.albums.length) st.error = 'the chosen albums have no photos the TV can show';
       const keep = want.slice(0, LIMITS.immich),
         keepIds = {};
       keep.forEach(w => (keepIds[w.id] = 1));
@@ -261,11 +285,8 @@ function create(ctx) {
         }
       }
       st.ok = Date.now();
-      st.error = full
-        ? 'Wallpapers is full (150 MB): not every photo was downloaded'
-        : failed
-          ? failed + ' photos could not be downloaded'
-          : '';
+      if (full) st.error = 'Wallpapers is full (150 MB): not every photo was downloaded';
+      else if (failed) st.error = failed + ' photos could not be downloaded';
     } catch (e) {
       st.error = String(e.message || e);
     }

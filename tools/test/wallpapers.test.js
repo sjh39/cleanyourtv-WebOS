@@ -112,6 +112,19 @@ run(async () => {
     if (u === '/api/albums') return send(200, [{ id: 'bbbbbbbb-0000-0000-0000-000000000001', albumName: 'Family', assetCount: 5 }]);
     if (u === '/api/albums?shared=true') return send(200, []);
     if (/^\/api\/albums\/bbbbbbbb/.test(u)) return send(200, { assets: album });
+    // a newer Immich (2.x, 3.x): the album does not list its photos, they are searched by album, page by page
+    if (/^\/api\/albums\/cccccccc/.test(u)) return send(200, { id: 'cccccccc-0000-0000-0000-000000000001', assetCount: 3 });
+    if (u === '/api/search/metadata' && q.method === 'POST') {
+      let b = '';
+      q.on('data', c => (b += c));
+      q.on('end', () => {
+        const f = JSON.parse(b),
+          all = [A(6), A(7), A(8)].filter(() => f.albumIds[0] === 'cccccccc-0000-0000-0000-000000000001');
+        const pg = f.page || 1;
+        send(200, { assets: { items: all.slice((pg - 1) * 2, pg * 2), nextPage: pg * 2 < all.length ? String(pg + 1) : null } });
+      });
+      return;
+    }
     const m = /^\/api\/assets\/([0-9a-f-]+)\/(thumbnail\?size=(fullsize|preview)|original)$/.exec(u);
     if (m) {
       if (m[3] === 'fullsize' && /1$/.test(m[1])) return send(404, {}); // no full-size image for this one: the original is used
@@ -143,6 +156,21 @@ run(async () => {
   album[1] = A(2, { checksum: 'changed' });
   await wp.sync();
   ok(down === 4, 'a changed photo is downloaded again');
+  await phone(
+    'POST',
+    '/api/immich/albums',
+    { ids: ['bbbbbbbb-0000-0000-0000-000000000001', 'cccccccc-0000-0000-0000-000000000001'] },
+    code
+  );
+  await wp.sync();
+  r = await call(wp, '/api/wallpapers/status');
+  ok(
+    r.j.immich.photos === 6 && down === 7,
+    'an album on a newer Immich (photos found by search, in pages) is synced too: ' + r.j.immich.photos
+  );
+  await phone('POST', '/api/immich/albums', { ids: ['bbbbbbbb-0000-0000-0000-000000000001'] }, code);
+  await wp.sync();
+  ok((await call(wp, '/api/wallpapers/status')).j.immich.photos === 3, "a deselected album's photos are removed");
   album = [A(1), A(2, { checksum: 'changed' })];
   await wp.sync();
   const imFiles = fs.readdirSync(path.join(process.env.CYTV_DIR, 'wallpapers', 'immich'));

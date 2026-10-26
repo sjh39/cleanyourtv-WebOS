@@ -25,7 +25,7 @@ same Wi-Fi. The page has two parts:
   long side, see **Picture size**), which also turns an iPhone's HEIC photos into JPEG. The page shows the progress and what failed.
   Uploaded photos are listed below, each with a × to delete it.
 - **Configure Immich**: the server address and an API key, then **Test connection and save**. Choose albums and **Save albums and
-  sync**. The synced photos are listed; tap one to hide it from the TV (tap again to show it).
+  sync** (choosing albums while a sync runs starts another one right after it). The synced photos are listed; tap one to hide it from the TV (tap again to show it).
 
 The page is served by the TV itself on port 8791, needs the code shown on the TV, stays open while you use it (at most an hour)
 and closes when you leave the QR screen. It is not encrypted: photos and the Immich key travel over your Wi-Fi.
@@ -47,7 +47,8 @@ Create an API key in Immich under **Account settings** > **API keys** with at le
 permissions (`asset.download` too for full-size pictures on older servers). The key is kept in the service's settings file
 (`config.json`, readable by root only); the TV's pages only ever see its last four characters, and it is not logged.
 
-A sync reads the chosen albums (your own and the ones shared with you) through the Immich API, skips videos and photos in the
+A sync reads the chosen albums (your own and the ones shared with you) through the Immich API (on Immich 2 and newer, where an
+album no longer lists its photos, by searching for the album's photos), skips videos and photos in the
 trash, and downloads each photo once, newest first. A photo is downloaded again only when Immich reports a different checksum;
 it is tracked by its Immich ID, not its file name. Photos that are no longer in a chosen album are deleted from the TV; nothing
 else is touched. At 4K the TV asks for Immich's full-size picture (Immich 1.120 or newer), then the original when it is a JPEG,
