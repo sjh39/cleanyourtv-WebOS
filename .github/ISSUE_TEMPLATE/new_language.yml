@@ -1,0 +1,38 @@
+name: New language or translation fix
+description: Add a language to CleanYourTV, or correct a translation
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping! A pull request against `dev` with the file `i18n/<code>.json` is the quickest way in; this form is for
+        when that is not possible. How to make the file: [Languages](https://lasharor.github.io/cleanyourtv-WebOS/languages/).
+  - type: input
+    id: language
+    attributes:
+      label: Language
+      placeholder: Italian (it)
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What is it?
+      options:
+        - A new language
+        - More texts for a language that is there
+        - A correction of a translation
+    validations:
+      required: true
+  - type: textarea
+    id: file
+    attributes:
+      label: The translations
+      description: 'Attach the .json file, or paste the lines ("English text": "translation") here.'
+      render: json
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything to know (optional)
+      description: 'Texts that were hard to fit, words that differ by country, a right-to-left language, ...'

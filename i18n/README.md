@@ -9,6 +9,7 @@ shown. The translations are one file per language in this folder.
 | `nl.json`, `de.json`, ... | One language: `{"Hidden apps": "Verborgen apps", ...}`. `_name` is the language in its own words, `_dir` is `ltr` or `rtl`. |
 | `runtime.js` | The code the pages use to translate (`t()`). |
 
+The guide for translators is [Languages](https://lasharor.github.io/cleanyourtv-WebOS/languages/) in the documentation.
 `tools/build-pages.js` puts the translations each page uses into that page, so the TV needs no network for them. The language is the
 TV's menu language, or the one chosen in the manager app under **More** > **Language**.
 

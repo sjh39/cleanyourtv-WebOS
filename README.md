@@ -67,7 +67,7 @@ and troubleshooting.
 
 1. **[A launcher that is quick and yours](https://lasharor.github.io/cleanyourtv-WebOS/launcher/).** A dock of four apps, an app
    grid sorted by how often you use each app, top buttons you choose, an Inputs list and a clock; menus in English, Dutch, German,
-   French and Spanish; [themes](https://lasharor.github.io/cleanyourtv-WebOS/themes/) for colours, layout and wallpaper, and
+   French and Spanish ([more languages welcome](https://lasharor.github.io/cleanyourtv-WebOS/languages/)); [themes](https://lasharor.github.io/cleanyourtv-WebOS/themes/) for colours, layout and wallpaper, and
    [Wallpapers](https://lasharor.github.io/cleanyourtv-WebOS/wallpapers/): your own photos behind Home, uploaded from a phone or synced
    from Immich albums.
 
@@ -162,7 +162,8 @@ Troubleshooting and fixing with an AI assistant (Claude, ChatGPT, a local model)
 [`tools/diagnose.sh`](tools/diagnose.sh) collects a read-only report from the TV, and the
 [documentation](https://lasharor.github.io/cleanyourtv-WebOS/ai/) has the prompts and the rules.
 
-Reports from other TVs are the most useful contribution: open an [issue](https://github.com/lasharor/cleanyourtv-WebOS/issues)
+Translations are welcome too: a language is one file in [`i18n/`](i18n/), no programming needed
+([how](https://lasharor.github.io/cleanyourtv-WebOS/languages/)). Reports from other TVs are the most useful contribution: open an [issue](https://github.com/lasharor/cleanyourtv-WebOS/issues)
 with the output of **Share log** in the manager app. For code, see [Contributing](https://lasharor.github.io/cleanyourtv-WebOS/development/):
 the service runs on Node.js 8 (webOS 5), `sh tools/check.sh` runs every check, every push to `dev` publishes a dev build, and a release goes out daily from `dev`.
 

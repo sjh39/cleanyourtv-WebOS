@@ -27,6 +27,7 @@ nav = [
     { "Voice (optional)" = "voice.md" },
     { "Debloat" = "debloat.md" },
     { "The manager app" = "manager.md" },
+    { "Languages" = "languages.md" },
   ] },
   { "Reference" = [
     { "Security" = "security.md" },
