@@ -2,9 +2,10 @@
 <html><head><meta charset="utf-8"><title>Inputs</title>
 <style>
 *{box-sizing:border-box;margin:0}
-:root{--ink:#f5f6f8;--ink2:rgba(245,246,248,.62);--font:"LG Smart UI","Helvetica Neue",Helvetica,Arial,sans-serif}
+/* the launcher's theme (colours, accent, typeface, corners) applies here too: the variables come from /api/apps, these are the defaults */
+:root{--ink:#f5f6f8;--ink2:rgba(245,246,248,.62);--font:"LG Smart UI","Helvetica Neue",Helvetica,Arial,sans-serif;--night:#0b0c10;--night-rgb:5,6,9;--panel2:#1a1c22;--acc:#f5f6f8;--acc-ink:#0b0c10;--focus:#f5f6f8;--tile-r:50px}
 html,body{width:1920px;height:1080px;overflow:hidden;background:transparent;color:var(--ink);font-family:var(--font)}
-#dim{position:absolute;left:0;top:0;width:1920px;height:1080px;background:rgba(5,6,9,.78);opacity:0;transition:opacity .12s linear}
+#dim{position:absolute;left:0;top:0;width:1920px;height:1080px;background:rgba(var(--night-rgb),.78);opacity:0;transition:opacity .12s linear}
 #wrap{position:absolute;left:96px;right:96px;top:0;bottom:0;display:flex;flex-direction:column;justify-content:center;opacity:0;transition:opacity .12s linear}
 .on #dim,.on #wrap{opacity:1}
 .cap{font-size:30px;font-weight:600;color:var(--ink2);margin-bottom:20px;letter-spacing:.01em}
@@ -12,11 +13,11 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:transparent;colo
 .row>*+*{margin-left:32px}
 #wrap>*+*{margin-top:72px}
 #inputs>*+*{margin-left:24px}
-.tile{position:relative;flex:1 1 0;min-width:0;height:180px;border-radius:50px;overflow:hidden;background:#1a1c22;display:flex;align-items:center;justify-content:center;
+.tile{position:relative;flex:1 1 0;min-width:0;height:180px;border-radius:calc(var(--tile-r) * 1.4);overflow:hidden;background:var(--panel2);display:flex;align-items:center;justify-content:center;
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);transform:scale(.96);transition:transform .15s ease-out}
 .tile img{max-width:58%;max-height:58%;object-fit:contain}
-.tile.f{transform:translateY(-10px) scale(1.06);box-shadow:0 0 0 5px var(--ink),0 26px 44px rgba(0,0,0,.5)}
-.chip{position:relative;flex:1 1 auto;min-width:max(200px,fit-content);max-width:340px;height:180px;padding:0 32px;border-radius:50px;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(245,246,248,.92);color:#0b0c10;
+.tile.f{transform:translateY(-10px) scale(1.06);box-shadow:0 0 0 5px var(--focus),0 26px 44px rgba(0,0,0,.5)}
+.chip{position:relative;flex:1 1 auto;min-width:max(200px,fit-content);max-width:340px;height:180px;padding:0 32px;border-radius:calc(var(--tile-r) * 1.4);overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--ink);color:var(--night);
   transform:scale(.96);transition:transform .15s ease-out}
 .chip>*+*{margin-top:8px}
 .chip svg{width:48px;height:48px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
@@ -31,7 +32,7 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:transparent;colo
 .tile.inp svg{width:64px;height:64px;fill:none;stroke:var(--ink);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .tile.inp .lb{margin-top:6px;font-size:26px;font-weight:600;max-width:90%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .chip.act::after,.tile.act::after{content:"";position:absolute;right:26px;top:24px;width:16px;height:16px;border-radius:8px;background:#1fbf5a;box-shadow:0 0 0 3px rgba(11,12,16,.9)}
-.chip.f{opacity:1;background:#fff;transform:translateY(-10px) scale(1.08);box-shadow:inset 0 0 0 5px #0b0c10,0 0 0 6px #fff,0 26px 44px rgba(0,0,0,.5)}
+.chip.f{opacity:1;background:var(--acc);color:var(--acc-ink);transform:translateY(-10px) scale(1.08);box-shadow:inset 0 0 0 5px var(--acc-ink),0 0 0 6px var(--focus),0 26px 44px rgba(0,0,0,.5)}
 #inputs{justify-content:center}
 #msg{margin-top:28px;text-align:center;font-size:28px;font-weight:500;color:var(--ink);opacity:.85}
 #msg:empty{display:none}
@@ -79,6 +80,17 @@ function idle(){clearTimeout(idleT);if(ondemand&&shown)idleT=setTimeout(function
 function hide(){log('hide');shown=false;clearTimeout(idleT);document.body.classList.remove('on');try{webOSSystem.hide()}catch(e){}if(ondemand)closeSoon()}
 function cur(){return row===0?apps:inputs}
 function persist(){try{localStorage.setItem(KEY,JSON.stringify(cache))}catch(e){}}
+/* the theme the service resolved for the launcher ({vars, font}); kept in the cache so the first open is already themed */
+var themed=[];
+function applyTheme(th){
+  var st=document.documentElement.style,k;
+  for(k=0;k<themed.length;k++)st.removeProperty(themed[k]);
+  themed=[];
+  if(!th||!th.vars)return;
+  for(k in th.vars){st.setProperty(k,th.vars[k]);themed.push(k)}
+  var f=th.font,fs=$('tfont'),css=f?'@font-face{font-family:"CYTV Theme Font";src:url("'+API+'/api/theme/font/'+f.id+'/'+f.file+'")}':'';
+  if(!fs){fs=document.createElement('style');fs.id='tfont';document.head.appendChild(fs)}
+  if(fs.textContent!==css)fs.textContent=css}
 
 /* a tile's background is the colour along its icon's edge, as in the launcher */
 function edge(img){try{var c=document.createElement('canvas');c.width=c.height=16;var g=c.getContext('2d');g.drawImage(img,0,0,16,16);
@@ -141,13 +153,15 @@ function get(path,cb,fail){var x=new XMLHttpRequest();x.open('GET',API+path);x.t
 function refresh(){
   var got={apps:null,inputs:null};
   function done(){if(!got.apps||!got.inputs)return;cache.apps=got.apps;cache.inputs=got.inputs;persist();$('msg').textContent='';setData(cache,false)}
-  get('/api/apps',function(x){liveOn=!(x.config&&x.config.options&&x.config.options.liveTv===false);dots=!!(x.config&&x.config.runDots===true);var by={};(x.apps||[]).forEach(function(a){by[a.id]=a});
+  get('/api/apps',function(x){liveOn=!(x.config&&x.config.options&&x.config.options.liveTv===false);
+    var th=(x.config&&x.config.theme)||null;if(JSON.stringify(th)!==JSON.stringify(cache.theme||null)){cache.theme=th;applyTheme(th);persist()}dots=!!(x.config&&x.config.runDots===true);var by={};(x.apps||[]).forEach(function(a){by[a.id]=a});
     pins={};(x.apps||[]).forEach(function(a){if(a.input)pins[a.id]=1});
     got.apps=((x.config&&x.config.dock)||[]).filter(function(id){return by[id]}).map(function(id){return by[id].input?{id:id,title:by[id].title,input:by[id].input}:{id:id,title:by[id].title}});done()},function(){});
   get('/api/inputs',function(x){got.inputs=buildInputs(x.devices);done()},function(){if(shown&&inputs.length<=1)$('msg').textContent=t('nohelper')});
   get('/api/running',function(x){var r={};(x.apps||[]).forEach(function(a){r[a.id]=1});if(JSON.stringify(r)!==JSON.stringify(running)){running=r;paint()}},function(){})}
 function load(){   // the last known layout, ready before the first open
   try{var c=JSON.parse(localStorage.getItem(KEY)||'null');if(c&&c.inputs&&c.inputs.length){cache=c;cache.icons=cache.icons||{};cache.colors=cache.colors||{}}}catch(e){}
+  applyTheme(cache.theme);
   setData(cache.inputs.length?cache:{apps:[],inputs:buildInputs([])},true)}
 function show(){
   shown=true;moved=false;shownAt=Date.now();downAt=0;log('show');idle();

@@ -1,4 +1,5 @@
-/* Live TV (inside the launcher) */
+/* Live TV (inside the launcher). The channel banner, the guide and its menus take the theme's colours (--panel, --acc, ...);
+   the error and setup cards keep their own. */
 #lv {
   --ink2: rgba(245, 246, 248, 0.76);
   position: absolute;
@@ -41,7 +42,7 @@
   padding: 0 44px 0 36px;
   display: flex;
   align-items: center;
-  background: rgba(12, 13, 17, 0.92);
+  background: var(--panel);
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.1),
     0 30px 60px rgba(0, 0, 0, 0.5);
@@ -54,7 +55,7 @@
   width: 150px;
   height: 150px;
   border-radius: 34px;
-  background: #1c1e24;
+  background: var(--panel2);
   object-fit: contain;
   flex: none;
 }
@@ -109,7 +110,7 @@
 }
 #lv-osd .pbar {
   margin-top: 16px;
-  color: var(--ink);
+  color: var(--acc);
 }
 #lv-numin {
   right: 96px;
@@ -185,7 +186,7 @@
   width: 640px;
   padding: 30px 28px 22px;
   border-radius: 40px;
-  background: rgba(12, 13, 17, 0.96);
+  background: var(--panel);
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.1),
     0 30px 60px rgba(0, 0, 0, 0.5);
@@ -205,8 +206,8 @@
   height: 76px;
   margin-bottom: 10px;
   padding: 0 28px;
-  border-radius: 26px;
-  background: rgba(255, 255, 255, 0.07);
+  border-radius: var(--row-r);
+  background: var(--panel2);
   font-size: 28px;
 }
 .mrow .ml {
@@ -221,11 +222,12 @@
   margin-left: 20px;
 }
 .mrow.f {
-  background: var(--ink);
-  color: #0b0c10;
+  background: var(--acc);
+  color: var(--acc-ink);
 }
 .mrow.f .mv {
-  color: rgba(11, 12, 16, 0.62);
+  color: inherit;
+  opacity: 0.62;
 }
 .bds {
   display: flex;
@@ -254,7 +256,7 @@
 }
 .crow.f .bd {
   background: rgba(11, 12, 16, 0.14);
-  color: #0b0c10;
+  color: var(--acc-ink);
 }
 .crow.f .bd.w {
   background: rgba(160, 100, 0, 0.2);
@@ -325,7 +327,7 @@ svg.st {
   top: 0;
   width: 1920px;
   height: 1080px;
-  background: rgba(7, 8, 11, 0.9);
+  background: rgba(var(--night-rgb), 0.9);
 }
 #lv-glow {
   position: absolute;
@@ -375,12 +377,12 @@ svg.st {
   align-items: center;
   white-space: nowrap;
   flex: none;
-  background: rgba(255, 255, 255, 0.09);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  background: var(--pill-bg);
+  box-shadow: inset 0 0 0 1px var(--pill-ring);
 }
 .ctab.on {
-  background: var(--ink);
-  color: #0b0c10;
+  background: var(--acc);
+  color: var(--acc-ink);
 }
 .ctab.m {
   background: none;
@@ -407,8 +409,8 @@ svg.st {
   height: 104px;
   margin-bottom: 12px;
   padding: 0 28px 0 18px;
-  border-radius: 30px;
-  background: rgba(255, 255, 255, 0.07);
+  border-radius: var(--row-r);
+  background: var(--panel2);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07);
 }
 .crow > * + * {
@@ -418,7 +420,7 @@ svg.st {
   width: 72px;
   height: 72px;
   border-radius: 20px;
-  background: #1c1e24;
+  background: var(--panel);
   object-fit: contain;
   flex: none;
 }
@@ -451,23 +453,24 @@ svg.st {
 .crow .pbar {
   margin-top: 9px;
   height: 6px;
-  color: var(--ink);
+  color: var(--acc);
 }
 .crow.cur .n {
   color: var(--ink);
 }
 .crow.f {
-  background: var(--ink);
-  color: #0b0c10;
+  background: var(--acc);
+  color: var(--acc-ink);
   box-shadow: 0 20px 34px rgba(0, 0, 0, 0.5);
 }
 .crow.f .n,
 .crow.f .nw {
-  color: rgba(11, 12, 16, 0.62);
+  color: inherit;
+  opacity: 0.62;
 }
 .crow.f .pbar {
   background: rgba(11, 12, 16, 0.18);
-  color: #0b0c10;
+  color: var(--acc-ink);
 }
 .crow.f .lg {
   background: #e9ebef;
@@ -505,7 +508,7 @@ svg.st {
   margin-top: 30px;
   padding: 30px 34px;
   border-radius: 36px;
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--panel2);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 #lv-detail .dt {
@@ -532,7 +535,7 @@ svg.st {
 }
 #lv-detail .card .pbar {
   margin-top: 20px;
-  color: var(--ink);
+  color: var(--acc);
 }
 #lv-detail h3 {
   font-size: 26px;

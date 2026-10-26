@@ -161,7 +161,8 @@ function create(ctx) {
     const out = {};
     if (strs(b.dock)) out.dock = strs(b.dock).slice(0, 8);
     if (strs(b.hidden)) out.hidden = strs(b.hidden);
-    if (b.sort === 'usage' || b.sort === 'alpha') out.sort = b.sort;
+    if (b.sort === 'usage' || b.sort === 'alpha' || b.sort === 'custom') out.sort = b.sort;
+    if (strs(b.order)) out.order = strs(b.order); // My order: the grid's apps as moved in wiggle mode
     if (['auto', '24', '12'].includes(b.clock)) out.clock = b.clock;
     if (b.runDots === true) out.runDots = true; // the green dot on open apps (off unless switched on)
     if (Array.isArray(b.topbar))

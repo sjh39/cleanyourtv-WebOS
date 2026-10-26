@@ -53,7 +53,14 @@ function shownBar() {
       });
 }
 function byOrder(a, b) {
-  if (cfg.sort !== 'alpha') {
+  /* My order (wiggle mode): the saved order first, apps added since then after it */
+  if (cfg.sort === 'custom' && cfg.order) {
+    var ia = cfg.order.indexOf(a.id),
+      ib = cfg.order.indexOf(b.id);
+    if (ia < 0) ia = 1e6;
+    if (ib < 0) ib = 1e6;
+    if (ia !== ib) return ia - ib;
+  } else if (cfg.sort !== 'alpha') {
     var d = (usage[b.id] || 0) - (usage[a.id] || 0);
     if (Math.abs(d) > 1e-9) return d > 0 ? 1 : -1;
   }
@@ -66,6 +73,7 @@ function title(id) {
 
 /* ---------- actions ---------- */
 function act(e) {
+  if (WIG.on) return WIG.ok(e);
   var a = e._a;
   if (a) {
     if (!a.sys) {

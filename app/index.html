@@ -537,6 +537,60 @@ body {
 #toast.on {
   opacity: 1;
 }
+/* wiggle mode (hold OK on an app): the tiles rock, the focused one stands still and shows where the carried app goes */
+@keyframes wig {
+  0% {
+    transform: rotate(-1.4deg);
+  }
+  50% {
+    transform: rotate(1.4deg);
+  }
+  100% {
+    transform: rotate(-1.4deg);
+  }
+}
+.wiggle .tile:not(.f) {
+  animation: wig 0.32s ease-in-out infinite;
+}
+.wiggle .tile:nth-child(2n):not(.f) {
+  animation-delay: -0.16s;
+}
+.wiggle .tile.carry {
+  opacity: 0.92;
+  box-shadow: 0 34px 50px rgba(0, 0, 0, 0.7);
+}
+.tile .wx {
+  position: absolute;
+  z-index: 2;
+  left: 8px;
+  top: 8px;
+  width: 44px;
+  height: 44px;
+  border-radius: 22px;
+  background: rgba(30, 32, 38, 0.95);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25);
+  color: var(--ink);
+  font-size: 34px;
+  font-style: normal;
+  line-height: 42px;
+  text-align: center;
+}
+.wiggle .tile.carry .wx {
+  display: none;
+}
+#wighint {
+  position: absolute;
+  z-index: 20;
+  left: 50%;
+  bottom: 40px;
+  transform: translateX(-50%);
+  padding: 16px 34px;
+  border-radius: 30px;
+  background: var(--panel);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  font-size: 26px;
+  white-space: nowrap;
+}
 /* menus */
 #ov {
   position: absolute;
@@ -618,7 +672,49 @@ body {
 #ov .msep {
   height: 6px;
 }
-/* Live TV (inside the launcher) */
+/* a menu with pictures (Customise > Theme): the list moves right, the focused row's picture and description are on the left */
+#ov.ws {
+  justify-content: flex-end;
+  padding-right: 150px;
+}
+#ovside {
+  position: absolute;
+  left: 150px;
+  top: 190px;
+  width: 820px;
+  z-index: 31;
+}
+#ovside .pvbox {
+  width: 820px;
+  height: 461px;
+  border-radius: var(--row-r);
+  overflow: hidden;
+  background: var(--panel2);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+#ovside img {
+  width: 820px;
+  height: 461px;
+  object-fit: cover;
+  display: block;
+}
+#ovside .pt {
+  margin-top: 30px;
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+#ovside .pd {
+  margin-top: 12px;
+  font-size: 26px;
+  line-height: 1.35;
+  color: var(--ink2);
+  white-space: pre-line;
+  max-height: 210px;
+  overflow: hidden;
+}
+/* Live TV (inside the launcher). The channel banner, the guide and its menus take the theme's colours (--panel, --acc, ...);
+   the error and setup cards keep their own. */
 #lv {
   --ink2: rgba(245, 246, 248, 0.76);
   position: absolute;
@@ -661,7 +757,7 @@ body {
   padding: 0 44px 0 36px;
   display: flex;
   align-items: center;
-  background: rgba(12, 13, 17, 0.92);
+  background: var(--panel);
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.1),
     0 30px 60px rgba(0, 0, 0, 0.5);
@@ -674,7 +770,7 @@ body {
   width: 150px;
   height: 150px;
   border-radius: 34px;
-  background: #1c1e24;
+  background: var(--panel2);
   object-fit: contain;
   flex: none;
 }
@@ -729,7 +825,7 @@ body {
 }
 #lv-osd .pbar {
   margin-top: 16px;
-  color: var(--ink);
+  color: var(--acc);
 }
 #lv-numin {
   right: 96px;
@@ -805,7 +901,7 @@ body {
   width: 640px;
   padding: 30px 28px 22px;
   border-radius: 40px;
-  background: rgba(12, 13, 17, 0.96);
+  background: var(--panel);
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.1),
     0 30px 60px rgba(0, 0, 0, 0.5);
@@ -825,8 +921,8 @@ body {
   height: 76px;
   margin-bottom: 10px;
   padding: 0 28px;
-  border-radius: 26px;
-  background: rgba(255, 255, 255, 0.07);
+  border-radius: var(--row-r);
+  background: var(--panel2);
   font-size: 28px;
 }
 .mrow .ml {
@@ -841,11 +937,12 @@ body {
   margin-left: 20px;
 }
 .mrow.f {
-  background: var(--ink);
-  color: #0b0c10;
+  background: var(--acc);
+  color: var(--acc-ink);
 }
 .mrow.f .mv {
-  color: rgba(11, 12, 16, 0.62);
+  color: inherit;
+  opacity: 0.62;
 }
 .bds {
   display: flex;
@@ -874,7 +971,7 @@ body {
 }
 .crow.f .bd {
   background: rgba(11, 12, 16, 0.14);
-  color: #0b0c10;
+  color: var(--acc-ink);
 }
 .crow.f .bd.w {
   background: rgba(160, 100, 0, 0.2);
@@ -945,7 +1042,7 @@ svg.st {
   top: 0;
   width: 1920px;
   height: 1080px;
-  background: rgba(7, 8, 11, 0.9);
+  background: rgba(var(--night-rgb), 0.9);
 }
 #lv-glow {
   position: absolute;
@@ -995,12 +1092,12 @@ svg.st {
   align-items: center;
   white-space: nowrap;
   flex: none;
-  background: rgba(255, 255, 255, 0.09);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  background: var(--pill-bg);
+  box-shadow: inset 0 0 0 1px var(--pill-ring);
 }
 .ctab.on {
-  background: var(--ink);
-  color: #0b0c10;
+  background: var(--acc);
+  color: var(--acc-ink);
 }
 .ctab.m {
   background: none;
@@ -1027,8 +1124,8 @@ svg.st {
   height: 104px;
   margin-bottom: 12px;
   padding: 0 28px 0 18px;
-  border-radius: 30px;
-  background: rgba(255, 255, 255, 0.07);
+  border-radius: var(--row-r);
+  background: var(--panel2);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07);
 }
 .crow > * + * {
@@ -1038,7 +1135,7 @@ svg.st {
   width: 72px;
   height: 72px;
   border-radius: 20px;
-  background: #1c1e24;
+  background: var(--panel);
   object-fit: contain;
   flex: none;
 }
@@ -1071,23 +1168,24 @@ svg.st {
 .crow .pbar {
   margin-top: 9px;
   height: 6px;
-  color: var(--ink);
+  color: var(--acc);
 }
 .crow.cur .n {
   color: var(--ink);
 }
 .crow.f {
-  background: var(--ink);
-  color: #0b0c10;
+  background: var(--acc);
+  color: var(--acc-ink);
   box-shadow: 0 20px 34px rgba(0, 0, 0, 0.5);
 }
 .crow.f .n,
 .crow.f .nw {
-  color: rgba(11, 12, 16, 0.62);
+  color: inherit;
+  opacity: 0.62;
 }
 .crow.f .pbar {
   background: rgba(11, 12, 16, 0.18);
-  color: #0b0c10;
+  color: var(--acc-ink);
 }
 .crow.f .lg {
   background: #e9ebef;
@@ -1125,7 +1223,7 @@ svg.st {
   margin-top: 30px;
   padding: 30px 34px;
   border-radius: 36px;
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--panel2);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 #lv-detail .dt {
@@ -1152,7 +1250,7 @@ svg.st {
 }
 #lv-detail .card .pbar {
   margin-top: 20px;
-  color: var(--ink);
+  color: var(--acc);
 }
 #lv-detail h3 {
   font-size: 26px;
@@ -1290,6 +1388,12 @@ var TX = {
     'Could not load the themes': 'Kan de thema’s niet laden',
     'Could not reach GitHub: showing the themes on this TV': 'GitHub is niet bereikbaar: de thema’s op deze TV worden getoond',
     'More settings...': 'Meer instellingen...',
+    'Arrows: move · OK: put down': 'Pijlen: verplaatsen · OK: neerzetten',
+    'OK: pick up · Hold OK: hide · Back: done': 'OK: oppakken · OK ingedrukt: verbergen · Terug: klaar',
+    '%s hidden': '%s is verborgen',
+    'My order': 'Mijn volgorde',
+    'Drop my order?': 'Mijn volgorde loslaten?',
+    'Keep my order': 'Mijn volgorde houden',
   },
   de: {
     'Running apps': 'Geöffnete Apps',
@@ -1357,6 +1461,12 @@ var TX = {
     'Could not load the themes': 'Designs konnten nicht geladen werden',
     'Could not reach GitHub: showing the themes on this TV': 'GitHub nicht erreichbar: Designs auf diesem Fernseher werden gezeigt',
     'More settings...': 'Weitere Einstellungen...',
+    'Arrows: move · OK: put down': 'Pfeile: verschieben · OK: ablegen',
+    'OK: pick up · Hold OK: hide · Back: done': 'OK: aufnehmen · OK halten: ausblenden · Zurück: fertig',
+    '%s hidden': '%s ausgeblendet',
+    'My order': 'Meine Reihenfolge',
+    'Drop my order?': 'Meine Reihenfolge verwerfen?',
+    'Keep my order': 'Meine Reihenfolge behalten',
   },
   fr: {
     'Running apps': 'Apps ouvertes',
@@ -1424,6 +1534,12 @@ var TX = {
     'Could not load the themes': 'Impossible de charger les thèmes',
     'Could not reach GitHub: showing the themes on this TV': 'GitHub injoignable : thèmes de ce téléviseur affichés',
     'More settings...': 'Plus de réglages...',
+    'Arrows: move · OK: put down': 'Flèches : déplacer · OK : poser',
+    'OK: pick up · Hold OK: hide · Back: done': 'OK : prendre · OK maintenu : masquer · Retour : terminé',
+    '%s hidden': '%s masquée',
+    'My order': 'Mon ordre',
+    'Drop my order?': 'Abandonner mon ordre ?',
+    'Keep my order': 'Garder mon ordre',
   },
   es: {
     'Running apps': 'Apps abiertas',
@@ -1491,6 +1607,12 @@ var TX = {
     'Could not load the themes': 'No se pudieron cargar los temas',
     'Could not reach GitHub: showing the themes on this TV': 'No se puede acceder a GitHub: se muestran los temas de este televisor',
     'More settings...': 'Más ajustes...',
+    'Arrows: move · OK: put down': 'Flechas: mover · OK: soltar',
+    'OK: pick up · Hold OK: hide · Back: done': 'OK: coger · Mantener OK: ocultar · Atrás: listo',
+    '%s hidden': '%s oculta',
+    'My order': 'Mi orden',
+    'Drop my order?': '¿Descartar mi orden?',
+    'Keep my order': 'Mantener mi orden',
   },
 };
 var TXL = {
@@ -1797,13 +1919,17 @@ function api(p, body) {
     return x.json();
   });
 }
-/* a timing for tools/perf-tv.sh: one line in the service log ("perf launcher ready 412"); nothing waits for it */
-function perfMark(m) {
+/* one line in the service log (Share log shows it); nothing waits for it */
+function logLine(m) {
   try {
     var x = new XMLHttpRequest();
-    x.open('GET', API + '/api/log?m=' + encodeURIComponent('perf ' + m));
+    x.open('GET', API + '/api/log?m=' + encodeURIComponent(m));
     x.send();
   } catch (e) {}
+}
+/* a timing for tools/perf-tv.sh ("perf launcher ready 412") */
+function perfMark(m) {
+  logLine('perf ' + m);
 }
 var perfReady = false;
 function launch(id, params) {
@@ -2319,7 +2445,14 @@ function shownBar() {
       });
 }
 function byOrder(a, b) {
-  if (cfg.sort !== 'alpha') {
+  /* My order (wiggle mode): the saved order first, apps added since then after it */
+  if (cfg.sort === 'custom' && cfg.order) {
+    var ia = cfg.order.indexOf(a.id),
+      ib = cfg.order.indexOf(b.id);
+    if (ia < 0) ia = 1e6;
+    if (ib < 0) ib = 1e6;
+    if (ia !== ib) return ia - ib;
+  } else if (cfg.sort !== 'alpha') {
     var d = (usage[b.id] || 0) - (usage[a.id] || 0);
     if (Math.abs(d) > 1e-9) return d > 0 ? 1 : -1;
   }
@@ -2332,6 +2465,7 @@ function title(id) {
 
 /* ---------- actions ---------- */
 function act(e) {
+  if (WIG.on) return WIG.ok(e);
   var a = e._a;
   if (a) {
     if (!a.sys) {
@@ -2377,6 +2511,36 @@ function closeMenus() {
     ovEl.remove();
     ovEl = null;
   }
+  drawSide(null);
+}
+/* a menu whose rows carry a picture (pv, the theme list) shows it with a description left of the list. Its own element, outside
+   the menu that is redrawn on every key, so the picture is only loaded again when the focused row's picture changes. */
+var sideEl = null;
+function drawSide(it) {
+  if (!it) {
+    if (sideEl) sideEl.remove();
+    sideEl = null;
+    return;
+  }
+  if (!sideEl) {
+    sideEl = document.createElement('div');
+    sideEl.id = 'ovside';
+    sideEl.innerHTML = '<div class="pvbox"><img alt=""></div><div class="pt"></div><div class="pd"></div>';
+    document.body.appendChild(sideEl);
+  }
+  var img = sideEl.querySelector('img'),
+    url = it.pv ? API + '/api/theme/preview/' + it.pv : '';
+  if (img.getAttribute('data-u') !== url) {
+    img.setAttribute('data-u', url);
+    img.style.visibility = 'hidden';
+    img.onload = function () {
+      img.style.visibility = '';
+    };
+    if (url) img.src = url;
+    else img.removeAttribute('src');
+  }
+  sideEl.querySelector('.pt').textContent = it.label;
+  sideEl.querySelector('.pd').textContent = it.desc || '';
 }
 function backMenu() {
   stack.pop();
@@ -2413,6 +2577,11 @@ function drawMenu() {
   }
   h += '<div class="more">' + (start + N < m.items.length ? '▼' : '') + '</div></div>';
   ovEl = setHtml(ovEl, h);
+  var side = m.items.some(function (x) {
+    return x.desc !== undefined;
+  });
+  ovEl.className = side ? 'ws' : '';
+  drawSide(side && !m.items[m.idx].sep ? m.items[m.idx] : null);
   ovEl.querySelector('h2').textContent = m.title;
   [].forEach.call(ovEl.querySelectorAll('.row'), function (row) {
     var it = m.items[+row.getAttribute('data-i')];
@@ -2607,92 +2776,6 @@ function pinInput(id, name, on) {
   );
 }
 
-function appMenu(a) {
-  var di = dockIds(),
-    pos = di.indexOf(a.id),
-    items = [
-      {
-        label: t('Open'),
-        fn: function () {
-          launch(a.id);
-        },
-      },
-    ];
-  if (pos >= 0) {
-    if (pos > 0)
-      items.push({
-        label: t('Move left in dock'),
-        fn: function () {
-          var d = di.slice();
-          d.splice(pos, 1);
-          d.splice(pos - 1, 0, a.id);
-          setDock(d);
-        },
-      });
-    if (pos < di.length - 1)
-      items.push({
-        label: t('Move right in dock'),
-        fn: function () {
-          var d = di.slice();
-          d.splice(pos, 1);
-          d.splice(pos + 1, 0, a.id);
-          setDock(d);
-        },
-      });
-    items.push({
-      label: t('Remove from dock'),
-      fn: function () {
-        setDock(
-          di.filter(function (i) {
-            return i !== a.id;
-          })
-        );
-      },
-    });
-  } else if (di.length < TH.dockN)
-    items.push({
-      label: t('Add to dock'),
-      fn: function () {
-        setDock(di.concat(a.id));
-      },
-    });
-  else
-    items.push({
-      label: t('Add to dock...'),
-      stay: true,
-      fn: function () {
-        openMenu(
-          t('Replace which app?'),
-          di.map(function (id, i) {
-            return {
-              label: title(id),
-              fn: function () {
-                var d = di.slice();
-                d[i] = a.id;
-                setDock(d);
-              },
-            };
-          })
-        );
-      },
-    });
-  if (a.input)
-    items.push({
-      label: t('Remove from Home'),
-      fn: function () {
-        pinInput(a.id, a.title, false);
-      },
-    });
-  else
-    items.push({
-      label: t('Hide app'),
-      fn: function () {
-        hideApp(a.id);
-      },
-    });
-  openMenu(a.title, items);
-}
-
 function removeButton(o) {
   cfg.topbar = topbar().filter(function (b) {
     return b !== o;
@@ -2746,8 +2829,10 @@ function customizeMenu() {
     { label: t('Hidden apps'), sub: nh ? String(nh) : '', stay: true, fn: hiddenMenu },
     {
       label: t('App order'),
-      sub: cfg.sort === 'alpha' ? t('A to Z') : t('Most used first'),
+      sub: cfg.sort === 'custom' ? t('My order') : cfg.sort === 'alpha' ? t('A to Z') : t('Most used first'),
+      stay: cfg.sort === 'custom',
       fn: function () {
+        if (cfg.sort === 'custom') return orderMenu();
         cfg.sort = cfg.sort === 'alpha' ? 'usage' : 'alpha';
         saveCfg();
       },
@@ -2781,6 +2866,21 @@ function customizeMenu() {
         launch('com.cleanyourtv.manager');
       },
     },
+  ]);
+}
+/* My order comes from moving apps in wiggle mode; going back to a sorted order drops it, so this asks first */
+function orderMenu() {
+  var to = function (s) {
+    return function () {
+      cfg.sort = s;
+      delete cfg.order;
+      saveCfg();
+    };
+  };
+  openMenu(t('Drop my order?'), [
+    { label: t('Keep my order'), fn: function () {} },
+    { label: t('Most used first'), fn: to('usage') },
+    { label: t('A to Z'), fn: to('alpha') },
   ]);
 }
 /* the apps that can go in the dock or on a button: not hidden, not Live TV, A to Z */
@@ -2931,6 +3031,8 @@ function themeMenu() {
         if (x.id === cur) at = i;
         return {
           label: x.name,
+          pv: x.preview ? x.id : '',
+          desc: (x.description || '') + (x.author ? '\n\n' + x.author : ''),
           sub: x.id === cur ? t('Selected') : x.installed || x.id === 'classic' ? '' : t('Downloads when chosen'),
           fn: function () {
             if (x.id === cur) return;
@@ -2945,6 +3047,12 @@ function themeMenu() {
         icon: 'restore',
         label: t('Go back to the previous theme'),
         sub: name(r.previous.id),
+        pv: (r.themes || []).some(function (x) {
+          return x.id === r.previous.id && x.preview;
+        })
+          ? r.previous.id
+          : '',
+        desc: '',
         fn: function () {
           themeCall('/api/theme/revert', {});
         },
@@ -3147,7 +3255,7 @@ function load() {
       setTimeout(load, 3000);
     });
 }
-/* ---------- input: tap OK to open, hold OK for options ---------- */
+/* ---------- input: tap OK to open, hold OK to move apps (wiggle.js) ---------- */
 var lastMove = 0,
   snapT = 0,
   downT = 0,
@@ -3166,7 +3274,7 @@ function hit(e) {
     clearTimeout(pressT);
     pressT = setTimeout(function () {
       held = true;
-      options(e);
+      options(e, true);
     }, 650);
   });
   e.addEventListener('mouseup', function () {
@@ -3180,8 +3288,10 @@ function hit(e) {
     act(e);
   });
 }
-function options(e) {
-  if (e._a && !e._a.sys) appMenu(e._a);
+/* held OK or pointer button: on an app, wiggle mode (in wiggle mode: hide it, or drag it with the pointer); on a top button, its menu */
+function options(e, ptr) {
+  if (WIG.on) WIG.hold(e, ptr);
+  else if (e._a && !e._a.sys) WIG.enter(e, ptr);
   else if (e._o && !e._o.fixed) barMenu(e._o);
 }
 
@@ -3206,6 +3316,8 @@ document.addEventListener('keydown', function (e) {
   var k = e.keyCode;
   lastKey = Date.now();
   if (LIVE.on) {
+    /* keys other than arrows, digits and OK go to the service log, to see what the remote sends while Live TV plays */
+    if (!(k >= 37 && k <= 40) && !(k >= 48 && k <= 57) && k !== 13) logLine('live key ' + k);
     LIVE.key(e);
     return;
   }
@@ -3235,6 +3347,10 @@ document.addEventListener('keydown', function (e) {
       }
     }
     if (menuKey(k)) e.preventDefault();
+    return;
+  }
+  if (WIG.on && WIG.key(e)) {
+    e.preventDefault();
     return;
   }
   if ((TH.overlay || TH.push) && r >= 2 && (k === 461 || k === 27 || k === 8)) {
@@ -3320,10 +3436,12 @@ function wantInputs() {
   }
 }
 document.addEventListener('webOSRelaunch', function () {
+  WIG.exit();
   var p = {};
   try {
     p = JSON.parse(webOSSystem.launchParams || '{}');
   } catch (e) {}
+  logLine('launcher relaunch ' + JSON.stringify(p).slice(0, 120) + (LIVE.on ? ' (live on)' : ''));
   if (LIVE.on && p && p.guide && liveOn()) {
     LIVE.toggleGuide();
     return;
@@ -3334,6 +3452,7 @@ document.addEventListener('webOSRelaunch', function () {
 });
 document.addEventListener('visibilitychange', function () {
   if (document.hidden) {
+    WIG.exit();
     if (LIVE.on) LIVE.exit();
     closeRunningMenu();
   } else load();
@@ -3350,6 +3469,263 @@ function tick() {
 }
 setInterval(tick, 15000);
 tick();
+/* ---------- wiggle mode: hold OK on an app and every tile wiggles. OK picks the focused app up and puts it down again; while it is
+   carried the arrows move it, also into the dock (a full dock swaps the app there with it). Hold OK hides the focused app (an input:
+   takes it off Home), the × on a tile does the same with the pointer, Back ends it. Moving an app in the grid switches App order to
+   My order (cfg.sort 'custom', the grid's ids in cfg.order). The pointer drags: hold the button on a tile, release over another. ---------- */
+var WIG = (function () {
+  var on = false,
+    carry = null,
+    dirty = false,
+    drag = null,
+    hint = null;
+
+  function gridIds() {
+    var di = dockIds();
+    return apps
+      .filter(function (a) {
+        return !isHidden(a.id) && di.indexOf(a.id) < 0;
+      })
+      .sort(byOrder)
+      .map(function (a) {
+        return a.id;
+      });
+  }
+  function setHint() {
+    if (!hint) {
+      hint = document.createElement('div');
+      hint.id = 'wighint';
+      document.body.appendChild(hint);
+    }
+    hint.textContent = carry ? t('Arrows: move · OK: put down') : t('OK: pick up · Hold OK: hide · Back: done');
+  }
+  function badges(add) {
+    for (var id in tiles) {
+      var d = tiles[id],
+        x = d.querySelector('.wx');
+      if (add && !x && d._a && !d._a.sys) {
+        x = document.createElement('i');
+        x.className = 'wx';
+        x.textContent = '×';
+        x._id = id;
+        d.appendChild(x);
+      } else if (!add && x) x.remove();
+    }
+  }
+  function mark() {
+    for (var id in tiles) tiles[id].classList.toggle('carry', id === carry);
+    setHint();
+  }
+  /* the new order is shown at once; it is saved when the app is put down or wiggle mode ends */
+  function apply(di, g, gridChanged) {
+    cfg.dock = di;
+    if (gridChanged) {
+      cfg.order = g;
+      cfg.sort = 'custom';
+    }
+    dirty = true;
+    rebuild();
+    badges(true);
+    mark();
+  }
+  function swap(a, i, j) {
+    var x = a[i];
+    a[i] = a[j];
+    a[j] = x;
+  }
+  /* move the carried app one step with an arrow key */
+  function step(k) {
+    var id = carry,
+      di = dockIds().slice(),
+      g = gridIds(),
+      N = TH.cols,
+      p = di.indexOf(id),
+      gi = g.indexOf(id);
+    if (p >= 0) {
+      if (k === 37 && p > 0) swap(di, p, p - 1);
+      else if (k === 39 && p < di.length - 1) swap(di, p, p + 1);
+      else if (k === 40) {
+        di.splice(p, 1);
+        g.splice(Math.min(g.length, mapCol(di.length + 1, Math.min(N, g.length + 1), p)), 0, id);
+        return apply(di, g, true);
+      } else return;
+      return apply(di, g, false);
+    }
+    if (gi < 0) return;
+    var row = Math.floor(gi / N),
+      to = -1;
+    if (k === 37 && gi > 0) to = gi - 1;
+    else if (k === 39 && gi < g.length - 1) to = gi + 1;
+    else if (k === 40 && gi + N < g.length) to = gi + N;
+    else if (k === 40 && row < Math.floor((g.length - 1) / N)) to = g.length - 1;
+    else if (k === 38 && row > 0) to = gi - N;
+    else if (k === 38) {
+      /* up from the grid's first row: into the dock, or swapped with the dock app above it when the dock is full */
+      var rl = Math.min(N, g.length),
+        col = gi % N;
+      if (di.length < TH.dockN) {
+        di.splice(di.length ? mapCol(rl, di.length + 1, col) : 0, 0, id);
+        g.splice(gi, 1);
+      } else {
+        var pos = mapCol(rl, di.length, col),
+          out = di[pos];
+        di[pos] = id;
+        g[gi] = out;
+      }
+      return apply(di, g, true);
+    }
+    if (to < 0) return;
+    g.splice(gi, 1);
+    g.splice(to, 0, id);
+    apply(di, g, true);
+  }
+  /* put the carried app where another one is (the pointer) */
+  function place(id, target) {
+    if (!target || target === id) return;
+    var di = dockIds().slice(),
+      g = gridIds(),
+      p = di.indexOf(id),
+      gi = g.indexOf(id),
+      tp = di.indexOf(target),
+      tg = g.indexOf(target);
+    if (tp >= 0) {
+      if (p >= 0) {
+        swap(di, p, tp);
+        return apply(di, g, false);
+      }
+      if (di.length >= TH.dockN) {
+        di[tp] = id;
+        g[gi] = target;
+      } else {
+        di.splice(tp, 0, id);
+        g.splice(gi, 1);
+      }
+      return apply(di, g, true);
+    }
+    if (tg < 0) return;
+    if (p >= 0) di.splice(p, 1);
+    else g.splice(gi, 1);
+    g.splice(tg, 0, id);
+    apply(di, g, true);
+  }
+  function remove(id) {
+    var a = null;
+    apps.forEach(function (x) {
+      if (x.id === id) a = x;
+    });
+    if (!a) return;
+    if (carry === id) carry = null;
+    if (a.input) {
+      pinInput(a.id, a.title, false);
+      return;
+    }
+    /* hideApp saves at once; the order changed so far is saved with it */
+    hideApp(id);
+    dirty = false;
+    toast(t('%s hidden').replace('%s', a.title));
+    badges(true);
+    mark();
+  }
+
+  function enter(e, ptr) {
+    if (!e._a || e._a.sys) return;
+    on = true;
+    carry = e._a.id;
+    dirty = false;
+    document.body.classList.add('wiggle');
+    badges(true);
+    mark();
+    if (ptr) drag = carry;
+  }
+  function exit() {
+    if (!on) return;
+    on = false;
+    carry = null;
+    drag = null;
+    document.body.classList.remove('wiggle');
+    badges(false);
+    for (var id in tiles) tiles[id].classList.remove('carry');
+    if (hint) {
+      hint.remove();
+      hint = null;
+    }
+    if (dirty) saveCfg();
+    dirty = false;
+  }
+  /* OK (or a click) on a tile: pick it up, or put the carried one down; on a top button it ends wiggle mode */
+  function ok(e) {
+    if (!e._a) return exit();
+    if (carry) {
+      carry = null;
+      if (dirty) saveCfg();
+      dirty = false;
+      badges(true);
+    } else if (!e._a.sys) carry = e._a.id;
+    mark();
+  }
+  /* hold OK in wiggle mode: hide the focused app; with the pointer, start dragging it */
+  function hold(e, ptr) {
+    if (!e._a || e._a.sys) return;
+    if (ptr) {
+      carry = drag = e._a.id;
+      mark();
+      return;
+    }
+    remove(e._a.id);
+  }
+  function key(e) {
+    var k = e.keyCode;
+    if (k === 461 || k === 27 || k === 8) {
+      exit();
+      return true;
+    }
+    if (carry && k >= 37 && k <= 40) {
+      step(k);
+      return true;
+    }
+    return false;
+  }
+
+  document.addEventListener('mouseup', function (ev) {
+    if (!on || !drag) return;
+    var el = document.elementFromPoint(ev.clientX, ev.clientY),
+      tl = el && el.closest ? el.closest('.tile') : null,
+      id = drag;
+    drag = null;
+    if (tl && tl._a) place(id, tl._a.id);
+    carry = null;
+    if (dirty) saveCfg();
+    dirty = false;
+    badges(true);
+    mark();
+  });
+  /* the × on a tile, or a click away from the tiles, before the tile's own click handler sees it */
+  document.addEventListener(
+    'click',
+    function (ev) {
+      if (!on) return;
+      var x = ev.target.closest ? ev.target.closest('.wx') : null;
+      if (x) {
+        ev.stopPropagation();
+        remove(x._id);
+        return;
+      }
+      if (!(ev.target.closest && ev.target.closest('.tile,.pill'))) exit();
+    },
+    true
+  );
+
+  return {
+    get on() {
+      return on;
+    },
+    enter: enter,
+    exit: exit,
+    ok: ok,
+    hold: hold,
+    key: key,
+  };
+})();
 /* ---------- Live TV (plays the user's M3U playlist in the TV's own video player) ---------- */
 var LIVE_ICON =
   'data:image/svg+xml;utf8,' +

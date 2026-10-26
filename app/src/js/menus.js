@@ -27,6 +27,36 @@ function closeMenus() {
     ovEl.remove();
     ovEl = null;
   }
+  drawSide(null);
+}
+/* a menu whose rows carry a picture (pv, the theme list) shows it with a description left of the list. Its own element, outside
+   the menu that is redrawn on every key, so the picture is only loaded again when the focused row's picture changes. */
+var sideEl = null;
+function drawSide(it) {
+  if (!it) {
+    if (sideEl) sideEl.remove();
+    sideEl = null;
+    return;
+  }
+  if (!sideEl) {
+    sideEl = document.createElement('div');
+    sideEl.id = 'ovside';
+    sideEl.innerHTML = '<div class="pvbox"><img alt=""></div><div class="pt"></div><div class="pd"></div>';
+    document.body.appendChild(sideEl);
+  }
+  var img = sideEl.querySelector('img'),
+    url = it.pv ? API + '/api/theme/preview/' + it.pv : '';
+  if (img.getAttribute('data-u') !== url) {
+    img.setAttribute('data-u', url);
+    img.style.visibility = 'hidden';
+    img.onload = function () {
+      img.style.visibility = '';
+    };
+    if (url) img.src = url;
+    else img.removeAttribute('src');
+  }
+  sideEl.querySelector('.pt').textContent = it.label;
+  sideEl.querySelector('.pd').textContent = it.desc || '';
 }
 function backMenu() {
   stack.pop();
@@ -63,6 +93,11 @@ function drawMenu() {
   }
   h += '<div class="more">' + (start + N < m.items.length ? '▼' : '') + '</div></div>';
   ovEl = setHtml(ovEl, h);
+  var side = m.items.some(function (x) {
+    return x.desc !== undefined;
+  });
+  ovEl.className = side ? 'ws' : '';
+  drawSide(side && !m.items[m.idx].sep ? m.items[m.idx] : null);
   ovEl.querySelector('h2').textContent = m.title;
   [].forEach.call(ovEl.querySelectorAll('.row'), function (row) {
     var it = m.items[+row.getAttribute('data-i')];
@@ -257,92 +292,6 @@ function pinInput(id, name, on) {
   );
 }
 
-function appMenu(a) {
-  var di = dockIds(),
-    pos = di.indexOf(a.id),
-    items = [
-      {
-        label: t('Open'),
-        fn: function () {
-          launch(a.id);
-        },
-      },
-    ];
-  if (pos >= 0) {
-    if (pos > 0)
-      items.push({
-        label: t('Move left in dock'),
-        fn: function () {
-          var d = di.slice();
-          d.splice(pos, 1);
-          d.splice(pos - 1, 0, a.id);
-          setDock(d);
-        },
-      });
-    if (pos < di.length - 1)
-      items.push({
-        label: t('Move right in dock'),
-        fn: function () {
-          var d = di.slice();
-          d.splice(pos, 1);
-          d.splice(pos + 1, 0, a.id);
-          setDock(d);
-        },
-      });
-    items.push({
-      label: t('Remove from dock'),
-      fn: function () {
-        setDock(
-          di.filter(function (i) {
-            return i !== a.id;
-          })
-        );
-      },
-    });
-  } else if (di.length < TH.dockN)
-    items.push({
-      label: t('Add to dock'),
-      fn: function () {
-        setDock(di.concat(a.id));
-      },
-    });
-  else
-    items.push({
-      label: t('Add to dock...'),
-      stay: true,
-      fn: function () {
-        openMenu(
-          t('Replace which app?'),
-          di.map(function (id, i) {
-            return {
-              label: title(id),
-              fn: function () {
-                var d = di.slice();
-                d[i] = a.id;
-                setDock(d);
-              },
-            };
-          })
-        );
-      },
-    });
-  if (a.input)
-    items.push({
-      label: t('Remove from Home'),
-      fn: function () {
-        pinInput(a.id, a.title, false);
-      },
-    });
-  else
-    items.push({
-      label: t('Hide app'),
-      fn: function () {
-        hideApp(a.id);
-      },
-    });
-  openMenu(a.title, items);
-}
-
 function removeButton(o) {
   cfg.topbar = topbar().filter(function (b) {
     return b !== o;
@@ -396,8 +345,10 @@ function customizeMenu() {
     { label: t('Hidden apps'), sub: nh ? String(nh) : '', stay: true, fn: hiddenMenu },
     {
       label: t('App order'),
-      sub: cfg.sort === 'alpha' ? t('A to Z') : t('Most used first'),
+      sub: cfg.sort === 'custom' ? t('My order') : cfg.sort === 'alpha' ? t('A to Z') : t('Most used first'),
+      stay: cfg.sort === 'custom',
       fn: function () {
+        if (cfg.sort === 'custom') return orderMenu();
         cfg.sort = cfg.sort === 'alpha' ? 'usage' : 'alpha';
         saveCfg();
       },
@@ -431,6 +382,21 @@ function customizeMenu() {
         launch('com.cleanyourtv.manager');
       },
     },
+  ]);
+}
+/* My order comes from moving apps in wiggle mode; going back to a sorted order drops it, so this asks first */
+function orderMenu() {
+  var to = function (s) {
+    return function () {
+      cfg.sort = s;
+      delete cfg.order;
+      saveCfg();
+    };
+  };
+  openMenu(t('Drop my order?'), [
+    { label: t('Keep my order'), fn: function () {} },
+    { label: t('Most used first'), fn: to('usage') },
+    { label: t('A to Z'), fn: to('alpha') },
   ]);
 }
 /* the apps that can go in the dock or on a button: not hidden, not Live TV, A to Z */
@@ -581,6 +547,8 @@ function themeMenu() {
         if (x.id === cur) at = i;
         return {
           label: x.name,
+          pv: x.preview ? x.id : '',
+          desc: (x.description || '') + (x.author ? '\n\n' + x.author : ''),
           sub: x.id === cur ? t('Selected') : x.installed || x.id === 'classic' ? '' : t('Downloads when chosen'),
           fn: function () {
             if (x.id === cur) return;
@@ -595,6 +563,12 @@ function themeMenu() {
         icon: 'restore',
         label: t('Go back to the previous theme'),
         sub: name(r.previous.id),
+        pv: (r.themes || []).some(function (x) {
+          return x.id === r.previous.id && x.preview;
+        })
+          ? r.previous.id
+          : '',
+        desc: '',
         fn: function () {
           themeCall('/api/theme/revert', {});
         },

@@ -68,6 +68,12 @@ var TX = {
     'Could not load the themes': 'Kan de thema’s niet laden',
     'Could not reach GitHub: showing the themes on this TV': 'GitHub is niet bereikbaar: de thema’s op deze TV worden getoond',
     'More settings...': 'Meer instellingen...',
+    'Arrows: move · OK: put down': 'Pijlen: verplaatsen · OK: neerzetten',
+    'OK: pick up · Hold OK: hide · Back: done': 'OK: oppakken · OK ingedrukt: verbergen · Terug: klaar',
+    '%s hidden': '%s is verborgen',
+    'My order': 'Mijn volgorde',
+    'Drop my order?': 'Mijn volgorde loslaten?',
+    'Keep my order': 'Mijn volgorde houden',
   },
   de: {
     'Running apps': 'Geöffnete Apps',
@@ -135,6 +141,12 @@ var TX = {
     'Could not load the themes': 'Designs konnten nicht geladen werden',
     'Could not reach GitHub: showing the themes on this TV': 'GitHub nicht erreichbar: Designs auf diesem Fernseher werden gezeigt',
     'More settings...': 'Weitere Einstellungen...',
+    'Arrows: move · OK: put down': 'Pfeile: verschieben · OK: ablegen',
+    'OK: pick up · Hold OK: hide · Back: done': 'OK: aufnehmen · OK halten: ausblenden · Zurück: fertig',
+    '%s hidden': '%s ausgeblendet',
+    'My order': 'Meine Reihenfolge',
+    'Drop my order?': 'Meine Reihenfolge verwerfen?',
+    'Keep my order': 'Meine Reihenfolge behalten',
   },
   fr: {
     'Running apps': 'Apps ouvertes',
@@ -202,6 +214,12 @@ var TX = {
     'Could not load the themes': 'Impossible de charger les thèmes',
     'Could not reach GitHub: showing the themes on this TV': 'GitHub injoignable : thèmes de ce téléviseur affichés',
     'More settings...': 'Plus de réglages...',
+    'Arrows: move · OK: put down': 'Flèches : déplacer · OK : poser',
+    'OK: pick up · Hold OK: hide · Back: done': 'OK : prendre · OK maintenu : masquer · Retour : terminé',
+    '%s hidden': '%s masquée',
+    'My order': 'Mon ordre',
+    'Drop my order?': 'Abandonner mon ordre ?',
+    'Keep my order': 'Garder mon ordre',
   },
   es: {
     'Running apps': 'Apps abiertas',
@@ -269,6 +287,12 @@ var TX = {
     'Could not load the themes': 'No se pudieron cargar los temas',
     'Could not reach GitHub: showing the themes on this TV': 'No se puede acceder a GitHub: se muestran los temas de este televisor',
     'More settings...': 'Más ajustes...',
+    'Arrows: move · OK: put down': 'Flechas: mover · OK: soltar',
+    'OK: pick up · Hold OK: hide · Back: done': 'OK: coger · Mantener OK: ocultar · Atrás: listo',
+    '%s hidden': '%s oculta',
+    'My order': 'Mi orden',
+    'Drop my order?': '¿Descartar mi orden?',
+    'Keep my order': 'Mantener mi orden',
   },
 };
 var TXL = {
@@ -575,13 +599,17 @@ function api(p, body) {
     return x.json();
   });
 }
-/* a timing for tools/perf-tv.sh: one line in the service log ("perf launcher ready 412"); nothing waits for it */
-function perfMark(m) {
+/* one line in the service log (Share log shows it); nothing waits for it */
+function logLine(m) {
   try {
     var x = new XMLHttpRequest();
-    x.open('GET', API + '/api/log?m=' + encodeURIComponent('perf ' + m));
+    x.open('GET', API + '/api/log?m=' + encodeURIComponent(m));
     x.send();
   } catch (e) {}
+}
+/* a timing for tools/perf-tv.sh ("perf launcher ready 412") */
+function perfMark(m) {
+  logLine('perf ' + m);
 }
 var perfReady = false;
 function launch(id, params) {

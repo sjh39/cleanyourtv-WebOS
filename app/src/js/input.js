@@ -1,4 +1,4 @@
-/* ---------- input: tap OK to open, hold OK for options ---------- */
+/* ---------- input: tap OK to open, hold OK to move apps (wiggle.js) ---------- */
 var lastMove = 0,
   snapT = 0,
   downT = 0,
@@ -17,7 +17,7 @@ function hit(e) {
     clearTimeout(pressT);
     pressT = setTimeout(function () {
       held = true;
-      options(e);
+      options(e, true);
     }, 650);
   });
   e.addEventListener('mouseup', function () {
@@ -31,8 +31,10 @@ function hit(e) {
     act(e);
   });
 }
-function options(e) {
-  if (e._a && !e._a.sys) appMenu(e._a);
+/* held OK or pointer button: on an app, wiggle mode (in wiggle mode: hide it, or drag it with the pointer); on a top button, its menu */
+function options(e, ptr) {
+  if (WIG.on) WIG.hold(e, ptr);
+  else if (e._a && !e._a.sys) WIG.enter(e, ptr);
   else if (e._o && !e._o.fixed) barMenu(e._o);
 }
 
@@ -57,6 +59,8 @@ document.addEventListener('keydown', function (e) {
   var k = e.keyCode;
   lastKey = Date.now();
   if (LIVE.on) {
+    /* keys other than arrows, digits and OK go to the service log, to see what the remote sends while Live TV plays */
+    if (!(k >= 37 && k <= 40) && !(k >= 48 && k <= 57) && k !== 13) logLine('live key ' + k);
     LIVE.key(e);
     return;
   }
@@ -86,6 +90,10 @@ document.addEventListener('keydown', function (e) {
       }
     }
     if (menuKey(k)) e.preventDefault();
+    return;
+  }
+  if (WIG.on && WIG.key(e)) {
+    e.preventDefault();
     return;
   }
   if ((TH.overlay || TH.push) && r >= 2 && (k === 461 || k === 27 || k === 8)) {
@@ -171,10 +179,12 @@ function wantInputs() {
   }
 }
 document.addEventListener('webOSRelaunch', function () {
+  WIG.exit();
   var p = {};
   try {
     p = JSON.parse(webOSSystem.launchParams || '{}');
   } catch (e) {}
+  logLine('launcher relaunch ' + JSON.stringify(p).slice(0, 120) + (LIVE.on ? ' (live on)' : ''));
   if (LIVE.on && p && p.guide && liveOn()) {
     LIVE.toggleGuide();
     return;
@@ -185,6 +195,7 @@ document.addEventListener('webOSRelaunch', function () {
 });
 document.addEventListener('visibilitychange', function () {
   if (document.hidden) {
+    WIG.exit();
     if (LIVE.on) LIVE.exit();
     closeRunningMenu();
   } else load();
