@@ -815,7 +815,7 @@ function build() {
       var n = DEBLOAT.filter(function (g) {
         return debloatOn(g.id);
       }).length;
-      return n === DEBLOAT.length ? 'on' : n ? n + ' of ' + DEBLOAT.length + ' on' : 'off';
+      return n === DEBLOAT.length ? onoff(true) : n ? n + ' of ' + DEBLOAT.length + ' on' : onoff(false);
     })(),
     fn: function () {
       push('debloat');

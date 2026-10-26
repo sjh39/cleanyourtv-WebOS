@@ -74,7 +74,7 @@ function onoff(v) {
 }
 function banner(text, cls) {
   var b = $('banner');
-  b.textContent = text || '';
+  b.textContent = tr(text || '');
   b.className = cls || '';
   b.style.display = text ? '' : 'none';
 }

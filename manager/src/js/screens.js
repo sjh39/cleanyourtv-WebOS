@@ -24,25 +24,27 @@ function openNotifyQr() {
   $('share').style.display = 'block';
   $('shareurl').textContent = '';
   $('qrbox').style.visibility = 'hidden';
-  $('share').querySelector('h2').textContent = 'Notification address and token';
-  $('share').querySelector('ol').innerHTML =
-    '<li>Phone on the <b>same Wi-Fi</b> as the TV.</li><li>Scan the code with the camera and open the page: it shows the address and the token with <b>Copy</b> buttons.</li><li>The token is a <b>secret</b>: anyone who sees this code while it is open can read it.</li>';
-  $('sharemsg').textContent = 'Preparing\u2026';
+  $('share').querySelector('h2').textContent = tr('Notification address and token');
+  $('share').querySelector('ol').innerHTML = tr(
+    '<li>Phone on the <b>same Wi-Fi</b> as the TV.</li><li>Scan the code with the camera and open the page: it shows the address and the token with <b>Copy</b> buttons.</li><li>The token is a <b>secret</b>: anyone who sees this code while it is open can read it.</li>'
+  );
+  $('sharemsg').textContent = tr('Preparing\u2026');
   api('/api/manager/notify-api', { page: true }).then(
     function (r) {
       if (view !== 'share') return;
       if (!r.pageUrl) {
-        $('sharemsg').textContent = 'The notification listener is not running.';
+        $('sharemsg').textContent = tr('The notification listener is not running.');
         return;
       }
       drawQr(r.pageUrl);
       $('qrbox').style.visibility = 'visible';
       $('shareurl').textContent = r.pageUrl;
-      $('sharemsg').textContent =
-        'The page opens for ten minutes. It is not encrypted: the token travels over your Wi-Fi, so use a network you trust.';
+      $('sharemsg').textContent = tr(
+        'The page opens for ten minutes. It is not encrypted: the token travels over your Wi-Fi, so use a network you trust.'
+      );
     },
     function () {
-      $('sharemsg').textContent = 'The service did not answer.';
+      $('sharemsg').textContent = tr('The service did not answer.');
     }
   );
 }
@@ -101,25 +103,27 @@ function openWallPair() {
   $('share').style.display = 'block';
   $('shareurl').textContent = '';
   $('qrbox').style.visibility = 'hidden';
-  $('share').querySelector('h2').textContent = 'Wallpapers';
-  $('share').querySelector('ol').innerHTML =
-    '<li>Phone on the <b>same Wi-Fi</b> as the TV.</li><li>Scan the code with the camera.</li><li>Choose <b>Upload photos</b> or <b>Configure Immich</b>.</li>';
-  $('sharemsg').textContent = 'Preparing\u2026';
+  $('share').querySelector('h2').textContent = tr('Wallpapers');
+  $('share').querySelector('ol').innerHTML = tr(
+    '<li>Phone on the <b>same Wi-Fi</b> as the TV.</li><li>Scan the code with the camera.</li><li>Choose <b>Upload photos</b> or <b>Configure Immich</b>.</li>'
+  );
+  $('sharemsg').textContent = tr('Preparing\u2026');
   api('/api/wallpapers/pair', {}).then(
     function (r) {
       if (view !== 'share' || shareMode !== 'wall') return;
       if (r.error) {
-        $('sharemsg').textContent = r.error;
+        $('sharemsg').textContent = tr(r.error);
         return;
       }
       drawQr(r.qr);
       $('qrbox').style.visibility = 'visible';
-      $('shareurl').textContent = r.url + '   code ' + r.code;
-      $('sharemsg').textContent =
-        'The page stays open while you use it, at most an hour. It is not encrypted: your photos and the Immich key travel over your Wi-Fi.';
+      $('shareurl').textContent = tr(r.url + '   code ' + r.code);
+      $('sharemsg').textContent = tr(
+        'The page stays open while you use it, at most an hour. It is not encrypted: your photos and the Immich key travel over your Wi-Fi.'
+      );
     },
     function () {
-      $('sharemsg').textContent = 'The service did not answer.';
+      $('sharemsg').textContent = tr('The service did not answer.');
     }
   );
 }
@@ -129,18 +133,20 @@ function openLivePair() {
   $('share').style.display = 'block';
   $('shareurl').textContent = '';
   $('qrbox').style.visibility = 'hidden';
-  $('share').querySelector('h2').textContent = 'Set up Live TV';
-  $('share').querySelector('ol').innerHTML =
-    '<li>Phone on the <b>same Wi-Fi</b> as the TV.</li><li>Scan the code with the camera.</li><li>Enter the <b>code</b> below and your playlist address.</li>';
-  $('sharemsg').textContent = 'Preparing\u2026';
+  $('share').querySelector('h2').textContent = tr('Set up Live TV');
+  $('share').querySelector('ol').innerHTML = tr(
+    '<li>Phone on the <b>same Wi-Fi</b> as the TV.</li><li>Scan the code with the camera.</li><li>Enter the <b>code</b> below and your playlist address.</li>'
+  );
+  $('sharemsg').textContent = tr('Preparing\u2026');
   api('/api/live/pair', {}).then(
     function (r) {
       if (view !== 'share') return;
       drawQr(r.url);
       $('qrbox').style.visibility = 'visible';
-      $('shareurl').textContent = r.url + '   code ' + r.code;
-      $('sharemsg').textContent =
-        'The page stays open for ten minutes. It is not encrypted: the playlist address, which may hold an access key, travels over your Wi-Fi.';
+      $('shareurl').textContent = tr(r.url + '   code ' + r.code);
+      $('sharemsg').textContent = tr(
+        'The page stays open for ten minutes. It is not encrypted: the playlist address, which may hold an access key, travels over your Wi-Fi.'
+      );
       (function poll(n) {
         if (view !== 'share' || shareMode !== 'live') return;
         api('/api/live/status').then(
@@ -165,7 +171,7 @@ function openLivePair() {
       })(0);
     },
     function () {
-      $('sharemsg').textContent = 'The service did not answer.';
+      $('sharemsg').textContent = tr('The service did not answer.');
     }
   );
 }
@@ -319,22 +325,24 @@ function openPair() {
   $('share').style.display = 'block';
   $('shareurl').textContent = '';
   $('qrbox').style.visibility = 'hidden';
-  $('share').querySelector('h2').textContent = 'Set up from your phone';
-  $('share').querySelector('ol').innerHTML =
-    '<li>Phone on the <b>same Wi-Fi</b> as the TV.</li><li>Scan the code with the camera.</li><li>Enter your <b>OpenRouter key</b> and model, or your <b>Home Assistant</b> address and access token, and tap <b>Save</b>.</li>';
-  $('sharemsg').textContent = 'Preparing\u2026';
+  $('share').querySelector('h2').textContent = tr('Set up from your phone');
+  $('share').querySelector('ol').innerHTML = tr(
+    '<li>Phone on the <b>same Wi-Fi</b> as the TV.</li><li>Scan the code with the camera.</li><li>Enter your <b>OpenRouter key</b> and model, or your <b>Home Assistant</b> address and access token, and tap <b>Save</b>.</li>'
+  );
+  $('sharemsg').textContent = tr('Preparing\u2026');
   api('/api/voice/pair', {}).then(
     function (r) {
       if (view !== 'share') return;
       drawQr(r.url);
       $('qrbox').style.visibility = 'visible';
-      $('shareurl').textContent = r.url;
-      $('sharemsg').textContent =
-        'The page stays open for ten minutes, or until you save. It is not encrypted: the key travels over your Wi-Fi, so use a network you trust.';
+      $('shareurl').textContent = tr(r.url);
+      $('sharemsg').textContent = tr(
+        'The page stays open for ten minutes, or until you save. It is not encrypted: the key travels over your Wi-Fi, so use a network you trust.'
+      );
       pollPair(0);
     },
     function () {
-      $('sharemsg').textContent = 'The service did not answer.';
+      $('sharemsg').textContent = tr('The service did not answer.');
     }
   );
 }
@@ -349,7 +357,7 @@ function pollPair(n) {
         return;
       }
       if (!v.pairing && n > 1) {
-        $('sharemsg').textContent = 'The page has closed. Close this and try again.';
+        $('sharemsg').textContent = tr('The page has closed. Close this and try again.');
         return;
       }
       setTimeout(function () {

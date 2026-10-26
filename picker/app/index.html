@@ -17,7 +17,7 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:transparent;colo
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);transform:scale(.96);transition:transform .15s ease-out}
 .tile img{max-width:58%;max-height:58%;object-fit:contain}
 .tile.f{transform:translateY(-10px) scale(1.06);box-shadow:0 0 0 5px var(--focus),0 26px 44px rgba(0,0,0,.5)}
-.chip{position:relative;flex:1 1 auto;min-width:max(200px,fit-content);max-width:340px;height:180px;padding:0 32px;border-radius:calc(var(--tile-r) * 1.4);overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--ink);color:var(--night);
+.chip{position:relative;flex:1 1 auto;min-width:max(200px,fit-content);max-width:340px;height:180px;padding:0 32px;border-radius:calc(var(--tile-r) * 1.4);overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--panel2);color:var(--ink);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);
   transform:scale(.96);transition:transform .15s ease-out}
 .chip>*+*{margin-top:8px}
 .chip svg{width:48px;height:48px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
@@ -126,7 +126,7 @@ function pinCur(){var r=cur()[col[row]];if(row!==1||!r||!/^com\.webos\.app\.hdmi
   var on=!pins[r.id],x=new XMLHttpRequest();x.open('POST',API+'/api/inputs/pin');x.timeout=4000;
   x.onload=function(){var ok=false;try{ok=JSON.parse(x.responseText).returnValue===true}catch(e){}
     if(ok){if(on)pins[r.id]=1;else delete pins[r.id]}
-    $('msg').textContent=ok?t(on?'pinned':'unpinned').replace('%s',r.sub&&r.sub!==t('Nothing')&&r.sub!==t('Connected')?r.sub:r.label):t('pinfail')};
+    $('msg').textContent=ok?t(on?'pinned':'unpinned').replace('%s',r.label):t('pinfail')};
   x.onerror=x.ontimeout=function(){$('msg').textContent=t('pinfail')};
   x.send(JSON.stringify({id:r.id,on:on}));log('pin '+r.id+' '+on);return true}
 function choose(){log('choose row '+row+' col '+col[row]);var r=cur()[col[row]];if(!r)return;if(row===0)launch(r.id);else launch(r.id,r.params);setTimeout(hide,200)}
@@ -134,10 +134,11 @@ function choose(){log('choose row '+row+' col '+col[row]);var r=cur()[col[row]];
 var liveOn=true;   /* Live TV is optional: the manager switches it off */
 function buildInputs(devs){
   var r=(devs||[]).filter(function(v){return v.appId}).map(function(v){
-    var port='HDMI '+v.port,named=v.label&&v.label!==port;
-    // second line: what is connected (the device's own name), or that nothing is
-    var what=!v.hdmiPlugIn?t('Nothing'):(named?v.label:t('Connected'));
-    return {id:v.appId,icon:'hdmi',label:port,sub:what,dim:!v.hdmiPlugIn,active:!!v.activate}});
+    var port='HDMI '+v.port,named=v.label&&v.label!==port,parts=[];
+    // as in the launcher's Inputs list: the device's name first, then the port and whether something is connected
+    if(named)parts.push(port);
+    parts.push(v.hdmiPlugIn?t('Connected'):t('Nothing'));
+    return {id:v.appId,icon:'hdmi',label:named?v.label:port,sub:parts.join(' \u00B7 '),dim:!v.hdmiPlugIn,active:!!v.activate}});
   if(liveOn)r.push({id:'com.webos.app.home',params:{live:true},icon:'tv',label:t('Live'),sub:t('LiveSub')});
   return r}
 function setData(d,fresh){

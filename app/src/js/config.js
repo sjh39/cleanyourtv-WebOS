@@ -1,7 +1,7 @@
 /* ---------- config (edited in the launcher, saved through the helper) ---------- */
 function saveCfg() {
   api('/api/config', cfg).catch(function () {
-    toast(t('Could not save settings'));
+    toast(t('Could not save the settings. Try again in a moment.'), true);
   });
   store();
   rebuild();

@@ -114,13 +114,16 @@ function infoFor(r) {
   if (r.info) return r.info;
   var k = r.label.replace(/ [0-9][0-9.]*$/, '');
   if (k === 'Check for updates' && offline)
-    return 'Works without the service: looks for a newer package and installs it through the root service.';
+    return { t: k, d: 'Works without the service: looks for a newer package and installs it through the root service.' };
   if (k === 'Use CleanYourTV as Home' && st.home && st.home.fullhome)
     return {
       t: k,
       d:
-        INFO[k] +
-        ' This TV also has LG\u2019s full-screen Home: if the Home button opens that instead of this launcher, set TV Settings > General > Home Settings > Home Style to Basic.',
+        tr(INFO[k]) +
+        ' ' +
+        tr(
+          'This TV also has LG\u2019s full-screen Home: if the Home button opens that instead of this launcher, set TV Settings > General > Home Settings > Home Style to Basic.'
+        ),
     };
   return INFO[k] ? { t: k, d: INFO[k] } : null;
 }

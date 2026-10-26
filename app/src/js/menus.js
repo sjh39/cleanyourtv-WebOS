@@ -17,8 +17,42 @@ function setHtml(el, h) {
   el.parentNode.replaceChild(n, el);
   return n;
 }
-function openMenu(title, items, idx) {
-  stack.push({ title: title, items: items, idx: idx || 0 });
+/* A menu can be built by a function (build): after a row with stay changes something, the menu is built again and stays open with the
+   new values, and the menu below is built again when Back returns to it. A note row is text only: the focus skips it. */
+function openMenu(title, items, idx, build) {
+  var m = { title: title, items: build ? build() : items, idx: idx || 0, build: build || null };
+  m.idx = usable(m, m.idx);
+  stack.push(m);
+  drawMenu();
+}
+function openBuilt(title, build, idx) {
+  openMenu(title, null, idx, build);
+}
+function skip(it) {
+  return !it || it.sep || it.note !== undefined;
+}
+/* the row at i, or the nearest one after (then before) it that can take the focus */
+function usable(m, i) {
+  var n = m.items.length;
+  i = Math.max(0, Math.min(i, n - 1));
+  for (var j = i; j < n; j++) if (!skip(m.items[j])) return j;
+  for (j = i; j >= 0; j--) if (!skip(m.items[j])) return j;
+  return i;
+}
+function refreshMenu() {
+  var m = stack[stack.length - 1];
+  if (!m) return;
+  if (m.build) {
+    /* the focus stays on the row with the same label (after "Move right" a "Move left" row can appear above it) */
+    var was = m.items[m.idx] && m.items[m.idx].label;
+    m.items = m.build();
+    for (var i = 0; i < m.items.length; i++)
+      if (was && m.items[i].label === was && !skip(m.items[i])) {
+        m.idx = i;
+        break;
+      }
+    m.idx = usable(m, m.idx);
+  }
   drawMenu();
 }
 function closeMenus() {
@@ -60,7 +94,7 @@ function drawSide(it) {
 }
 function backMenu() {
   stack.pop();
-  if (stack.length) drawMenu();
+  if (stack.length) refreshMenu();
   else closeMenus();
 }
 function drawMenu() {
@@ -77,6 +111,10 @@ function drawMenu() {
     var it = m.items[i];
     if (it.sep) {
       h += '<div class="msep"></div>';
+      continue;
+    }
+    if (it.note !== undefined) {
+      h += '<div class="mnote" data-n="' + i + '"></div>';
       continue;
     }
     h +=
@@ -97,8 +135,11 @@ function drawMenu() {
     return x.desc !== undefined;
   });
   ovEl.className = side ? 'ws' : '';
-  drawSide(side && !m.items[m.idx].sep ? m.items[m.idx] : null);
+  drawSide(side && !skip(m.items[m.idx]) ? m.items[m.idx] : null);
   ovEl.querySelector('h2').textContent = m.title;
+  [].forEach.call(ovEl.querySelectorAll('.mnote'), function (el) {
+    el.textContent = m.items[+el.getAttribute('data-n')].note;
+  });
   [].forEach.call(ovEl.querySelectorAll('.row'), function (row) {
     var it = m.items[+row.getAttribute('data-i')];
     row.querySelector('.lb').textContent = it.label;
@@ -125,18 +166,21 @@ function drawMenu() {
     });
   });
 }
+/* a row without stay closes the menus (it opened an app or finished a task); with stay the menu stays and shows the new values */
 function pickMenu() {
   var m = stack[stack.length - 1],
     it = m.items[m.idx];
-  if (it && it.fn) {
+  if (it && it.fn && !skip(it)) {
     var n = stack.length;
     it.fn();
-    if (stack.length === n && !it.stay) closeMenus();
+    if (stack.length !== n || stack[stack.length - 1] !== m) return;
+    if (it.stay) refreshMenu();
+    else closeMenus();
   }
 }
-/* the next row up or down that is not a separator, or -1 */
+/* the next row up or down that can take the focus, or -1 */
 function menuStep(m, d) {
-  for (var i = m.idx + d; i >= 0 && i < m.items.length; i += d) if (!m.items[i].sep) return i;
+  for (var i = m.idx + d; i >= 0 && i < m.items.length; i += d) if (!skip(m.items[i])) return i;
   return -1;
 }
 function menuKey(k) {
@@ -157,12 +201,12 @@ function menuKey(k) {
 function runningMenu() {
   api('/api/running').then(
     function (x) {
-      if (x.error) return toast(t('Could not read the running apps'));
+      if (x.error) return toast(t('Could not read the open apps. Try again in a moment.'), true);
       openMenu(t('Running apps'), runningItems(x.apps || []));
       stack[stack.length - 1].running = true;
     },
     function () {
-      toast(t('Could not read the running apps'));
+      toast(t('Could not read the open apps. Try again in a moment.'), true);
     }
   );
 }
@@ -210,10 +254,10 @@ function closeRunning(list, ids) {
     });
   api('/api/running/close', ids.length > 1 ? { all: true } : { id: ids[0] }).then(
     function (x) {
-      if (!x || x.returnValue !== true) toast(t('Could not close'));
+      if (!x || x.returnValue !== true) toast(t('Could not close the app. Try again, or close it from the app itself.'), true);
     },
     function () {
-      toast(t('Could not close'));
+      toast(t('Could not close the app. Try again, or close it from the app itself.'), true);
     }
   );
   ids.forEach(function (id) {
@@ -281,101 +325,110 @@ function inputMenu(id, name) {
 function pinInput(id, name, on) {
   api('/api/inputs/pin', { id: id, on: on }).then(
     function (x) {
-      if (!x || x.returnValue !== true) return toast(t('Could not change Home'));
+      if (!x || x.returnValue !== true) return toast(t('Could not change Home. Try again in a moment.'), true);
       toast((on ? t('%s added to Home') : t('%s removed from Home')).replace('%s', name));
       lastSig = '';
       load();
     },
     function () {
-      toast(t('Could not change Home'));
+      toast(t('Could not change Home. Try again in a moment.'), true);
     }
   );
 }
 
 function appMenu(a) {
-  var di = dockIds(),
-    pos = di.indexOf(a.id),
-    items = [
-      {
-        label: t('Open'),
-        fn: function () {
-          launch(a.id);
-        },
+  openBuilt(a.title, function () {
+    var di = dockIds(),
+      pos = di.indexOf(a.id),
+      move = function (d) {
+        var x = di.slice();
+        x[pos] = x[pos + d];
+        x[pos + d] = a.id;
+        setDock(x);
       },
-    ];
-  if (pos >= 0) {
-    if (pos > 0)
+      items = [
+        {
+          label: t('Open'),
+          fn: function () {
+            launch(a.id);
+          },
+        },
+      ];
+    if (pos >= 0) {
+      if (pos > 0)
+        items.push({
+          label: t('Move left in dock'),
+          stay: true,
+          fn: function () {
+            move(-1);
+          },
+        });
+      if (pos < di.length - 1)
+        items.push({
+          label: t('Move right in dock'),
+          stay: true,
+          fn: function () {
+            move(1);
+          },
+        });
       items.push({
-        label: t('Move left in dock'),
+        label: t('Remove from dock'),
+        stay: true,
         fn: function () {
-          var d = di.slice();
-          d.splice(pos, 1);
-          d.splice(pos - 1, 0, a.id);
-          setDock(d);
+          setDock(
+            di.filter(function (i) {
+              return i !== a.id;
+            })
+          );
         },
       });
-    if (pos < di.length - 1)
+    } else if (di.length < TH.dockN)
       items.push({
-        label: t('Move right in dock'),
+        label: t('Add to dock'),
+        stay: true,
         fn: function () {
-          var d = di.slice();
-          d.splice(pos, 1);
-          d.splice(pos + 1, 0, a.id);
-          setDock(d);
+          setDock(di.concat(a.id));
         },
       });
-    items.push({
-      label: t('Remove from dock'),
-      fn: function () {
-        setDock(
-          di.filter(function (i) {
-            return i !== a.id;
-          })
-        );
-      },
-    });
-  } else if (di.length < TH.dockN)
-    items.push({
-      label: t('Add to dock'),
-      fn: function () {
-        setDock(di.concat(a.id));
-      },
-    });
-  else
-    items.push({
-      label: t('Add to dock...'),
-      stay: true,
-      fn: function () {
-        openMenu(
-          t('Replace which app?'),
-          di.map(function (id, i) {
-            return {
-              label: title(id),
-              fn: function () {
-                var d = di.slice();
-                d[i] = a.id;
-                setDock(d);
-              },
-            };
-          })
-        );
-      },
-    });
-  if (a.input)
-    items.push({
-      label: t('Remove from Home'),
-      fn: function () {
-        pinInput(a.id, a.title, false);
-      },
-    });
-  else
-    items.push({
-      label: t('Hide app'),
-      fn: function () {
-        hideApp(a.id);
-      },
-    });
-  openMenu(a.title, items);
+    else
+      items.push({
+        label: t('Add to dock...'),
+        stay: true,
+        fn: function () {
+          openMenu(
+            t('Replace which app?'),
+            di.map(function (id, i) {
+              return {
+                label: title(id),
+                stay: true,
+                fn: function () {
+                  var d = di.slice();
+                  d[i] = a.id;
+                  setDock(d);
+                  backMenu();
+                },
+              };
+            })
+          );
+        },
+      });
+    if (a.input)
+      items.push({
+        label: t('Remove from Home'),
+        fn: function () {
+          pinInput(a.id, a.title, false);
+        },
+      });
+    else
+      items.push({
+        label: t('Hide app'),
+        fn: function () {
+          hideApp(a.id);
+          toast(t('%s is hidden. Customise > Hidden apps shows it again.').replace('%s', a.title));
+        },
+      });
+    return items;
+  });
 }
 
 function removeButton(o) {
@@ -397,118 +450,132 @@ function moveButton(o, d) {
   saveCfg();
 }
 function barMenu(o) {
-  var sb = shownBar(),
-    pos = sb.indexOf(o),
-    items = [];
-  if (pos > 0)
+  openBuilt(barLabel(o), function () {
+    var sb = shownBar(),
+      pos = sb.indexOf(o),
+      items = [];
+    if (pos > 0)
+      items.push({
+        label: t('Move left'),
+        stay: true,
+        fn: function () {
+          moveButton(o, -1);
+        },
+      });
+    if (pos >= 0 && pos < sb.length - 1)
+      items.push({
+        label: t('Move right'),
+        stay: true,
+        fn: function () {
+          moveButton(o, 1);
+        },
+      });
     items.push({
-      label: t('Move left'),
+      label: t('Remove this button'),
+      stay: true,
       fn: function () {
-        moveButton(o, -1);
+        removeButton(o);
+        backMenu();
       },
     });
-  if (pos >= 0 && pos < sb.length - 1)
-    items.push({
-      label: t('Move right'),
-      fn: function () {
-        moveButton(o, 1);
-      },
-    });
-  items.push({
-    label: t('Remove this button'),
-    fn: function () {
-      removeButton(o);
-    },
+    return items;
   });
-  openMenu(barLabel(o), items);
 }
 /* Customise: how Home looks. What the TV and the service do is in the manager app (More settings...) */
 function customizeMenu() {
-  var nh = hiddenIds().length;
-  openMenu(t('Customise'), [
-    { label: t('Dock'), stay: true, fn: dockMenu },
-    { label: t('Top buttons'), stay: true, fn: topButtonsMenu },
-    { label: t('Hidden apps'), sub: nh ? String(nh) : '', stay: true, fn: hiddenMenu },
-    {
-      label: t('App order'),
-      sub: cfg.sort === 'alpha' ? t('A to Z') : t('Most used first'),
-      fn: function () {
-        cfg.sort = cfg.sort === 'alpha' ? 'usage' : 'alpha';
-        saveCfg();
+  openBuilt(t('Customise'), function () {
+    var nh = hiddenIds().length;
+    return [
+      { label: t('Dock'), stay: true, fn: dockMenu },
+      { label: t('Top buttons'), stay: true, fn: topButtonsMenu },
+      { label: t('Hidden apps'), sub: nh ? String(nh) : '', stay: true, fn: hiddenMenu },
+      {
+        label: t('App order'),
+        sub: cfg.sort === 'alpha' ? t('A to Z') : t('Most used first'),
+        stay: true,
+        fn: function () {
+          cfg.sort = cfg.sort === 'alpha' ? 'usage' : 'alpha';
+          saveCfg();
+        },
       },
-    },
-    {
-      label: t('Mark running apps'),
-      sub: cfg.runDots === true ? t('Green dot') : t('No dot'),
-      fn: function () {
-        if (cfg.runDots === true) delete cfg.runDots;
-        else cfg.runDots = true;
-        saveCfg();
+      {
+        label: t('Mark running apps'),
+        sub: cfg.runDots === true ? t('Green dot') : t('No dot'),
+        stay: true,
+        fn: function () {
+          if (cfg.runDots === true) delete cfg.runDots;
+          else cfg.runDots = true;
+          saveCfg();
+        },
       },
-    },
-    {
-      label: t('Clock'),
-      sub: cfg.clock === '24' ? t('24-hour') : cfg.clock === '12' ? t('12-hour') : t('Automatic'),
-      fn: function () {
-        cfg.clock = cfg.clock === '24' ? '12' : cfg.clock === '12' ? 'auto' : '24';
-        saveCfg();
-        tick();
+      {
+        label: t('Clock'),
+        sub: cfg.clock === '24' ? t('24-hour') : cfg.clock === '12' ? t('12-hour') : t('Automatic'),
+        stay: true,
+        fn: function () {
+          cfg.clock = cfg.clock === '24' ? '12' : cfg.clock === '12' ? 'auto' : '24';
+          saveCfg();
+          tick();
+        },
       },
-    },
-    { sep: true },
-    { label: t('Theme'), stay: true, fn: themeMenu },
-    {
-      label: t('Wallpapers'),
-      sub: cfg.wall && cfg.wall.on ? t('On') : t('Off'),
-      stay: true,
-      fn: wallMenu,
-    },
-    { label: t('Accent colour'), stay: true, fn: accentMenu },
-    { sep: true },
-    {
-      label: t('More settings...'),
-      sub: 'CleanYourTV',
-      fn: function () {
-        launch('com.cleanyourtv.manager');
+      { sep: true },
+      { label: t('Theme'), stay: true, fn: themeMenu },
+      {
+        label: t('Wallpapers'),
+        sub: cfg.wall && cfg.wall.on ? t('On') : t('Off'),
+        stay: true,
+        fn: wallMenu,
       },
-    },
-  ]);
+      { label: t('Accent colour'), stay: true, fn: accentMenu },
+      { sep: true },
+      {
+        label: t('More settings...'),
+        sub: t('Home, Live TV, Debloat, updates'),
+        fn: function () {
+          launch('com.cleanyourtv.manager');
+        },
+      },
+      /* the hidden gestures, said where people already look instead of over Home (issue: hold OK was undiscoverable) */
+      { note: t('Hold OK on an app for its options. Back on Home lists the open apps.') },
+    ];
+  });
 }
 /* Wallpapers: switched on here and how often the photo changes; the photos are added in the manager (uploads from a phone, Immich) */
 function wallMenu() {
-  var w = cfg.wall || { on: false, every: 15 },
-    n = +String((cfg.wallpapers && cfg.wallpapers.stamp) || '0').split(':')[0] || 0,
-    EV = [0, 5, 15, 60],
-    evName = function (m) {
-      return m ? t('Every %s min').replace('%s', m) : t('Each time Home opens');
-    };
-  openMenu(t('Wallpapers'), [
-    {
-      label: t('Use Wallpapers'),
-      sub: (w.on ? t('On') : t('Off')) + ' \u00B7 ' + (n ? t('%s photos').replace('%s', n) : t('no photos yet')),
-      fn: function () {
-        cfg.wall = { on: !w.on, every: w.every == null ? 15 : w.every };
-        saveCfg();
+  openBuilt(t('Wallpapers'), function () {
+    var w = cfg.wall || { on: false, every: 15 },
+      e = w.every == null ? 15 : w.every,
+      n = +String((cfg.wallpapers && cfg.wallpapers.stamp) || '0').split(':')[0] || 0,
+      EV = [0, 5, 15, 60];
+    return [
+      {
+        label: t('Use Wallpapers'),
+        sub: (w.on ? t('On') : t('Off')) + ' \u00B7 ' + (n ? t('%s photos').replace('%s', n) : t('no photos yet')),
+        stay: true,
+        fn: function () {
+          cfg.wall = { on: !w.on, every: e };
+          saveCfg();
+        },
       },
-    },
-    {
-      label: t('New photo'),
-      sub: evName(w.every == null ? 15 : w.every),
-      fn: function () {
-        var e = w.every == null ? 15 : w.every;
-        cfg.wall = { on: !!w.on, every: EV[(EV.indexOf(e) + 1) % EV.length] };
-        saveCfg();
+      {
+        label: t('New photo'),
+        sub: e ? t('Every %s min').replace('%s', e) : t('Each time Home opens'),
+        stay: true,
+        fn: function () {
+          cfg.wall = { on: !!w.on, every: EV[(EV.indexOf(e) + 1) % EV.length] };
+          saveCfg();
+        },
       },
-    },
-    { sep: true },
-    {
-      label: t('Add photos...'),
-      sub: 'CleanYourTV',
-      fn: function () {
-        launch('com.cleanyourtv.manager', { open: 'wallpapers' });
+      { sep: true },
+      {
+        label: t('Add photos...'),
+        sub: t('in the CleanYourTV app'),
+        fn: function () {
+          launch('com.cleanyourtv.manager', { open: 'wallpapers' });
+        },
       },
-    },
-  ]);
+    ];
+  });
 }
 /* the apps that can go in the dock or on a button: not hidden, not Live TV, A to Z */
 function pickApp(heading, skip, cb) {
@@ -524,6 +591,7 @@ function pickApp(heading, skip, cb) {
     list.map(function (a) {
       return {
         label: a.title,
+        stay: true,
         fn: function () {
           cb(a);
         },
@@ -532,190 +600,231 @@ function pickApp(heading, skip, cb) {
   );
 }
 function dockMenu() {
-  var di = dockIds(),
-    items = di.map(function (id, i) {
-      return {
-        label: title(id),
+  openBuilt(t('Dock'), function () {
+    var di = dockIds(),
+      items = di.map(function (id, i) {
+        return {
+          label: title(id),
+          stay: true,
+          fn: function () {
+            dockSlotMenu(i);
+          },
+        };
+      });
+    if (di.length < TH.dockN)
+      items.push({
+        label: t('Add an app...'),
         stay: true,
         fn: function () {
-          dockSlotMenu(i);
+          pickApp(t('Add to dock'), di, function (a) {
+            setDock(dockIds().concat(a.id));
+            backMenu();
+          });
+        },
+      });
+    return items;
+  });
+}
+/* one app in the dock; after a move the menu stays on the same app (now in its new place), so it can be moved again */
+function dockSlotMenu(start) {
+  var id = dockIds()[start];
+  openBuilt(title(id), function () {
+    var di = dockIds(),
+      i = di.indexOf(id),
+      move = function (d) {
+        var x = di.slice();
+        x[i] = x[i + d];
+        x[i + d] = id;
+        setDock(x);
+      },
+      items = [
+        {
+          label: t('Replace with...'),
+          stay: true,
+          fn: function () {
+            pickApp(title(id), [id], function (a) {
+              /* an app that is in the dock already swaps places with this one */
+              var x = di.slice(),
+                j = x.indexOf(a.id);
+              if (j >= 0) x[j] = id;
+              x[i] = a.id;
+              setDock(x);
+              backMenu();
+              backMenu();
+            });
+          },
+        },
+      ];
+    if (i > 0)
+      items.push({
+        label: t('Move left'),
+        stay: true,
+        fn: function () {
+          move(-1);
+        },
+      });
+    if (i >= 0 && i < di.length - 1)
+      items.push({
+        label: t('Move right'),
+        stay: true,
+        fn: function () {
+          move(1);
+        },
+      });
+    items.push({
+      label: t('Remove from dock'),
+      stay: true,
+      fn: function () {
+        setDock(
+          di.filter(function (x) {
+            return x !== id;
+          })
+        );
+        backMenu();
+      },
+    });
+    return items;
+  });
+}
+function topButtonsMenu() {
+  openBuilt(t('Top buttons'), function () {
+    var items = shownBar().map(function (o) {
+      return {
+        icon: o.icon,
+        label: barLabel(o),
+        stay: true,
+        fn: function () {
+          barMenu(o);
         },
       };
     });
-  if (di.length < TH.dockN)
-    items.push({
-      label: t('Add an app...'),
-      stay: true,
-      fn: function () {
-        pickApp(t('Add to dock'), di, function (a) {
-          setDock(dockIds().concat(a.id));
-        });
-      },
-    });
-  openMenu(t('Dock'), items);
-}
-function dockSlotMenu(i) {
-  var di = dockIds(),
-    id = di[i],
-    move = function (d) {
-      var x = di.slice();
-      x[i] = x[i + d];
-      x[i + d] = id;
-      setDock(x);
-    },
-    items = [
-      {
-        label: t('Replace with...'),
-        stay: true,
-        fn: function () {
-          pickApp(title(id), [id], function (a) {
-            /* an app that is in the dock already swaps places with this one */
-            var x = di.slice(),
-              j = x.indexOf(a.id);
-            if (j >= 0) x[j] = id;
-            x[i] = a.id;
-            setDock(x);
-          });
-        },
-      },
-    ];
-  if (i > 0)
-    items.push({
-      label: t('Move left'),
-      fn: function () {
-        move(-1);
-      },
-    });
-  if (i < di.length - 1)
-    items.push({
-      label: t('Move right'),
-      fn: function () {
-        move(1);
-      },
-    });
-  items.push({
-    label: t('Remove from dock'),
-    fn: function () {
-      setDock(
-        di.filter(function (x) {
-          return x !== id;
-        })
-      );
-    },
+    items.push({ label: t('Add a button...'), stay: true, fn: addButtonMenu });
+    return items;
   });
-  openMenu(title(id), items);
-}
-function topButtonsMenu() {
-  var items = shownBar().map(function (o) {
-    return {
-      icon: o.icon,
-      label: barLabel(o),
-      stay: true,
-      fn: function () {
-        barMenu(o);
-      },
-    };
-  });
-  items.push({ label: t('Add a button...'), stay: true, fn: addButtonMenu });
-  openMenu(t('Top buttons'), items);
 }
 /* themes come from the service (GET /api/theme/list); choosing one applies it, a theme not on the TV is downloaded first */
 function themeList(then) {
   api('/api/theme/list').then(
     function (r) {
-      if (r.error) return toast(r.error);
+      if (r.error) return toast(r.error, true);
       then(r);
     },
     function () {
-      toast(t('Could not load the themes'));
+      toast(t('Could not load the themes. Try again in a moment.'), true);
     }
   );
 }
-function themeCall(path, b) {
+/* the service answers with the theme list again; the open theme or accent menu is built from it, so it shows the new choice */
+function themeCall(path, b, after) {
   api(path, b).then(
     function (r) {
-      if (r.error) return toast(r.error);
+      if (r.error) return toast(r.error, true);
       lastSig = '';
       load();
+      if (after) after(r);
     },
     function () {
-      toast(t('Could not load the themes'));
+      toast(t('Could not load the themes. Try again in a moment.'), true);
     }
   );
 }
 function themeMenu() {
-  themeList(function (r) {
-    var cur = (r.current && r.current.id) || 'classic',
-      at = 0,
-      name = function (id) {
-        var n = id;
-        (r.themes || []).forEach(function (x) {
-          if (x.id === id) n = x.name;
-        });
-        return n;
-      },
-      items = (r.themes || []).map(function (x, i) {
-        if (x.id === cur) at = i;
-        return {
-          label: x.name,
-          pv: x.preview ? x.id : '',
-          desc: (x.description || '') + (x.author ? '\n\n' + x.author : ''),
-          sub: x.id === cur ? t('Selected') : x.installed || x.id === 'classic' ? '' : t('Downloads when chosen'),
-          fn: function () {
-            if (x.id === cur) return;
-            if (!x.installed) toast(t('Getting the theme...'));
-            themeCall('/api/theme/set', { id: x.id });
+  themeList(function (data) {
+    var at = 0,
+      build = function () {
+        var r = data,
+          cur = (r.current && r.current.id) || 'classic',
+          name = function (id) {
+            var n = id;
+            (r.themes || []).forEach(function (x) {
+              if (x.id === id) n = x.name;
+            });
+            return n;
           },
-        };
-      });
-    if (r.previous && r.previous.id) {
-      items.push({ sep: true });
-      items.push({
-        icon: 'restore',
-        label: t('Go back to the previous theme'),
-        sub: name(r.previous.id),
-        pv: (r.themes || []).some(function (x) {
-          return x.id === r.previous.id && x.preview;
-        })
-          ? r.previous.id
-          : '',
-        desc: '',
-        fn: function () {
-          themeCall('/api/theme/revert', {});
-        },
-      });
-    }
-    if (r.catalogue && !r.catalogue.ok) toast(t('Could not reach GitHub: showing the themes on this TV'));
-    openMenu(t('Theme'), items, at);
+          items = (r.themes || []).map(function (x, i) {
+            if (x.id === cur) at = i;
+            return {
+              label: x.name,
+              pv: x.preview ? x.id : '',
+              desc: (x.description || '') + (x.author ? '\n\n' + x.author : ''),
+              sub: x.id === cur ? t('Selected') : x.installed || x.id === 'classic' ? '' : t('Downloads when chosen'),
+              stay: true,
+              fn: function () {
+                if (x.id === cur) return;
+                if (!x.installed) toast(t('Getting the theme...'));
+                themeCall('/api/theme/set', { id: x.id }, update);
+              },
+            };
+          });
+        if (r.previous && r.previous.id) {
+          items.push({ sep: true });
+          items.push({
+            icon: 'restore',
+            label: t('Go back to the previous theme'),
+            sub: name(r.previous.id),
+            pv: (r.themes || []).some(function (x) {
+              return x.id === r.previous.id && x.preview;
+            })
+              ? r.previous.id
+              : '',
+            desc: '',
+            stay: true,
+            fn: function () {
+              themeCall('/api/theme/revert', {}, update);
+            },
+          });
+        }
+        return items;
+      },
+      update = function (r) {
+        data = r;
+        if (stack.length && stack[stack.length - 1].build === build) refreshMenu();
+      };
+    build();
+    if (data.catalogue && !data.catalogue.ok) toast(t('Could not reach GitHub: showing the themes on this TV'));
+    openBuilt(t('Theme'), build, at);
   });
 }
 function accentMenu() {
-  themeList(function (r) {
-    var cur = (r.current && r.current.accent) || '',
-      at = 0,
-      items = (r.accents || []).map(function (a, i) {
-        if (a.hex === cur) at = i;
-        return {
-          label: t(a.name),
-          sub: a.hex === cur ? t('Selected') : '',
-          fn: function () {
-            themeCall('/api/theme/set', { accent: a.hex });
-          },
-        };
-      });
-    openMenu(t('Accent colour'), items, at);
+  themeList(function (data) {
+    var at = 0,
+      build = function () {
+        var cur = (data.current && data.current.accent) || '';
+        return (data.accents || []).map(function (a, i) {
+          if (a.hex === cur) at = i;
+          return {
+            label: t(a.name),
+            sub: a.hex === cur ? t('Selected') : '',
+            stay: true,
+            fn: function () {
+              themeCall('/api/theme/set', { accent: a.hex }, update);
+            },
+          };
+        });
+      },
+      update = function (r) {
+        data = r;
+        if (stack.length && stack[stack.length - 1].build === build) refreshMenu();
+      };
+    build();
+    openBuilt(t('Accent colour'), build, at);
   });
 }
 function addButtonMenu() {
+  var add = function (b) {
+    cfg.topbar = topbar().concat([b]);
+    saveCfg();
+  };
   var items = PRESETS.filter(function (p) {
     return liveOn() || p.action !== 'live';
   }).map(function (p) {
     return {
       icon: p.icon,
       label: barLabel(p),
+      stay: true,
       fn: function () {
-        cfg.topbar = topbar().concat([p]);
-        saveCfg();
+        add(p);
+        backMenu();
       },
     };
   });
@@ -724,8 +833,9 @@ function addButtonMenu() {
     stay: true,
     fn: function () {
       pickApp(t('Pick an app'), [], function (a) {
-        cfg.topbar = topbar().concat([{ label: a.title, icon: 'grid', app: a.id }]);
-        saveCfg();
+        add({ label: a.title, icon: 'grid', app: a.id });
+        backMenu();
+        backMenu();
       });
     },
   });
@@ -739,18 +849,19 @@ function hiddenIds() {
   });
 }
 function hiddenMenu() {
-  var h = hiddenIds();
-  openMenu(
-    h.length ? t('Hidden apps (OK to show again)') : t('Hidden apps'),
-    h.length
-      ? h.map(function (id) {
-          return {
-            label: title(id),
-            fn: function () {
-              unhideApp(id);
-            },
-          };
-        })
-      : [{ label: t('No hidden apps'), dim: true }]
-  );
+  openBuilt(t('Hidden apps'), function () {
+    var h = hiddenIds();
+    if (!h.length) return [{ note: t('No hidden apps. To hide one, hold OK on it on Home and choose Hide app.') }];
+    return [{ note: t('OK shows an app on Home again.') }].concat(
+      h.map(function (id) {
+        return {
+          label: title(id),
+          stay: true,
+          fn: function () {
+            unhideApp(id);
+          },
+        };
+      })
+    );
+  });
 }

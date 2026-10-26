@@ -54,6 +54,7 @@ document.addEventListener('webOSRelaunch', function () {
   load();
   wantView();
 });
+$('shareclose').textContent = tr('Close');
 banner('Reading status…', 'work');
 load();
 wantView();

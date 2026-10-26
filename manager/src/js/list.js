@@ -36,53 +36,53 @@ function draw() {
   var el = $('list').children;
   rows.forEach(function (r, i) {
     if (r.sep) return;
-    el[i].querySelector('.lb').textContent = r.label;
-    if (r.sub) el[i].querySelector('.st').textContent = r.sub;
+    el[i].querySelector('.lb').textContent = tr(r.label);
+    if (r.sub) el[i].querySelector('.st').textContent = tr(r.sub);
   });
   var inf = infoFor(rows[idx]),
     ie = $('info');
   ie.textContent = '';
   $('sub').style.wordBreak = '';
   if (view === 'notifyhow' || view === 'voicehow') {
-    $('sub').textContent = kText;
+    $('sub').textContent = tr(kText);
     $('sub').style.whiteSpace = 'pre-line';
     $('sub').style.wordBreak = 'break-all';
     return;
   }
   if (view === 'notifyapi') {
-    $('sub').textContent = 'Network notifications';
+    $('sub').textContent = tr('Network notifications');
     return;
   }
   if (view === 'models') {
-    $('sub').textContent = 'Choose the model that answers';
+    $('sub').textContent = tr('Choose the model that answers');
     return;
   }
   if (view === 'agents') {
-    $('sub').textContent = 'Choose the Home Assistant agent';
+    $('sub').textContent = tr('Choose the Home Assistant agent');
     return;
   }
   if (view === 'channel') {
-    $('sub').textContent = 'Where updates come from';
+    $('sub').textContent = tr('Where updates come from');
     return;
   }
   if (view === 'livetv') {
-    $('sub').textContent = 'Live TV: your own playlist';
+    $('sub').textContent = tr('Live TV: your own playlist');
     return;
   }
   if (view === 'confirm-live-reset') {
-    $('sub').textContent = 'Remove the playlist?';
+    $('sub').textContent = tr('Remove the playlist?');
     return;
   }
   if (view === 'themeopts') {
-    $('sub').textContent = 'Theme options';
+    $('sub').textContent = tr('Theme options');
     return;
   }
   if (view === 'theme') {
-    $('sub').textContent = 'Choose how Home looks. The change shows the next time you open Home.';
+    $('sub').textContent = tr('Choose how Home looks. The change shows the next time you open Home.');
     return;
   }
   if (view === 'accent') {
-    $('sub').textContent = 'The colour of the focus ring and highlights';
+    $('sub').textContent = tr('The colour of the focus ring and highlights');
     return;
   }
   if (view === 'voice') {
@@ -96,33 +96,33 @@ function draw() {
             (vv.last.error ? '\nNot sent: ' + vv.last.error : '')
           : 'Last try: ' + vv.last.state + (vv.last.error ? '\n' + vv.last.error : '')
         : '';
-    $('sub').textContent = 'Voice \u00B7 ' + (vv.engine || '') + (ls ? '\n' + ls : '');
+    $('sub').textContent = tr('Voice \u00B7 ' + (vv.engine || '') + (ls ? '\n' + ls : ''));
     $('sub').style.whiteSpace = 'pre-line';
     if (inf) {
       var b2 = document.createElement('b');
-      b2.textContent = inf.t;
+      b2.textContent = tr(inf.t);
       ie.appendChild(b2);
-      ie.appendChild(document.createTextNode(inf.d));
+      ie.appendChild(document.createTextNode(tr(inf.d)));
     }
     return;
   }
   if (view === 'keys') {
-    $('sub').textContent = kText;
+    $('sub').textContent = tr(kText);
     $('sub').style.whiteSpace = 'pre-line';
     return;
   }
   if (inf) {
     var b = document.createElement('b');
-    b.textContent = inf.t;
+    b.textContent = tr(inf.t);
     ie.appendChild(b);
-    ie.appendChild(document.createTextNode(inf.d));
+    ie.appendChild(document.createTextNode(tr(inf.d)));
   }
   if (view === 'inputkey') {
-    $('sub').textContent = 'Input key';
+    $('sub').textContent = tr('Input key');
     return;
   }
   if (view === 'confirm-home' || view === 'confirm-uninstall') {
-    $('sub').textContent = view === 'confirm-uninstall' ? 'Remove CleanYourTV?' : 'Switch Home?';
+    $('sub').textContent = tr(view === 'confirm-uninstall' ? 'Remove CleanYourTV?' : 'Switch Home?');
     return;
   }
   if (!offline && st) {
@@ -130,12 +130,12 @@ function draw() {
     m.push('Launcher ' + st.frontend.version + ' · service ' + st.service.version);
     if (st.checkError) m.push('Updates: ' + st.checkError);
     else if (st.release) m.push('Latest release ' + st.release.version);
-    $('sub').textContent = m.join('\n');
+    $('sub').textContent = tr(m.join('\n'));
     $('sub').style.whiteSpace = 'pre-line';
   } else
-    $('sub').textContent = offline
-      ? 'The service is not running. Set it up to replace LG’s Home, take over the Input key and keep everything up to date.'
-      : '';
+    $('sub').textContent = tr(
+      offline ? 'The service is not running. Set it up to replace LG’s Home, take over the Input key and keep everything up to date.' : ''
+    );
 }
 function next(dir) {
   var n = rows.length,

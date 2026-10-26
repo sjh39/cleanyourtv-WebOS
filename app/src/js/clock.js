@@ -7,8 +7,6 @@ var TX = {
     'Close': 'Sluiten',
     'Close all': 'Alles sluiten',
     'No apps are running': 'Er zijn geen apps geopend',
-    'Could not close': 'Kan niet sluiten',
-    'Could not read the running apps': 'Kan de geopende apps niet lezen',
     'Inputs': 'Ingangen',
     'Settings': 'Instellingen',
     'Customise': 'Aanpassen',
@@ -27,7 +25,6 @@ var TX = {
     'Remove from Home': 'Van Home verwijderen',
     '%s added to Home': '%s is aan Home toegevoegd',
     '%s removed from Home': '%s is van Home verwijderd',
-    'Could not change Home': 'Kan Home niet aanpassen',
     'Remove this button': 'Deze knop verwijderen',
     'Top buttons': 'Knoppen bovenaan',
     'Hidden apps': 'Verborgen apps',
@@ -39,12 +36,8 @@ var TX = {
     'An app...': 'Een app...',
     'Pick an app': 'Kies een app',
     'OK to remove': 'OK om te verwijderen',
-    'Hidden apps (OK to show again)': 'Verborgen apps (OK om te tonen)',
-    'No hidden apps': 'Geen verborgen apps',
     'Restore LG Home': 'LG Home herstellen',
     'Switching to LG Home: the TV restarts...': 'Overschakelen naar LG Home: de TV start opnieuw op...',
-    'Could not open': 'Kan niet openen',
-    'Could not save settings': 'Instellingen opslaan mislukt',
     'Helper not reachable, retrying...': 'Helper niet bereikbaar, opnieuw proberen...',
     'Connected': 'Verbonden',
     'Active': 'Actief',
@@ -65,7 +58,6 @@ var TX = {
     'Downloads when chosen': 'Wordt gedownload als je het kiest',
     'Getting the theme...': 'Thema ophalen...',
     'Go back to the previous theme': 'Terug naar het vorige thema',
-    'Could not load the themes': 'Kan de thema’s niet laden',
     'Could not reach GitHub: showing the themes on this TV': 'GitHub is niet bereikbaar: de thema’s op deze TV worden getoond',
     'More settings...': 'Meer instellingen...',
     'Wallpapers': 'Wallpapers',
@@ -78,14 +70,27 @@ var TX = {
     'Every %s min': 'Elke %s min',
     'Each time Home opens': 'Elke keer dat Home opent',
     'Add photos...': 'Foto’s toevoegen...',
+    '%s is hidden. Customise > Hidden apps shows it again.': '%s is verborgen. Aanpassen > Verborgen apps toont de app weer.',
+    'Could not change Home. Try again in a moment.': 'Kan Home niet aanpassen. Probeer het zo opnieuw.',
+    'Could not close the app. Try again, or close it from the app itself.':
+      'Kan de app niet sluiten. Probeer het opnieuw, of sluit hem in de app zelf.',
+    'Could not load the themes. Try again in a moment.': 'Kan de thema’s niet laden. Probeer het zo opnieuw.',
+    'Could not open %s. Is it still installed?': 'Kan %s niet openen. Is de app nog geïnstalleerd?',
+    'Could not read the open apps. Try again in a moment.': 'Kan de geopende apps niet lezen. Probeer het zo opnieuw.',
+    'Could not save the settings. Try again in a moment.': 'Kan de instellingen niet opslaan. Probeer het zo opnieuw.',
+    'Hold OK on an app for its options. Back on Home lists the open apps.':
+      'Houd OK ingedrukt op een app voor de opties. Terug op Home toont de geopende apps.',
+    'Home, Live TV, Debloat, updates': 'Home, Live TV, Debloat, updates',
+    'in the CleanYourTV app': 'in de CleanYourTV-app',
+    'No hidden apps. To hide one, hold OK on it on Home and choose Hide app.':
+      'Geen verborgen apps. Houd OK ingedrukt op een app op Home en kies App verbergen.',
+    'OK shows an app on Home again.': 'OK zet een app weer op Home.',
   },
   de: {
     'Running apps': 'Geöffnete Apps',
     'Close': 'Schließen',
     'Close all': 'Alle schließen',
     'No apps are running': 'Keine Apps geöffnet',
-    'Could not close': 'Konnte nicht geschlossen werden',
-    'Could not read the running apps': 'Geöffnete Apps konnten nicht gelesen werden',
     'Inputs': 'Eingänge',
     'Settings': 'Einstellungen',
     'Customise': 'Anpassen',
@@ -104,7 +109,6 @@ var TX = {
     'Remove from Home': 'Von Home entfernen',
     '%s added to Home': '%s zu Home hinzugefügt',
     '%s removed from Home': '%s von Home entfernt',
-    'Could not change Home': 'Home konnte nicht geändert werden',
     'Remove this button': 'Diese Schaltfläche entfernen',
     'Top buttons': 'Obere Schaltflächen',
     'Hidden apps': 'Ausgeblendete Apps',
@@ -116,12 +120,8 @@ var TX = {
     'An app...': 'Eine App...',
     'Pick an app': 'App auswählen',
     'OK to remove': 'OK zum Entfernen',
-    'Hidden apps (OK to show again)': 'Ausgeblendete Apps (OK zum Einblenden)',
-    'No hidden apps': 'Keine ausgeblendeten Apps',
     'Restore LG Home': 'LG Home wiederherstellen',
     'Switching to LG Home: the TV restarts...': 'Wechsel zu LG Home: Der Fernseher startet neu...',
-    'Could not open': 'Konnte nicht geöffnet werden',
-    'Could not save settings': 'Einstellungen konnten nicht gespeichert werden',
     'Helper not reachable, retrying...': 'Helper nicht erreichbar, neuer Versuch...',
     'Connected': 'Verbunden',
     'Active': 'Aktiv',
@@ -142,7 +142,6 @@ var TX = {
     'Downloads when chosen': 'Wird bei Auswahl geladen',
     'Getting the theme...': 'Design wird geladen...',
     'Go back to the previous theme': 'Zurück zum vorherigen Design',
-    'Could not load the themes': 'Designs konnten nicht geladen werden',
     'Could not reach GitHub: showing the themes on this TV': 'GitHub nicht erreichbar: Designs auf diesem Fernseher werden gezeigt',
     'More settings...': 'Weitere Einstellungen...',
     'Wallpapers': 'Wallpapers',
@@ -155,14 +154,27 @@ var TX = {
     'Every %s min': 'Alle %s Min.',
     'Each time Home opens': 'Bei jedem Öffnen von Home',
     'Add photos...': 'Fotos hinzufügen...',
+    '%s is hidden. Customise > Hidden apps shows it again.': '%s ist ausgeblendet. Anpassen > Ausgeblendete Apps zeigt sie wieder.',
+    'Could not change Home. Try again in a moment.': 'Home konnte nicht geändert werden. Gleich noch einmal versuchen.',
+    'Could not close the app. Try again, or close it from the app itself.':
+      'Die App konnte nicht geschlossen werden. Noch einmal versuchen oder in der App selbst schließen.',
+    'Could not load the themes. Try again in a moment.': 'Designs konnten nicht geladen werden. Gleich noch einmal versuchen.',
+    'Could not open %s. Is it still installed?': '%s konnte nicht geöffnet werden. Ist die App noch installiert?',
+    'Could not read the open apps. Try again in a moment.': 'Geöffnete Apps konnten nicht gelesen werden. Gleich noch einmal versuchen.',
+    'Could not save the settings. Try again in a moment.': 'Einstellungen konnten nicht gespeichert werden. Gleich noch einmal versuchen.',
+    'Hold OK on an app for its options. Back on Home lists the open apps.':
+      'OK auf einer App gedrückt halten für ihre Optionen. Zurück auf Home zeigt die geöffneten Apps.',
+    'Home, Live TV, Debloat, updates': 'Home, Live-TV, Debloat, Updates',
+    'in the CleanYourTV app': 'in der CleanYourTV-App',
+    'No hidden apps. To hide one, hold OK on it on Home and choose Hide app.':
+      'Keine ausgeblendeten Apps. Zum Ausblenden OK auf der App gedrückt halten und App ausblenden wählen.',
+    'OK shows an app on Home again.': 'OK zeigt eine App wieder auf Home.',
   },
   fr: {
     'Running apps': 'Apps ouvertes',
     'Close': 'Fermer',
     'Close all': 'Tout fermer',
     'No apps are running': 'Aucune app ouverte',
-    'Could not close': 'Impossible de fermer',
-    'Could not read the running apps': 'Impossible de lire les apps ouvertes',
     'Inputs': 'Entrées',
     'Settings': 'Paramètres',
     'Customise': 'Personnaliser',
@@ -181,7 +193,6 @@ var TX = {
     'Remove from Home': 'Retirer de l’accueil',
     '%s added to Home': '%s ajouté à l’accueil',
     '%s removed from Home': '%s retiré de l’accueil',
-    'Could not change Home': 'Impossible de modifier l’accueil',
     'Remove this button': 'Supprimer ce bouton',
     'Top buttons': 'Boutons du haut',
     'Hidden apps': 'Apps masquées',
@@ -193,12 +204,8 @@ var TX = {
     'An app...': 'Une app...',
     'Pick an app': 'Choisir une app',
     'OK to remove': 'OK pour supprimer',
-    'Hidden apps (OK to show again)': 'Apps masquées (OK pour afficher)',
-    'No hidden apps': 'Aucune app masquée',
     'Restore LG Home': 'Rétablir LG Home',
     'Switching to LG Home: the TV restarts...': 'Passage à LG Home : le téléviseur redémarre...',
-    'Could not open': 'Impossible d’ouvrir',
-    'Could not save settings': 'Impossible d’enregistrer les réglages',
     'Helper not reachable, retrying...': 'Assistant injoignable, nouvel essai...',
     'Connected': 'Connecté',
     'Active': 'Actif',
@@ -219,7 +226,6 @@ var TX = {
     'Downloads when chosen': 'Téléchargé au choix',
     'Getting the theme...': 'Téléchargement du thème...',
     'Go back to the previous theme': 'Revenir au thème précédent',
-    'Could not load the themes': 'Impossible de charger les thèmes',
     'Could not reach GitHub: showing the themes on this TV': 'GitHub injoignable : thèmes de ce téléviseur affichés',
     'More settings...': 'Plus de réglages...',
     'Wallpapers': 'Wallpapers',
@@ -232,14 +238,27 @@ var TX = {
     'Every %s min': 'Toutes les %s min',
     'Each time Home opens': 'À chaque ouverture de l’accueil',
     'Add photos...': 'Ajouter des photos...',
+    '%s is hidden. Customise > Hidden apps shows it again.': '%s est masquée. Personnaliser > Apps masquées l’affiche à nouveau.',
+    'Could not change Home. Try again in a moment.': 'Impossible de modifier l’accueil. Réessayez dans un instant.',
+    'Could not close the app. Try again, or close it from the app itself.':
+      'Impossible de fermer l’app. Réessayez, ou fermez-la depuis l’app elle-même.',
+    'Could not load the themes. Try again in a moment.': 'Impossible de charger les thèmes. Réessayez dans un instant.',
+    'Could not open %s. Is it still installed?': 'Impossible d’ouvrir %s. Est-elle toujours installée ?',
+    'Could not read the open apps. Try again in a moment.': 'Impossible de lire les apps ouvertes. Réessayez dans un instant.',
+    'Could not save the settings. Try again in a moment.': 'Impossible d’enregistrer les réglages. Réessayez dans un instant.',
+    'Hold OK on an app for its options. Back on Home lists the open apps.':
+      'Maintenez OK sur une app pour ses options. Retour sur l’accueil liste les apps ouvertes.',
+    'Home, Live TV, Debloat, updates': 'Accueil, TV en direct, Debloat, mises à jour',
+    'in the CleanYourTV app': 'dans l’app CleanYourTV',
+    'No hidden apps. To hide one, hold OK on it on Home and choose Hide app.':
+      'Aucune app masquée. Pour en masquer une, maintenez OK dessus sur l’accueil et choisissez Masquer l’app.',
+    'OK shows an app on Home again.': 'OK remet une app sur l’accueil.',
   },
   es: {
     'Running apps': 'Apps abiertas',
     'Close': 'Cerrar',
     'Close all': 'Cerrar todas',
     'No apps are running': 'No hay apps abiertas',
-    'Could not close': 'No se pudo cerrar',
-    'Could not read the running apps': 'No se pudieron leer las apps abiertas',
     'Inputs': 'Entradas',
     'Settings': 'Ajustes',
     'Customise': 'Personalizar',
@@ -258,7 +277,6 @@ var TX = {
     'Remove from Home': 'Quitar de Inicio',
     '%s added to Home': '%s añadido a Inicio',
     '%s removed from Home': '%s quitado de Inicio',
-    'Could not change Home': 'No se pudo cambiar Inicio',
     'Remove this button': 'Quitar este botón',
     'Top buttons': 'Botones superiores',
     'Hidden apps': 'Apps ocultas',
@@ -270,12 +288,8 @@ var TX = {
     'An app...': 'Una app...',
     'Pick an app': 'Elige una app',
     'OK to remove': 'OK para quitar',
-    'Hidden apps (OK to show again)': 'Apps ocultas (OK para mostrar)',
-    'No hidden apps': 'No hay apps ocultas',
     'Restore LG Home': 'Restaurar LG Home',
     'Switching to LG Home: the TV restarts...': 'Cambiando a LG Home: el televisor se reinicia...',
-    'Could not open': 'No se pudo abrir',
-    'Could not save settings': 'No se pudieron guardar los ajustes',
     'Helper not reachable, retrying...': 'Helper no disponible, reintentando...',
     'Connected': 'Conectado',
     'Active': 'Activo',
@@ -296,7 +310,6 @@ var TX = {
     'Downloads when chosen': 'Se descarga al elegirlo',
     'Getting the theme...': 'Descargando el tema...',
     'Go back to the previous theme': 'Volver al tema anterior',
-    'Could not load the themes': 'No se pudieron cargar los temas',
     'Could not reach GitHub: showing the themes on this TV': 'No se puede acceder a GitHub: se muestran los temas de este televisor',
     'More settings...': 'Más ajustes...',
     'Wallpapers': 'Wallpapers',
@@ -309,6 +322,21 @@ var TX = {
     'Every %s min': 'Cada %s min',
     'Each time Home opens': 'Cada vez que se abre Inicio',
     'Add photos...': 'Añadir fotos...',
+    '%s is hidden. Customise > Hidden apps shows it again.': '%s está oculta. Personalizar > Apps ocultas la muestra de nuevo.',
+    'Could not change Home. Try again in a moment.': 'No se pudo cambiar Inicio. Inténtalo de nuevo en un momento.',
+    'Could not close the app. Try again, or close it from the app itself.':
+      'No se pudo cerrar la app. Inténtalo de nuevo o ciérrala desde la propia app.',
+    'Could not load the themes. Try again in a moment.': 'No se pudieron cargar los temas. Inténtalo de nuevo en un momento.',
+    'Could not open %s. Is it still installed?': 'No se pudo abrir %s. ¿Sigue instalada?',
+    'Could not read the open apps. Try again in a moment.': 'No se pudieron leer las apps abiertas. Inténtalo de nuevo en un momento.',
+    'Could not save the settings. Try again in a moment.': 'No se pudieron guardar los ajustes. Inténtalo de nuevo en un momento.',
+    'Hold OK on an app for its options. Back on Home lists the open apps.':
+      'Mantén OK en una app para ver sus opciones. Atrás en Inicio muestra las apps abiertas.',
+    'Home, Live TV, Debloat, updates': 'Inicio, TV en directo, Debloat, actualizaciones',
+    'in the CleanYourTV app': 'en la app CleanYourTV',
+    'No hidden apps. To hide one, hold OK on it on Home and choose Hide app.':
+      'No hay apps ocultas. Para ocultar una, mantén OK sobre ella en Inicio y elige Ocultar app.',
+    'OK shows an app on Home again.': 'OK vuelve a poner una app en Inicio.',
   },
 };
 var TXL = {
@@ -590,14 +618,18 @@ function $(id) {
   return document.getElementById(id);
 }
 var toastT;
-function toast(t) {
+/* a short message at the bottom; an error stays twice as long, so its next step can be read from the couch */
+function toast(t, err) {
   var e = $('toast');
   e.textContent = t;
   e.classList.add('on');
   clearTimeout(toastT);
-  toastT = setTimeout(function () {
-    e.classList.remove('on');
-  }, 4000);
+  toastT = setTimeout(
+    function () {
+      e.classList.remove('on');
+    },
+    err ? 8000 : 4000
+  );
 }
 var MIN_SERVICE = '1.4.3';
 function oldSvc(v) {
@@ -631,7 +663,7 @@ var perfReady = false;
 function launch(id, params) {
   if (id === '__live') return LIVE.enter();
   api('/api/launch', { id: id, params: params }).then(function (x) {
-    if (x && x.returnValue === false) toast(t('Could not open') + ' ' + id);
+    if (x && x.returnValue === false) toast(t('Could not open %s. Is it still installed?').replace('%s', title(id)), true);
   });
 }
 function store() {

@@ -682,6 +682,14 @@ body.wpon {
   max-height: 210px;
   overflow: hidden;
 }
+/* a note in a menu (how to hide an app, the hidden gestures): text only, the focus skips it */
+#ov .mnote {
+  padding: 6px 34px 0;
+  font-size: calc(24px * var(--fs));
+  line-height: 1.35;
+  color: var(--ink2);
+  white-space: normal;
+}
 /* Live TV (inside the launcher). The channel banner, the guide and its menus take the theme's colours (--panel, --acc, ...);
    the error and setup cards keep their own. */
 #lv {
@@ -1296,8 +1304,6 @@ var TX = {
     'Close': 'Sluiten',
     'Close all': 'Alles sluiten',
     'No apps are running': 'Er zijn geen apps geopend',
-    'Could not close': 'Kan niet sluiten',
-    'Could not read the running apps': 'Kan de geopende apps niet lezen',
     'Inputs': 'Ingangen',
     'Settings': 'Instellingen',
     'Customise': 'Aanpassen',
@@ -1316,7 +1322,6 @@ var TX = {
     'Remove from Home': 'Van Home verwijderen',
     '%s added to Home': '%s is aan Home toegevoegd',
     '%s removed from Home': '%s is van Home verwijderd',
-    'Could not change Home': 'Kan Home niet aanpassen',
     'Remove this button': 'Deze knop verwijderen',
     'Top buttons': 'Knoppen bovenaan',
     'Hidden apps': 'Verborgen apps',
@@ -1328,12 +1333,8 @@ var TX = {
     'An app...': 'Een app...',
     'Pick an app': 'Kies een app',
     'OK to remove': 'OK om te verwijderen',
-    'Hidden apps (OK to show again)': 'Verborgen apps (OK om te tonen)',
-    'No hidden apps': 'Geen verborgen apps',
     'Restore LG Home': 'LG Home herstellen',
     'Switching to LG Home: the TV restarts...': 'Overschakelen naar LG Home: de TV start opnieuw op...',
-    'Could not open': 'Kan niet openen',
-    'Could not save settings': 'Instellingen opslaan mislukt',
     'Helper not reachable, retrying...': 'Helper niet bereikbaar, opnieuw proberen...',
     'Connected': 'Verbonden',
     'Active': 'Actief',
@@ -1354,7 +1355,6 @@ var TX = {
     'Downloads when chosen': 'Wordt gedownload als je het kiest',
     'Getting the theme...': 'Thema ophalen...',
     'Go back to the previous theme': 'Terug naar het vorige thema',
-    'Could not load the themes': 'Kan de thema’s niet laden',
     'Could not reach GitHub: showing the themes on this TV': 'GitHub is niet bereikbaar: de thema’s op deze TV worden getoond',
     'More settings...': 'Meer instellingen...',
     'Wallpapers': 'Wallpapers',
@@ -1367,14 +1367,27 @@ var TX = {
     'Every %s min': 'Elke %s min',
     'Each time Home opens': 'Elke keer dat Home opent',
     'Add photos...': 'Foto’s toevoegen...',
+    '%s is hidden. Customise > Hidden apps shows it again.': '%s is verborgen. Aanpassen > Verborgen apps toont de app weer.',
+    'Could not change Home. Try again in a moment.': 'Kan Home niet aanpassen. Probeer het zo opnieuw.',
+    'Could not close the app. Try again, or close it from the app itself.':
+      'Kan de app niet sluiten. Probeer het opnieuw, of sluit hem in de app zelf.',
+    'Could not load the themes. Try again in a moment.': 'Kan de thema’s niet laden. Probeer het zo opnieuw.',
+    'Could not open %s. Is it still installed?': 'Kan %s niet openen. Is de app nog geïnstalleerd?',
+    'Could not read the open apps. Try again in a moment.': 'Kan de geopende apps niet lezen. Probeer het zo opnieuw.',
+    'Could not save the settings. Try again in a moment.': 'Kan de instellingen niet opslaan. Probeer het zo opnieuw.',
+    'Hold OK on an app for its options. Back on Home lists the open apps.':
+      'Houd OK ingedrukt op een app voor de opties. Terug op Home toont de geopende apps.',
+    'Home, Live TV, Debloat, updates': 'Home, Live TV, Debloat, updates',
+    'in the CleanYourTV app': 'in de CleanYourTV-app',
+    'No hidden apps. To hide one, hold OK on it on Home and choose Hide app.':
+      'Geen verborgen apps. Houd OK ingedrukt op een app op Home en kies App verbergen.',
+    'OK shows an app on Home again.': 'OK zet een app weer op Home.',
   },
   de: {
     'Running apps': 'Geöffnete Apps',
     'Close': 'Schließen',
     'Close all': 'Alle schließen',
     'No apps are running': 'Keine Apps geöffnet',
-    'Could not close': 'Konnte nicht geschlossen werden',
-    'Could not read the running apps': 'Geöffnete Apps konnten nicht gelesen werden',
     'Inputs': 'Eingänge',
     'Settings': 'Einstellungen',
     'Customise': 'Anpassen',
@@ -1393,7 +1406,6 @@ var TX = {
     'Remove from Home': 'Von Home entfernen',
     '%s added to Home': '%s zu Home hinzugefügt',
     '%s removed from Home': '%s von Home entfernt',
-    'Could not change Home': 'Home konnte nicht geändert werden',
     'Remove this button': 'Diese Schaltfläche entfernen',
     'Top buttons': 'Obere Schaltflächen',
     'Hidden apps': 'Ausgeblendete Apps',
@@ -1405,12 +1417,8 @@ var TX = {
     'An app...': 'Eine App...',
     'Pick an app': 'App auswählen',
     'OK to remove': 'OK zum Entfernen',
-    'Hidden apps (OK to show again)': 'Ausgeblendete Apps (OK zum Einblenden)',
-    'No hidden apps': 'Keine ausgeblendeten Apps',
     'Restore LG Home': 'LG Home wiederherstellen',
     'Switching to LG Home: the TV restarts...': 'Wechsel zu LG Home: Der Fernseher startet neu...',
-    'Could not open': 'Konnte nicht geöffnet werden',
-    'Could not save settings': 'Einstellungen konnten nicht gespeichert werden',
     'Helper not reachable, retrying...': 'Helper nicht erreichbar, neuer Versuch...',
     'Connected': 'Verbunden',
     'Active': 'Aktiv',
@@ -1431,7 +1439,6 @@ var TX = {
     'Downloads when chosen': 'Wird bei Auswahl geladen',
     'Getting the theme...': 'Design wird geladen...',
     'Go back to the previous theme': 'Zurück zum vorherigen Design',
-    'Could not load the themes': 'Designs konnten nicht geladen werden',
     'Could not reach GitHub: showing the themes on this TV': 'GitHub nicht erreichbar: Designs auf diesem Fernseher werden gezeigt',
     'More settings...': 'Weitere Einstellungen...',
     'Wallpapers': 'Wallpapers',
@@ -1444,14 +1451,27 @@ var TX = {
     'Every %s min': 'Alle %s Min.',
     'Each time Home opens': 'Bei jedem Öffnen von Home',
     'Add photos...': 'Fotos hinzufügen...',
+    '%s is hidden. Customise > Hidden apps shows it again.': '%s ist ausgeblendet. Anpassen > Ausgeblendete Apps zeigt sie wieder.',
+    'Could not change Home. Try again in a moment.': 'Home konnte nicht geändert werden. Gleich noch einmal versuchen.',
+    'Could not close the app. Try again, or close it from the app itself.':
+      'Die App konnte nicht geschlossen werden. Noch einmal versuchen oder in der App selbst schließen.',
+    'Could not load the themes. Try again in a moment.': 'Designs konnten nicht geladen werden. Gleich noch einmal versuchen.',
+    'Could not open %s. Is it still installed?': '%s konnte nicht geöffnet werden. Ist die App noch installiert?',
+    'Could not read the open apps. Try again in a moment.': 'Geöffnete Apps konnten nicht gelesen werden. Gleich noch einmal versuchen.',
+    'Could not save the settings. Try again in a moment.': 'Einstellungen konnten nicht gespeichert werden. Gleich noch einmal versuchen.',
+    'Hold OK on an app for its options. Back on Home lists the open apps.':
+      'OK auf einer App gedrückt halten für ihre Optionen. Zurück auf Home zeigt die geöffneten Apps.',
+    'Home, Live TV, Debloat, updates': 'Home, Live-TV, Debloat, Updates',
+    'in the CleanYourTV app': 'in der CleanYourTV-App',
+    'No hidden apps. To hide one, hold OK on it on Home and choose Hide app.':
+      'Keine ausgeblendeten Apps. Zum Ausblenden OK auf der App gedrückt halten und App ausblenden wählen.',
+    'OK shows an app on Home again.': 'OK zeigt eine App wieder auf Home.',
   },
   fr: {
     'Running apps': 'Apps ouvertes',
     'Close': 'Fermer',
     'Close all': 'Tout fermer',
     'No apps are running': 'Aucune app ouverte',
-    'Could not close': 'Impossible de fermer',
-    'Could not read the running apps': 'Impossible de lire les apps ouvertes',
     'Inputs': 'Entrées',
     'Settings': 'Paramètres',
     'Customise': 'Personnaliser',
@@ -1470,7 +1490,6 @@ var TX = {
     'Remove from Home': 'Retirer de l’accueil',
     '%s added to Home': '%s ajouté à l’accueil',
     '%s removed from Home': '%s retiré de l’accueil',
-    'Could not change Home': 'Impossible de modifier l’accueil',
     'Remove this button': 'Supprimer ce bouton',
     'Top buttons': 'Boutons du haut',
     'Hidden apps': 'Apps masquées',
@@ -1482,12 +1501,8 @@ var TX = {
     'An app...': 'Une app...',
     'Pick an app': 'Choisir une app',
     'OK to remove': 'OK pour supprimer',
-    'Hidden apps (OK to show again)': 'Apps masquées (OK pour afficher)',
-    'No hidden apps': 'Aucune app masquée',
     'Restore LG Home': 'Rétablir LG Home',
     'Switching to LG Home: the TV restarts...': 'Passage à LG Home : le téléviseur redémarre...',
-    'Could not open': 'Impossible d’ouvrir',
-    'Could not save settings': 'Impossible d’enregistrer les réglages',
     'Helper not reachable, retrying...': 'Assistant injoignable, nouvel essai...',
     'Connected': 'Connecté',
     'Active': 'Actif',
@@ -1508,7 +1523,6 @@ var TX = {
     'Downloads when chosen': 'Téléchargé au choix',
     'Getting the theme...': 'Téléchargement du thème...',
     'Go back to the previous theme': 'Revenir au thème précédent',
-    'Could not load the themes': 'Impossible de charger les thèmes',
     'Could not reach GitHub: showing the themes on this TV': 'GitHub injoignable : thèmes de ce téléviseur affichés',
     'More settings...': 'Plus de réglages...',
     'Wallpapers': 'Wallpapers',
@@ -1521,14 +1535,27 @@ var TX = {
     'Every %s min': 'Toutes les %s min',
     'Each time Home opens': 'À chaque ouverture de l’accueil',
     'Add photos...': 'Ajouter des photos...',
+    '%s is hidden. Customise > Hidden apps shows it again.': '%s est masquée. Personnaliser > Apps masquées l’affiche à nouveau.',
+    'Could not change Home. Try again in a moment.': 'Impossible de modifier l’accueil. Réessayez dans un instant.',
+    'Could not close the app. Try again, or close it from the app itself.':
+      'Impossible de fermer l’app. Réessayez, ou fermez-la depuis l’app elle-même.',
+    'Could not load the themes. Try again in a moment.': 'Impossible de charger les thèmes. Réessayez dans un instant.',
+    'Could not open %s. Is it still installed?': 'Impossible d’ouvrir %s. Est-elle toujours installée ?',
+    'Could not read the open apps. Try again in a moment.': 'Impossible de lire les apps ouvertes. Réessayez dans un instant.',
+    'Could not save the settings. Try again in a moment.': 'Impossible d’enregistrer les réglages. Réessayez dans un instant.',
+    'Hold OK on an app for its options. Back on Home lists the open apps.':
+      'Maintenez OK sur une app pour ses options. Retour sur l’accueil liste les apps ouvertes.',
+    'Home, Live TV, Debloat, updates': 'Accueil, TV en direct, Debloat, mises à jour',
+    'in the CleanYourTV app': 'dans l’app CleanYourTV',
+    'No hidden apps. To hide one, hold OK on it on Home and choose Hide app.':
+      'Aucune app masquée. Pour en masquer une, maintenez OK dessus sur l’accueil et choisissez Masquer l’app.',
+    'OK shows an app on Home again.': 'OK remet une app sur l’accueil.',
   },
   es: {
     'Running apps': 'Apps abiertas',
     'Close': 'Cerrar',
     'Close all': 'Cerrar todas',
     'No apps are running': 'No hay apps abiertas',
-    'Could not close': 'No se pudo cerrar',
-    'Could not read the running apps': 'No se pudieron leer las apps abiertas',
     'Inputs': 'Entradas',
     'Settings': 'Ajustes',
     'Customise': 'Personalizar',
@@ -1547,7 +1574,6 @@ var TX = {
     'Remove from Home': 'Quitar de Inicio',
     '%s added to Home': '%s añadido a Inicio',
     '%s removed from Home': '%s quitado de Inicio',
-    'Could not change Home': 'No se pudo cambiar Inicio',
     'Remove this button': 'Quitar este botón',
     'Top buttons': 'Botones superiores',
     'Hidden apps': 'Apps ocultas',
@@ -1559,12 +1585,8 @@ var TX = {
     'An app...': 'Una app...',
     'Pick an app': 'Elige una app',
     'OK to remove': 'OK para quitar',
-    'Hidden apps (OK to show again)': 'Apps ocultas (OK para mostrar)',
-    'No hidden apps': 'No hay apps ocultas',
     'Restore LG Home': 'Restaurar LG Home',
     'Switching to LG Home: the TV restarts...': 'Cambiando a LG Home: el televisor se reinicia...',
-    'Could not open': 'No se pudo abrir',
-    'Could not save settings': 'No se pudieron guardar los ajustes',
     'Helper not reachable, retrying...': 'Helper no disponible, reintentando...',
     'Connected': 'Conectado',
     'Active': 'Activo',
@@ -1585,7 +1607,6 @@ var TX = {
     'Downloads when chosen': 'Se descarga al elegirlo',
     'Getting the theme...': 'Descargando el tema...',
     'Go back to the previous theme': 'Volver al tema anterior',
-    'Could not load the themes': 'No se pudieron cargar los temas',
     'Could not reach GitHub: showing the themes on this TV': 'No se puede acceder a GitHub: se muestran los temas de este televisor',
     'More settings...': 'Más ajustes...',
     'Wallpapers': 'Wallpapers',
@@ -1598,6 +1619,21 @@ var TX = {
     'Every %s min': 'Cada %s min',
     'Each time Home opens': 'Cada vez que se abre Inicio',
     'Add photos...': 'Añadir fotos...',
+    '%s is hidden. Customise > Hidden apps shows it again.': '%s está oculta. Personalizar > Apps ocultas la muestra de nuevo.',
+    'Could not change Home. Try again in a moment.': 'No se pudo cambiar Inicio. Inténtalo de nuevo en un momento.',
+    'Could not close the app. Try again, or close it from the app itself.':
+      'No se pudo cerrar la app. Inténtalo de nuevo o ciérrala desde la propia app.',
+    'Could not load the themes. Try again in a moment.': 'No se pudieron cargar los temas. Inténtalo de nuevo en un momento.',
+    'Could not open %s. Is it still installed?': 'No se pudo abrir %s. ¿Sigue instalada?',
+    'Could not read the open apps. Try again in a moment.': 'No se pudieron leer las apps abiertas. Inténtalo de nuevo en un momento.',
+    'Could not save the settings. Try again in a moment.': 'No se pudieron guardar los ajustes. Inténtalo de nuevo en un momento.',
+    'Hold OK on an app for its options. Back on Home lists the open apps.':
+      'Mantén OK en una app para ver sus opciones. Atrás en Inicio muestra las apps abiertas.',
+    'Home, Live TV, Debloat, updates': 'Inicio, TV en directo, Debloat, actualizaciones',
+    'in the CleanYourTV app': 'en la app CleanYourTV',
+    'No hidden apps. To hide one, hold OK on it on Home and choose Hide app.':
+      'No hay apps ocultas. Para ocultar una, mantén OK sobre ella en Inicio y elige Ocultar app.',
+    'OK shows an app on Home again.': 'OK vuelve a poner una app en Inicio.',
   },
 };
 var TXL = {
@@ -1879,14 +1915,18 @@ function $(id) {
   return document.getElementById(id);
 }
 var toastT;
-function toast(t) {
+/* a short message at the bottom; an error stays twice as long, so its next step can be read from the couch */
+function toast(t, err) {
   var e = $('toast');
   e.textContent = t;
   e.classList.add('on');
   clearTimeout(toastT);
-  toastT = setTimeout(function () {
-    e.classList.remove('on');
-  }, 4000);
+  toastT = setTimeout(
+    function () {
+      e.classList.remove('on');
+    },
+    err ? 8000 : 4000
+  );
 }
 var MIN_SERVICE = '1.4.3';
 function oldSvc(v) {
@@ -1920,7 +1960,7 @@ var perfReady = false;
 function launch(id, params) {
   if (id === '__live') return LIVE.enter();
   api('/api/launch', { id: id, params: params }).then(function (x) {
-    if (x && x.returnValue === false) toast(t('Could not open') + ' ' + id);
+    if (x && x.returnValue === false) toast(t('Could not open %s. Is it still installed?').replace('%s', title(id)), true);
   });
 }
 function store() {
@@ -2479,7 +2519,7 @@ var WALL = (function () {
 /* ---------- config (edited in the launcher, saved through the helper) ---------- */
 function saveCfg() {
   api('/api/config', cfg).catch(function () {
-    toast(t('Could not save settings'));
+    toast(t('Could not save the settings. Try again in a moment.'), true);
   });
   store();
   rebuild();
@@ -2579,8 +2619,42 @@ function setHtml(el, h) {
   el.parentNode.replaceChild(n, el);
   return n;
 }
-function openMenu(title, items, idx) {
-  stack.push({ title: title, items: items, idx: idx || 0 });
+/* A menu can be built by a function (build): after a row with stay changes something, the menu is built again and stays open with the
+   new values, and the menu below is built again when Back returns to it. A note row is text only: the focus skips it. */
+function openMenu(title, items, idx, build) {
+  var m = { title: title, items: build ? build() : items, idx: idx || 0, build: build || null };
+  m.idx = usable(m, m.idx);
+  stack.push(m);
+  drawMenu();
+}
+function openBuilt(title, build, idx) {
+  openMenu(title, null, idx, build);
+}
+function skip(it) {
+  return !it || it.sep || it.note !== undefined;
+}
+/* the row at i, or the nearest one after (then before) it that can take the focus */
+function usable(m, i) {
+  var n = m.items.length;
+  i = Math.max(0, Math.min(i, n - 1));
+  for (var j = i; j < n; j++) if (!skip(m.items[j])) return j;
+  for (j = i; j >= 0; j--) if (!skip(m.items[j])) return j;
+  return i;
+}
+function refreshMenu() {
+  var m = stack[stack.length - 1];
+  if (!m) return;
+  if (m.build) {
+    /* the focus stays on the row with the same label (after "Move right" a "Move left" row can appear above it) */
+    var was = m.items[m.idx] && m.items[m.idx].label;
+    m.items = m.build();
+    for (var i = 0; i < m.items.length; i++)
+      if (was && m.items[i].label === was && !skip(m.items[i])) {
+        m.idx = i;
+        break;
+      }
+    m.idx = usable(m, m.idx);
+  }
   drawMenu();
 }
 function closeMenus() {
@@ -2622,7 +2696,7 @@ function drawSide(it) {
 }
 function backMenu() {
   stack.pop();
-  if (stack.length) drawMenu();
+  if (stack.length) refreshMenu();
   else closeMenus();
 }
 function drawMenu() {
@@ -2639,6 +2713,10 @@ function drawMenu() {
     var it = m.items[i];
     if (it.sep) {
       h += '<div class="msep"></div>';
+      continue;
+    }
+    if (it.note !== undefined) {
+      h += '<div class="mnote" data-n="' + i + '"></div>';
       continue;
     }
     h +=
@@ -2659,8 +2737,11 @@ function drawMenu() {
     return x.desc !== undefined;
   });
   ovEl.className = side ? 'ws' : '';
-  drawSide(side && !m.items[m.idx].sep ? m.items[m.idx] : null);
+  drawSide(side && !skip(m.items[m.idx]) ? m.items[m.idx] : null);
   ovEl.querySelector('h2').textContent = m.title;
+  [].forEach.call(ovEl.querySelectorAll('.mnote'), function (el) {
+    el.textContent = m.items[+el.getAttribute('data-n')].note;
+  });
   [].forEach.call(ovEl.querySelectorAll('.row'), function (row) {
     var it = m.items[+row.getAttribute('data-i')];
     row.querySelector('.lb').textContent = it.label;
@@ -2687,18 +2768,21 @@ function drawMenu() {
     });
   });
 }
+/* a row without stay closes the menus (it opened an app or finished a task); with stay the menu stays and shows the new values */
 function pickMenu() {
   var m = stack[stack.length - 1],
     it = m.items[m.idx];
-  if (it && it.fn) {
+  if (it && it.fn && !skip(it)) {
     var n = stack.length;
     it.fn();
-    if (stack.length === n && !it.stay) closeMenus();
+    if (stack.length !== n || stack[stack.length - 1] !== m) return;
+    if (it.stay) refreshMenu();
+    else closeMenus();
   }
 }
-/* the next row up or down that is not a separator, or -1 */
+/* the next row up or down that can take the focus, or -1 */
 function menuStep(m, d) {
-  for (var i = m.idx + d; i >= 0 && i < m.items.length; i += d) if (!m.items[i].sep) return i;
+  for (var i = m.idx + d; i >= 0 && i < m.items.length; i += d) if (!skip(m.items[i])) return i;
   return -1;
 }
 function menuKey(k) {
@@ -2719,12 +2803,12 @@ function menuKey(k) {
 function runningMenu() {
   api('/api/running').then(
     function (x) {
-      if (x.error) return toast(t('Could not read the running apps'));
+      if (x.error) return toast(t('Could not read the open apps. Try again in a moment.'), true);
       openMenu(t('Running apps'), runningItems(x.apps || []));
       stack[stack.length - 1].running = true;
     },
     function () {
-      toast(t('Could not read the running apps'));
+      toast(t('Could not read the open apps. Try again in a moment.'), true);
     }
   );
 }
@@ -2772,10 +2856,10 @@ function closeRunning(list, ids) {
     });
   api('/api/running/close', ids.length > 1 ? { all: true } : { id: ids[0] }).then(
     function (x) {
-      if (!x || x.returnValue !== true) toast(t('Could not close'));
+      if (!x || x.returnValue !== true) toast(t('Could not close the app. Try again, or close it from the app itself.'), true);
     },
     function () {
-      toast(t('Could not close'));
+      toast(t('Could not close the app. Try again, or close it from the app itself.'), true);
     }
   );
   ids.forEach(function (id) {
@@ -2843,101 +2927,110 @@ function inputMenu(id, name) {
 function pinInput(id, name, on) {
   api('/api/inputs/pin', { id: id, on: on }).then(
     function (x) {
-      if (!x || x.returnValue !== true) return toast(t('Could not change Home'));
+      if (!x || x.returnValue !== true) return toast(t('Could not change Home. Try again in a moment.'), true);
       toast((on ? t('%s added to Home') : t('%s removed from Home')).replace('%s', name));
       lastSig = '';
       load();
     },
     function () {
-      toast(t('Could not change Home'));
+      toast(t('Could not change Home. Try again in a moment.'), true);
     }
   );
 }
 
 function appMenu(a) {
-  var di = dockIds(),
-    pos = di.indexOf(a.id),
-    items = [
-      {
-        label: t('Open'),
-        fn: function () {
-          launch(a.id);
-        },
+  openBuilt(a.title, function () {
+    var di = dockIds(),
+      pos = di.indexOf(a.id),
+      move = function (d) {
+        var x = di.slice();
+        x[pos] = x[pos + d];
+        x[pos + d] = a.id;
+        setDock(x);
       },
-    ];
-  if (pos >= 0) {
-    if (pos > 0)
+      items = [
+        {
+          label: t('Open'),
+          fn: function () {
+            launch(a.id);
+          },
+        },
+      ];
+    if (pos >= 0) {
+      if (pos > 0)
+        items.push({
+          label: t('Move left in dock'),
+          stay: true,
+          fn: function () {
+            move(-1);
+          },
+        });
+      if (pos < di.length - 1)
+        items.push({
+          label: t('Move right in dock'),
+          stay: true,
+          fn: function () {
+            move(1);
+          },
+        });
       items.push({
-        label: t('Move left in dock'),
+        label: t('Remove from dock'),
+        stay: true,
         fn: function () {
-          var d = di.slice();
-          d.splice(pos, 1);
-          d.splice(pos - 1, 0, a.id);
-          setDock(d);
+          setDock(
+            di.filter(function (i) {
+              return i !== a.id;
+            })
+          );
         },
       });
-    if (pos < di.length - 1)
+    } else if (di.length < TH.dockN)
       items.push({
-        label: t('Move right in dock'),
+        label: t('Add to dock'),
+        stay: true,
         fn: function () {
-          var d = di.slice();
-          d.splice(pos, 1);
-          d.splice(pos + 1, 0, a.id);
-          setDock(d);
+          setDock(di.concat(a.id));
         },
       });
-    items.push({
-      label: t('Remove from dock'),
-      fn: function () {
-        setDock(
-          di.filter(function (i) {
-            return i !== a.id;
-          })
-        );
-      },
-    });
-  } else if (di.length < TH.dockN)
-    items.push({
-      label: t('Add to dock'),
-      fn: function () {
-        setDock(di.concat(a.id));
-      },
-    });
-  else
-    items.push({
-      label: t('Add to dock...'),
-      stay: true,
-      fn: function () {
-        openMenu(
-          t('Replace which app?'),
-          di.map(function (id, i) {
-            return {
-              label: title(id),
-              fn: function () {
-                var d = di.slice();
-                d[i] = a.id;
-                setDock(d);
-              },
-            };
-          })
-        );
-      },
-    });
-  if (a.input)
-    items.push({
-      label: t('Remove from Home'),
-      fn: function () {
-        pinInput(a.id, a.title, false);
-      },
-    });
-  else
-    items.push({
-      label: t('Hide app'),
-      fn: function () {
-        hideApp(a.id);
-      },
-    });
-  openMenu(a.title, items);
+    else
+      items.push({
+        label: t('Add to dock...'),
+        stay: true,
+        fn: function () {
+          openMenu(
+            t('Replace which app?'),
+            di.map(function (id, i) {
+              return {
+                label: title(id),
+                stay: true,
+                fn: function () {
+                  var d = di.slice();
+                  d[i] = a.id;
+                  setDock(d);
+                  backMenu();
+                },
+              };
+            })
+          );
+        },
+      });
+    if (a.input)
+      items.push({
+        label: t('Remove from Home'),
+        fn: function () {
+          pinInput(a.id, a.title, false);
+        },
+      });
+    else
+      items.push({
+        label: t('Hide app'),
+        fn: function () {
+          hideApp(a.id);
+          toast(t('%s is hidden. Customise > Hidden apps shows it again.').replace('%s', a.title));
+        },
+      });
+    return items;
+  });
 }
 
 function removeButton(o) {
@@ -2959,118 +3052,132 @@ function moveButton(o, d) {
   saveCfg();
 }
 function barMenu(o) {
-  var sb = shownBar(),
-    pos = sb.indexOf(o),
-    items = [];
-  if (pos > 0)
+  openBuilt(barLabel(o), function () {
+    var sb = shownBar(),
+      pos = sb.indexOf(o),
+      items = [];
+    if (pos > 0)
+      items.push({
+        label: t('Move left'),
+        stay: true,
+        fn: function () {
+          moveButton(o, -1);
+        },
+      });
+    if (pos >= 0 && pos < sb.length - 1)
+      items.push({
+        label: t('Move right'),
+        stay: true,
+        fn: function () {
+          moveButton(o, 1);
+        },
+      });
     items.push({
-      label: t('Move left'),
+      label: t('Remove this button'),
+      stay: true,
       fn: function () {
-        moveButton(o, -1);
+        removeButton(o);
+        backMenu();
       },
     });
-  if (pos >= 0 && pos < sb.length - 1)
-    items.push({
-      label: t('Move right'),
-      fn: function () {
-        moveButton(o, 1);
-      },
-    });
-  items.push({
-    label: t('Remove this button'),
-    fn: function () {
-      removeButton(o);
-    },
+    return items;
   });
-  openMenu(barLabel(o), items);
 }
 /* Customise: how Home looks. What the TV and the service do is in the manager app (More settings...) */
 function customizeMenu() {
-  var nh = hiddenIds().length;
-  openMenu(t('Customise'), [
-    { label: t('Dock'), stay: true, fn: dockMenu },
-    { label: t('Top buttons'), stay: true, fn: topButtonsMenu },
-    { label: t('Hidden apps'), sub: nh ? String(nh) : '', stay: true, fn: hiddenMenu },
-    {
-      label: t('App order'),
-      sub: cfg.sort === 'alpha' ? t('A to Z') : t('Most used first'),
-      fn: function () {
-        cfg.sort = cfg.sort === 'alpha' ? 'usage' : 'alpha';
-        saveCfg();
+  openBuilt(t('Customise'), function () {
+    var nh = hiddenIds().length;
+    return [
+      { label: t('Dock'), stay: true, fn: dockMenu },
+      { label: t('Top buttons'), stay: true, fn: topButtonsMenu },
+      { label: t('Hidden apps'), sub: nh ? String(nh) : '', stay: true, fn: hiddenMenu },
+      {
+        label: t('App order'),
+        sub: cfg.sort === 'alpha' ? t('A to Z') : t('Most used first'),
+        stay: true,
+        fn: function () {
+          cfg.sort = cfg.sort === 'alpha' ? 'usage' : 'alpha';
+          saveCfg();
+        },
       },
-    },
-    {
-      label: t('Mark running apps'),
-      sub: cfg.runDots === true ? t('Green dot') : t('No dot'),
-      fn: function () {
-        if (cfg.runDots === true) delete cfg.runDots;
-        else cfg.runDots = true;
-        saveCfg();
+      {
+        label: t('Mark running apps'),
+        sub: cfg.runDots === true ? t('Green dot') : t('No dot'),
+        stay: true,
+        fn: function () {
+          if (cfg.runDots === true) delete cfg.runDots;
+          else cfg.runDots = true;
+          saveCfg();
+        },
       },
-    },
-    {
-      label: t('Clock'),
-      sub: cfg.clock === '24' ? t('24-hour') : cfg.clock === '12' ? t('12-hour') : t('Automatic'),
-      fn: function () {
-        cfg.clock = cfg.clock === '24' ? '12' : cfg.clock === '12' ? 'auto' : '24';
-        saveCfg();
-        tick();
+      {
+        label: t('Clock'),
+        sub: cfg.clock === '24' ? t('24-hour') : cfg.clock === '12' ? t('12-hour') : t('Automatic'),
+        stay: true,
+        fn: function () {
+          cfg.clock = cfg.clock === '24' ? '12' : cfg.clock === '12' ? 'auto' : '24';
+          saveCfg();
+          tick();
+        },
       },
-    },
-    { sep: true },
-    { label: t('Theme'), stay: true, fn: themeMenu },
-    {
-      label: t('Wallpapers'),
-      sub: cfg.wall && cfg.wall.on ? t('On') : t('Off'),
-      stay: true,
-      fn: wallMenu,
-    },
-    { label: t('Accent colour'), stay: true, fn: accentMenu },
-    { sep: true },
-    {
-      label: t('More settings...'),
-      sub: 'CleanYourTV',
-      fn: function () {
-        launch('com.cleanyourtv.manager');
+      { sep: true },
+      { label: t('Theme'), stay: true, fn: themeMenu },
+      {
+        label: t('Wallpapers'),
+        sub: cfg.wall && cfg.wall.on ? t('On') : t('Off'),
+        stay: true,
+        fn: wallMenu,
       },
-    },
-  ]);
+      { label: t('Accent colour'), stay: true, fn: accentMenu },
+      { sep: true },
+      {
+        label: t('More settings...'),
+        sub: t('Home, Live TV, Debloat, updates'),
+        fn: function () {
+          launch('com.cleanyourtv.manager');
+        },
+      },
+      /* the hidden gestures, said where people already look instead of over Home (issue: hold OK was undiscoverable) */
+      { note: t('Hold OK on an app for its options. Back on Home lists the open apps.') },
+    ];
+  });
 }
 /* Wallpapers: switched on here and how often the photo changes; the photos are added in the manager (uploads from a phone, Immich) */
 function wallMenu() {
-  var w = cfg.wall || { on: false, every: 15 },
-    n = +String((cfg.wallpapers && cfg.wallpapers.stamp) || '0').split(':')[0] || 0,
-    EV = [0, 5, 15, 60],
-    evName = function (m) {
-      return m ? t('Every %s min').replace('%s', m) : t('Each time Home opens');
-    };
-  openMenu(t('Wallpapers'), [
-    {
-      label: t('Use Wallpapers'),
-      sub: (w.on ? t('On') : t('Off')) + ' \u00B7 ' + (n ? t('%s photos').replace('%s', n) : t('no photos yet')),
-      fn: function () {
-        cfg.wall = { on: !w.on, every: w.every == null ? 15 : w.every };
-        saveCfg();
+  openBuilt(t('Wallpapers'), function () {
+    var w = cfg.wall || { on: false, every: 15 },
+      e = w.every == null ? 15 : w.every,
+      n = +String((cfg.wallpapers && cfg.wallpapers.stamp) || '0').split(':')[0] || 0,
+      EV = [0, 5, 15, 60];
+    return [
+      {
+        label: t('Use Wallpapers'),
+        sub: (w.on ? t('On') : t('Off')) + ' \u00B7 ' + (n ? t('%s photos').replace('%s', n) : t('no photos yet')),
+        stay: true,
+        fn: function () {
+          cfg.wall = { on: !w.on, every: e };
+          saveCfg();
+        },
       },
-    },
-    {
-      label: t('New photo'),
-      sub: evName(w.every == null ? 15 : w.every),
-      fn: function () {
-        var e = w.every == null ? 15 : w.every;
-        cfg.wall = { on: !!w.on, every: EV[(EV.indexOf(e) + 1) % EV.length] };
-        saveCfg();
+      {
+        label: t('New photo'),
+        sub: e ? t('Every %s min').replace('%s', e) : t('Each time Home opens'),
+        stay: true,
+        fn: function () {
+          cfg.wall = { on: !!w.on, every: EV[(EV.indexOf(e) + 1) % EV.length] };
+          saveCfg();
+        },
       },
-    },
-    { sep: true },
-    {
-      label: t('Add photos...'),
-      sub: 'CleanYourTV',
-      fn: function () {
-        launch('com.cleanyourtv.manager', { open: 'wallpapers' });
+      { sep: true },
+      {
+        label: t('Add photos...'),
+        sub: t('in the CleanYourTV app'),
+        fn: function () {
+          launch('com.cleanyourtv.manager', { open: 'wallpapers' });
+        },
       },
-    },
-  ]);
+    ];
+  });
 }
 /* the apps that can go in the dock or on a button: not hidden, not Live TV, A to Z */
 function pickApp(heading, skip, cb) {
@@ -3086,6 +3193,7 @@ function pickApp(heading, skip, cb) {
     list.map(function (a) {
       return {
         label: a.title,
+        stay: true,
         fn: function () {
           cb(a);
         },
@@ -3094,190 +3202,231 @@ function pickApp(heading, skip, cb) {
   );
 }
 function dockMenu() {
-  var di = dockIds(),
-    items = di.map(function (id, i) {
-      return {
-        label: title(id),
+  openBuilt(t('Dock'), function () {
+    var di = dockIds(),
+      items = di.map(function (id, i) {
+        return {
+          label: title(id),
+          stay: true,
+          fn: function () {
+            dockSlotMenu(i);
+          },
+        };
+      });
+    if (di.length < TH.dockN)
+      items.push({
+        label: t('Add an app...'),
         stay: true,
         fn: function () {
-          dockSlotMenu(i);
+          pickApp(t('Add to dock'), di, function (a) {
+            setDock(dockIds().concat(a.id));
+            backMenu();
+          });
+        },
+      });
+    return items;
+  });
+}
+/* one app in the dock; after a move the menu stays on the same app (now in its new place), so it can be moved again */
+function dockSlotMenu(start) {
+  var id = dockIds()[start];
+  openBuilt(title(id), function () {
+    var di = dockIds(),
+      i = di.indexOf(id),
+      move = function (d) {
+        var x = di.slice();
+        x[i] = x[i + d];
+        x[i + d] = id;
+        setDock(x);
+      },
+      items = [
+        {
+          label: t('Replace with...'),
+          stay: true,
+          fn: function () {
+            pickApp(title(id), [id], function (a) {
+              /* an app that is in the dock already swaps places with this one */
+              var x = di.slice(),
+                j = x.indexOf(a.id);
+              if (j >= 0) x[j] = id;
+              x[i] = a.id;
+              setDock(x);
+              backMenu();
+              backMenu();
+            });
+          },
+        },
+      ];
+    if (i > 0)
+      items.push({
+        label: t('Move left'),
+        stay: true,
+        fn: function () {
+          move(-1);
+        },
+      });
+    if (i >= 0 && i < di.length - 1)
+      items.push({
+        label: t('Move right'),
+        stay: true,
+        fn: function () {
+          move(1);
+        },
+      });
+    items.push({
+      label: t('Remove from dock'),
+      stay: true,
+      fn: function () {
+        setDock(
+          di.filter(function (x) {
+            return x !== id;
+          })
+        );
+        backMenu();
+      },
+    });
+    return items;
+  });
+}
+function topButtonsMenu() {
+  openBuilt(t('Top buttons'), function () {
+    var items = shownBar().map(function (o) {
+      return {
+        icon: o.icon,
+        label: barLabel(o),
+        stay: true,
+        fn: function () {
+          barMenu(o);
         },
       };
     });
-  if (di.length < TH.dockN)
-    items.push({
-      label: t('Add an app...'),
-      stay: true,
-      fn: function () {
-        pickApp(t('Add to dock'), di, function (a) {
-          setDock(dockIds().concat(a.id));
-        });
-      },
-    });
-  openMenu(t('Dock'), items);
-}
-function dockSlotMenu(i) {
-  var di = dockIds(),
-    id = di[i],
-    move = function (d) {
-      var x = di.slice();
-      x[i] = x[i + d];
-      x[i + d] = id;
-      setDock(x);
-    },
-    items = [
-      {
-        label: t('Replace with...'),
-        stay: true,
-        fn: function () {
-          pickApp(title(id), [id], function (a) {
-            /* an app that is in the dock already swaps places with this one */
-            var x = di.slice(),
-              j = x.indexOf(a.id);
-            if (j >= 0) x[j] = id;
-            x[i] = a.id;
-            setDock(x);
-          });
-        },
-      },
-    ];
-  if (i > 0)
-    items.push({
-      label: t('Move left'),
-      fn: function () {
-        move(-1);
-      },
-    });
-  if (i < di.length - 1)
-    items.push({
-      label: t('Move right'),
-      fn: function () {
-        move(1);
-      },
-    });
-  items.push({
-    label: t('Remove from dock'),
-    fn: function () {
-      setDock(
-        di.filter(function (x) {
-          return x !== id;
-        })
-      );
-    },
+    items.push({ label: t('Add a button...'), stay: true, fn: addButtonMenu });
+    return items;
   });
-  openMenu(title(id), items);
-}
-function topButtonsMenu() {
-  var items = shownBar().map(function (o) {
-    return {
-      icon: o.icon,
-      label: barLabel(o),
-      stay: true,
-      fn: function () {
-        barMenu(o);
-      },
-    };
-  });
-  items.push({ label: t('Add a button...'), stay: true, fn: addButtonMenu });
-  openMenu(t('Top buttons'), items);
 }
 /* themes come from the service (GET /api/theme/list); choosing one applies it, a theme not on the TV is downloaded first */
 function themeList(then) {
   api('/api/theme/list').then(
     function (r) {
-      if (r.error) return toast(r.error);
+      if (r.error) return toast(r.error, true);
       then(r);
     },
     function () {
-      toast(t('Could not load the themes'));
+      toast(t('Could not load the themes. Try again in a moment.'), true);
     }
   );
 }
-function themeCall(path, b) {
+/* the service answers with the theme list again; the open theme or accent menu is built from it, so it shows the new choice */
+function themeCall(path, b, after) {
   api(path, b).then(
     function (r) {
-      if (r.error) return toast(r.error);
+      if (r.error) return toast(r.error, true);
       lastSig = '';
       load();
+      if (after) after(r);
     },
     function () {
-      toast(t('Could not load the themes'));
+      toast(t('Could not load the themes. Try again in a moment.'), true);
     }
   );
 }
 function themeMenu() {
-  themeList(function (r) {
-    var cur = (r.current && r.current.id) || 'classic',
-      at = 0,
-      name = function (id) {
-        var n = id;
-        (r.themes || []).forEach(function (x) {
-          if (x.id === id) n = x.name;
-        });
-        return n;
-      },
-      items = (r.themes || []).map(function (x, i) {
-        if (x.id === cur) at = i;
-        return {
-          label: x.name,
-          pv: x.preview ? x.id : '',
-          desc: (x.description || '') + (x.author ? '\n\n' + x.author : ''),
-          sub: x.id === cur ? t('Selected') : x.installed || x.id === 'classic' ? '' : t('Downloads when chosen'),
-          fn: function () {
-            if (x.id === cur) return;
-            if (!x.installed) toast(t('Getting the theme...'));
-            themeCall('/api/theme/set', { id: x.id });
+  themeList(function (data) {
+    var at = 0,
+      build = function () {
+        var r = data,
+          cur = (r.current && r.current.id) || 'classic',
+          name = function (id) {
+            var n = id;
+            (r.themes || []).forEach(function (x) {
+              if (x.id === id) n = x.name;
+            });
+            return n;
           },
-        };
-      });
-    if (r.previous && r.previous.id) {
-      items.push({ sep: true });
-      items.push({
-        icon: 'restore',
-        label: t('Go back to the previous theme'),
-        sub: name(r.previous.id),
-        pv: (r.themes || []).some(function (x) {
-          return x.id === r.previous.id && x.preview;
-        })
-          ? r.previous.id
-          : '',
-        desc: '',
-        fn: function () {
-          themeCall('/api/theme/revert', {});
-        },
-      });
-    }
-    if (r.catalogue && !r.catalogue.ok) toast(t('Could not reach GitHub: showing the themes on this TV'));
-    openMenu(t('Theme'), items, at);
+          items = (r.themes || []).map(function (x, i) {
+            if (x.id === cur) at = i;
+            return {
+              label: x.name,
+              pv: x.preview ? x.id : '',
+              desc: (x.description || '') + (x.author ? '\n\n' + x.author : ''),
+              sub: x.id === cur ? t('Selected') : x.installed || x.id === 'classic' ? '' : t('Downloads when chosen'),
+              stay: true,
+              fn: function () {
+                if (x.id === cur) return;
+                if (!x.installed) toast(t('Getting the theme...'));
+                themeCall('/api/theme/set', { id: x.id }, update);
+              },
+            };
+          });
+        if (r.previous && r.previous.id) {
+          items.push({ sep: true });
+          items.push({
+            icon: 'restore',
+            label: t('Go back to the previous theme'),
+            sub: name(r.previous.id),
+            pv: (r.themes || []).some(function (x) {
+              return x.id === r.previous.id && x.preview;
+            })
+              ? r.previous.id
+              : '',
+            desc: '',
+            stay: true,
+            fn: function () {
+              themeCall('/api/theme/revert', {}, update);
+            },
+          });
+        }
+        return items;
+      },
+      update = function (r) {
+        data = r;
+        if (stack.length && stack[stack.length - 1].build === build) refreshMenu();
+      };
+    build();
+    if (data.catalogue && !data.catalogue.ok) toast(t('Could not reach GitHub: showing the themes on this TV'));
+    openBuilt(t('Theme'), build, at);
   });
 }
 function accentMenu() {
-  themeList(function (r) {
-    var cur = (r.current && r.current.accent) || '',
-      at = 0,
-      items = (r.accents || []).map(function (a, i) {
-        if (a.hex === cur) at = i;
-        return {
-          label: t(a.name),
-          sub: a.hex === cur ? t('Selected') : '',
-          fn: function () {
-            themeCall('/api/theme/set', { accent: a.hex });
-          },
-        };
-      });
-    openMenu(t('Accent colour'), items, at);
+  themeList(function (data) {
+    var at = 0,
+      build = function () {
+        var cur = (data.current && data.current.accent) || '';
+        return (data.accents || []).map(function (a, i) {
+          if (a.hex === cur) at = i;
+          return {
+            label: t(a.name),
+            sub: a.hex === cur ? t('Selected') : '',
+            stay: true,
+            fn: function () {
+              themeCall('/api/theme/set', { accent: a.hex }, update);
+            },
+          };
+        });
+      },
+      update = function (r) {
+        data = r;
+        if (stack.length && stack[stack.length - 1].build === build) refreshMenu();
+      };
+    build();
+    openBuilt(t('Accent colour'), build, at);
   });
 }
 function addButtonMenu() {
+  var add = function (b) {
+    cfg.topbar = topbar().concat([b]);
+    saveCfg();
+  };
   var items = PRESETS.filter(function (p) {
     return liveOn() || p.action !== 'live';
   }).map(function (p) {
     return {
       icon: p.icon,
       label: barLabel(p),
+      stay: true,
       fn: function () {
-        cfg.topbar = topbar().concat([p]);
-        saveCfg();
+        add(p);
+        backMenu();
       },
     };
   });
@@ -3286,8 +3435,9 @@ function addButtonMenu() {
     stay: true,
     fn: function () {
       pickApp(t('Pick an app'), [], function (a) {
-        cfg.topbar = topbar().concat([{ label: a.title, icon: 'grid', app: a.id }]);
-        saveCfg();
+        add({ label: a.title, icon: 'grid', app: a.id });
+        backMenu();
+        backMenu();
       });
     },
   });
@@ -3301,20 +3451,21 @@ function hiddenIds() {
   });
 }
 function hiddenMenu() {
-  var h = hiddenIds();
-  openMenu(
-    h.length ? t('Hidden apps (OK to show again)') : t('Hidden apps'),
-    h.length
-      ? h.map(function (id) {
-          return {
-            label: title(id),
-            fn: function () {
-              unhideApp(id);
-            },
-          };
-        })
-      : [{ label: t('No hidden apps'), dim: true }]
-  );
+  openBuilt(t('Hidden apps'), function () {
+    var h = hiddenIds();
+    if (!h.length) return [{ note: t('No hidden apps. To hide one, hold OK on it on Home and choose Hide app.') }];
+    return [{ note: t('OK shows an app on Home again.') }].concat(
+      h.map(function (id) {
+        return {
+          label: title(id),
+          stay: true,
+          fn: function () {
+            unhideApp(id);
+          },
+        };
+      })
+    );
+  });
 }
 /* ---------- layout ---------- */
 function rebuild() {

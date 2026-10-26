@@ -17,13 +17,14 @@ function drawQr(url) {
 function openShare() {
   shareMode = 'log';
   push('share');
-  $('share').querySelector('h2').textContent = 'Share the log';
-  $('share').querySelector('ol').innerHTML =
-    '<li>Phone on the <b>same Wi-Fi</b> as the TV.</li><li>Scan the code with the camera.</li><li>Tap <b>Copy</b> on the page and paste it into your message.</li>';
+  $('share').querySelector('h2').textContent = tr('Share the log');
+  $('share').querySelector('ol').innerHTML = tr(
+    '<li>Phone on the <b>same Wi-Fi</b> as the TV.</li><li>Scan the code with the camera.</li><li>Tap <b>Copy</b> on the page and paste it into your message.</li>'
+  );
   $('share').style.display = 'block';
   $('shareurl').textContent = '';
   $('qrbox').style.visibility = 'hidden';
-  $('sharemsg').textContent = 'Preparing the report\u2026';
+  $('sharemsg').textContent = tr('Preparing the report\u2026');
   rootExec('rm -f /tmp/cytv-sharelog.json; nohup node ' + SVC + '/helper/sharelog.js > /tmp/cytv-sharelog.out 2>&1 &').then(function () {
     pollShare(0);
   });
@@ -39,12 +40,13 @@ function pollShare(n) {
       drawQr(st.url);
       $('qrbox').style.visibility = 'visible';
       $('shareurl').textContent = st.url;
-      $('sharemsg').textContent =
-        'The page is open for ten minutes. It lists versions, the setup log and the service log; addresses and URL paths are masked.';
+      $('sharemsg').textContent = tr(
+        'The page is open for ten minutes. It lists versions, the setup log and the service log; addresses and URL paths are masked.'
+      );
       return;
     }
     if (n > 45) {
-      $('sharemsg').textContent = 'Could not prepare the report (is the Homebrew Channel installed?).';
+      $('sharemsg').textContent = tr('Could not prepare the report (is the Homebrew Channel installed?).');
       return;
     }
     setTimeout(function () {
