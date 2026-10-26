@@ -190,6 +190,9 @@ body {
 }
 .pill span {
   white-space: nowrap;
+  max-width: 300px; /* a long translation is cut with "..." instead of pushing the buttons off the screen */
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .pill.f {
   background: var(--acc);
@@ -524,6 +527,9 @@ body {
   padding: 18px 38px;
   border-radius: 34px;
   font-size: 28px;
+  max-width: 1500px; /* a long message (an error with its next step, a long translation) wraps instead of running off the screen */
+  width: max-content;
+  text-align: center;
   background: var(--panel);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
   opacity: 0;

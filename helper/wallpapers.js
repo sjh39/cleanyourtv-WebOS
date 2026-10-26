@@ -522,8 +522,8 @@ function create(ctx) {
 // the browser (to 3840 or 1920 pixels on the long side) before they are sent, which also turns an iPhone's HEIC into JPEG. It is in the
 // phone's language: the fixed text is translated here, the script's own texts by t() with the translations it uses (i18n.js).
 const PHONE_JS = `var code='',S={},MAX=3840,$=function(i){return document.getElementById(i)};
-/* a text in the page's language with its %s / %d filled in, in order */
-function fm(s){var a=arguments,n=1;return t(s).replace(/%[sd]/g,function(){return a[n++]})}
+/* a text with its %s / %d filled in, in order, then in the page's language (a template's plural form follows the number) */
+function fm(s){var a=arguments,n=1;return t(s.replace(/%[sd]/g,function(){return a[n++]}))}
 function api(p,b,ct){return new Promise(function(ok,no){var x=new XMLHttpRequest();x.open(b===undefined?'GET':'POST','/api/'+p);x.setRequestHeader('x-code',code);
  if(ct)x.setRequestHeader('content-type',ct);x.onload=function(){var j={};try{j=JSON.parse(x.responseText)}catch(e){}if(x.status===403){showLogin(t('Wrong code.'));no(j)}else ok(j)};x.onerror=function(){no({error:t('The TV did not answer. Is the phone on the same Wi-Fi?')})};
  x.send(b===undefined?null:(ct?b:JSON.stringify(b)))})}

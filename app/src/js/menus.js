@@ -559,7 +559,7 @@ function wallMenu() {
     return [
       {
         label: t('Use Wallpapers'),
-        sub: (w.on ? t('On') : t('Off')) + ' \u00B7 ' + (n ? t('%s photos').replace('%s', n) : t('no photos yet')),
+        sub: (w.on ? t('On') : t('Off')) + ' \u00B7 ' + (n ? t(n + ' photos') : t('no photos yet')),
         stay: true,
         fn: function () {
           cfg.wall = { on: !w.on, secs: e };

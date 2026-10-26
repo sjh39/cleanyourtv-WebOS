@@ -6,7 +6,7 @@ shown. The translations are one file per language in this folder.
 | File | What it is |
 |---|---|
 | `en.json` | Every English text the screens use. The key and the value are the same; it is the list to translate from. |
-| `nl.json`, `de.json`, ... | One language: `{"Hidden apps": "Verborgen apps", ...}`. `_name` is the language in its own words, `_dir` is `ltr` (or `rtl`, not supported yet). |
+| `nl.json`, `de.json`, ... | One language: `{"Hidden apps": "Verborgen apps", ...}`. `_name` is the language in its own words, `_dir` is `ltr` or `rtl`. |
 | `runtime.js` | The code the pages use to translate (`t()`). |
 
 `tools/build-pages.js` puts the translations each page uses into that page, so the TV needs no network for them. The language is the
@@ -17,8 +17,13 @@ TV's menu language, or the one chosen in the manager app under **More** > **Lang
 1. Copy `en.json` to `<code>.json` (the two-letter code, for example `it.json`), set `_name` (`"Italiano"`) and replace each value
    with the translation. Leave out what you do not know: those texts stay English.
 2. Keep `%s` (any text) and `%d` (a number) in the translation, as many as the English has.
-3. Run `node tools/build-pages.js`, then `node tools/i18n.js` to see how complete the language is and whether a file has an error.
-4. Open a pull request.
+3. A text with a count can have plural forms instead of one translation: `"%d photos": {"one": "%d foto", "other": "%d foto’s"}`.
+   The forms are the Unicode CLDR categories `zero`, `one`, `two`, `few`, `many` and `other` (Russian uses `one`, `few`, `many`);
+   the form follows the first number in the text. `other` is required. `en.json` has the English forms the same way.
+4. For a right-to-left language (Arabic, Hebrew) set `"_dir": "rtl"`: the home screen, its menus, the Inputs list and this app
+   are then mirrored, and Left and Right follow the mirrored layout. Live TV keeps its left-to-right layout for now.
+5. Run `node tools/build-pages.js`, then `node tools/i18n.js` to see how complete the language is and whether a file has an error.
+6. Open a pull request. Texts that are too long for a row or a button end in "..." on the TV; a shorter wording reads better.
 
 ## Adding a text to a page
 

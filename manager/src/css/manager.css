@@ -135,6 +135,12 @@ body {
   font-size: 24px;
   opacity: 0.7;
   white-space: nowrap;
+  /* a long translation is cut with "...", the label keeps at least 40% of the row */
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 60%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .row.dim {
   opacity: 0.55;
@@ -226,4 +232,41 @@ body {
   align-items: center;
   background: var(--ink);
   color: #0b0c10;
+}
+/* a right-to-left language (_dir "rtl"): the help text goes right, the list left, and the share screens mirror */
+[dir="rtl"] #head {
+  left: auto;
+  right: 96px;
+}
+[dir="rtl"] #panel {
+  left: auto;
+  right: 820px;
+}
+[dir="rtl"] .row > * + * {
+  margin-left: 0;
+  margin-right: 22px;
+}
+[dir="rtl"] #share h2,
+[dir="rtl"] #share ol,
+[dir="rtl"] #sharemsg,
+[dir="rtl"] #shareurl,
+[dir="rtl"] #shareclose {
+  left: auto;
+  right: 96px;
+}
+[dir="rtl"] #share ol {
+  padding-left: 0;
+  padding-right: 44px;
+}
+[dir="rtl"] #qrbox {
+  left: auto;
+  right: 1120px;
+}
+/* a text that is still English (not translated yet) keeps its own left-to-right order inside the mirrored layout */
+[dir="rtl"] .row .lb,
+[dir="rtl"] .row .st,
+[dir="rtl"] #sub,
+[dir="rtl"] #info {
+  unicode-bidi: plaintext;
+  text-align: right;
 }

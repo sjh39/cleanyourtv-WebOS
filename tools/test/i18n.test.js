@@ -20,7 +20,8 @@ run(async () => {
       'navigator',
       'document',
       'I18N',
-      runtime + '; return { t: t, setLang: setLang, lang: function () { return LANG; }, languages: languages };'
+      runtime +
+        '; return { t: t, setLang: setLang, lang: function () { return LANG; }, languages: languages, rtl: rtl, dir: function () { return document.documentElement.dir; } };'
     )({ webOSSystem: { locale: locale } }, { language: 'en' }, { documentElement: {} }, table);
   const T = {
     nl: {
@@ -86,4 +87,53 @@ run(async () => {
     "a phone page's script gets only the translations it uses"
   );
   ok(I.script('en', '').indexOf('var I18N = {}') >= 0, 'in English the page carries no translations');
+
+  // longer words (German, Russian): every one-line text of a row or button is cut with "..." instead of running out of it
+  const css = f => fs.readFileSync(path.join(root, f), 'utf8');
+  const cut = (text, sel) => {
+    const m = new RegExp(sel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*\\{([^}]*)\\}').exec(text);
+    return !!m && /text-overflow:\s*ellipsis/.test(m[1]) && /overflow:\s*hidden/.test(m[1]) && /white-space:\s*nowrap/.test(m[1]);
+  };
+  const L = css('app/index.html'),
+    M = css('manager/app/index.html');
+  ok(
+    cut(L, '.row .lb') && cut(L, '.row .st') && cut(L, '.pill span') && cut(L, '#name') && cut(M, '.row .lb') && cut(M, '.row .st'),
+    'menu rows, sub-labels, top buttons and the app name end in "..." when a translation is too long'
+  );
+
+  // plural forms follow the language's rules; English has its own forms
+  const P = {
+    en: { '%d photos': { one: '%d photo', other: '%d photos' } },
+    ru: {
+      _name: 'Русский',
+      '%d photos': { one: '%d фото', few: '%d фотографии', many: '%d фотографий', other: '%d фото' },
+      'synced %s': 'синхронизировано %s',
+    },
+    fr: { _name: 'Français', '%d photos': { one: '%d photo', other: '%d photos' } },
+    he: { _name: 'עברית', _dir: 'rtl', Back: 'חזרה' },
+  };
+  const ru = make('ru-RU', P);
+  ok(
+    ru.t('1 photos') === '1 фото' &&
+      ru.t('3 photos') === '3 фотографии' &&
+      ru.t('11 photos') === '11 фотографий' &&
+      ru.t('22 photos') === '22 фотографии',
+    'Russian plural forms: one, few, many'
+  );
+  const fr = make('fr-FR', P);
+  ok(fr.t('0 photos') === '0 photo' && fr.t('2 photos') === '2 photos', 'French counts 0 and 1 as one');
+  const en = make('en-GB', P);
+  ok(
+    en.t('1 photos') === '1 photo' && en.t('5 photos') === '5 photos' && en.t('Back') === 'Back',
+    'English has its own plural forms and otherwise stays as written'
+  );
+  const he = make('he-IL', P);
+  ok(
+    he.rtl() && he.dir() === 'rtl' && he.t('Back') === 'חזרה' && !fr.rtl() && fr.dir() === 'ltr',
+    'a right-to-left language turns the page right-to-left'
+  );
+  ok(
+    I.tr('nl', '1 photos') === '1 foto' && I.tr('nl', '4 photos') === '4 foto’s' && I.tr('en', '1 photos') === '1 photo',
+    'the service picks plural forms too (its own rules: Node 8 has no Intl.PluralRules)'
+  );
 });

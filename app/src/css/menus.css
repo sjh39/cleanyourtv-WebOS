@@ -61,6 +61,13 @@
 .row .st {
   font-size: 22px;
   opacity: 0.65;
+  /* a long translation (German, Russian) is cut with "...", not wrapped out of the row; the label keeps at least 40% */
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 60%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .row.dim {
   opacity: 0.6;

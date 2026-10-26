@@ -2,7 +2,8 @@
 //   node tools/i18n.js            a table per language; exits with 1 only when a file is broken
 //   node tools/i18n.js --missing  also lists the English texts a language does not have yet
 //   node tools/i18n.js --sync     adds every text the pages use but en.json does not list (run after adding a string to a page)
-// A file is broken when it is not JSON, when a translation is not a string, or when its %s / %d do not match the English text.
+// A file is broken when it is not JSON, when a translation is neither a text nor plural forms ({"one": ..., "other": ...}), or
+// when its %s / %d do not match the English text.
 // Missing texts are fine: the page shows English for them. A text in en.json that no page uses is reported, not an error.
 // Runs on Node 8.
 'use strict';
@@ -13,6 +14,7 @@ const root = path.join(__dirname, '..'),
   dir = path.join(root, 'i18n');
 
 const holes = s => (String(s).match(/%[sd]/g) || []).join('');
+const FORMS = ['zero', 'one', 'two', 'few', 'many', 'other'];
 function pageText() {
   // what the pages show: their sources as built, without the translations themselves
   return B.plain(
@@ -60,13 +62,20 @@ function report() {
       stray = [];
     for (const k of Object.keys(L)) {
       if (k.charAt(0) === '_') continue;
-      if (typeof L[k] !== 'string') problems.push(f + ': the translation of "' + k + '" is not text');
-      else if (L[k] && holes(L[k]).split('').sort().join('') !== holes(k).split('').sort().join(''))
-        problems.push(f + ': "' + k + '" has ' + (holes(k) || 'no %s/%d') + ' but the translation has ' + (holes(L[k]) || 'none'));
+      const forms = typeof L[k] === 'string' ? { other: L[k] } : L[k];
+      if (!forms || typeof forms !== 'object' || typeof forms.other !== 'string')
+        problems.push(f + ': the translation of "' + k + '" is neither a text nor plural forms with "other"');
+      else
+        for (const fm of Object.keys(forms)) {
+          if (FORMS.indexOf(fm) < 0)
+            problems.push(f + ': "' + k + '" has an unknown plural form "' + fm + '" (zero, one, two, few, many, other)');
+          else if (forms[fm] && holes(forms[fm]).split('').sort().join('') !== holes(k).split('').sort().join(''))
+            problems.push(f + ': "' + k + '" has ' + (holes(k) || 'no %s/%d') + ' but the translation has ' + (holes(forms[fm]) || 'none'));
+        }
       if (!Object.prototype.hasOwnProperty.call(en, k)) stray.push(k);
     }
     for (const k of keys) {
-      if (typeof L[k] === 'string' && L[k] !== '') done++;
+      if (B.filled(L[k])) done++;
       else missing.push(k);
     }
     rows.push({ code: m[1], name: L._name, done, missing, stray });

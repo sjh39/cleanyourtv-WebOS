@@ -1,0 +1,69 @@
+/* right-to-left languages (_dir "rtl" in i18n/<language>.json, set on <html dir>): the home screen, its menus and the shelf are
+   mirrored. Flex rows and the app grid follow the direction by themselves; what is placed by left/right is swapped here. Live TV keeps
+   its own left-to-right layout for now. */
+[dir="rtl"] #clock {
+  left: var(--clock-r);
+  right: var(--clock-l);
+}
+[dir="rtl"] #date {
+  margin-left: 0;
+  margin-right: 22px;
+}
+[dir="rtl"] [data-clock="stack"] #date {
+  margin-right: 0;
+}
+[dir="rtl"] #bar {
+  left: var(--bar-r);
+  right: var(--bar-l);
+}
+[dir="rtl"] #bar > * + * {
+  margin-left: 0;
+  margin-right: var(--bar-gap);
+}
+[dir="rtl"] .pill {
+  padding: 0 24px 0 30px;
+}
+[dir="rtl"] .pill > * + * {
+  margin-left: 0;
+  margin-right: 14px;
+}
+[dir="rtl"] #shelf {
+  text-align: right;
+}
+[dir="rtl"] #dock {
+  left: var(--dock-r);
+  right: var(--dock-l);
+}
+[dir="rtl"] #dock > * + * {
+  margin-left: 0;
+  margin-right: var(--dock-gap);
+}
+[dir="rtl"] .tile .rd {
+  right: auto;
+  left: 14px;
+}
+[dir="rtl"] #dock .tile .rd {
+  left: 20px;
+}
+[dir="rtl"] .row > * + * {
+  margin-left: 0;
+  margin-right: 22px;
+}
+[dir="rtl"] #ov.ws {
+  justify-content: flex-start;
+  padding-right: 0;
+  padding-left: 150px;
+}
+[dir="rtl"] #ovside {
+  left: auto;
+  right: 150px;
+}
+[dir="rtl"] #lv {
+  direction: ltr;
+}
+/* a text that is still English (not translated yet) keeps its own left-to-right order inside the mirrored layout */
+[dir="rtl"] .row .lb,
+[dir="rtl"] .row .st {
+  unicode-bidi: plaintext;
+  text-align: right;
+}

@@ -55,6 +55,8 @@ document.addEventListener('mousemove', function (ev) {
 
 document.addEventListener('keydown', function (e) {
   var k = e.keyCode;
+  /* a right-to-left layout: Left moves to what is on the left, which is the next tile in the row (Live TV keeps left-to-right) */
+  if (rtl() && !LIVE.on && (k === 37 || k === 39)) k = 76 - k;
   lastKey = Date.now();
   if (LIVE.on) {
     LIVE.key(e);

@@ -1,22 +1,36 @@
 {
  "_name": "English",
  "_dir": "ltr",
- "%d channels": "%d channels",
- "%d days ago": "%d days ago",
+ "%d channels": {
+  "one": "%d channel",
+  "other": "%d channels"
+ },
+ "%d days ago": {
+  "one": "%d day ago",
+  "other": "%d days ago"
+ },
  "%d h ago": "%d h ago",
  "%d min ago": "%d min ago",
  "%d of %d": "%d of %d",
  "%d of %d on": "%d of %d on",
  "%d of %d photos uploaded.": "%d of %d photos uploaded.",
  "%d of 150 MB": "%d of 150 MB",
- "%d photos": "%d photos",
- "%d photos could not be downloaded": "%d photos could not be downloaded",
- "%d photos from %d albums": "%d photos from %d albums",
+ "%d photos": {
+  "one": "%d photo",
+  "other": "%d photos"
+ },
+ "%d photos could not be downloaded": {
+  "one": "%d photo could not be downloaded",
+  "other": "%d photos could not be downloaded"
+ },
+ "%d photos from %d albums": {
+  "one": "%d photo from %d albums",
+  "other": "%d photos from %d albums"
+ },
  "%s   code %s": "%s   code %s",
  "%s added to Home": "%s added to Home",
  "%s is hidden. Customise > Hidden apps shows it again.": "%s is hidden. Customise > Hidden apps shows it again.",
  "%s key learned: code %s.": "%s key learned: code %s.",
- "%s photos": "%s photos",
  "%s removed from Home": "%s removed from Home",
  "(empty: short plain answers)": "(empty: short plain answers)",
  "(one is saved; leave empty to keep it)": "(one is saved; leave empty to keep it)",

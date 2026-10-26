@@ -1,22 +1,36 @@
 {
  "_name": "Français",
  "_dir": "ltr",
- "%d channels": "%d chaînes",
- "%d days ago": "il y a %d jours",
+ "%d channels": {
+  "one": "%d chaîne",
+  "other": "%d chaînes"
+ },
+ "%d days ago": {
+  "one": "il y a %d jour",
+  "other": "il y a %d jours"
+ },
  "%d h ago": "il y a %d h",
  "%d min ago": "il y a %d min",
  "%d of %d": "%d sur %d",
  "%d of %d on": "%d sur %d activés",
  "%d of %d photos uploaded.": "%d sur %d photos envoyées.",
  "%d of 150 MB": "%d sur 150 Mo",
- "%d photos": "%d photos",
- "%d photos could not be downloaded": "%d photos n’ont pas pu être téléchargées",
- "%d photos from %d albums": "%d photos de %d albums",
+ "%d photos": {
+  "one": "%d photo",
+  "other": "%d photos"
+ },
+ "%d photos could not be downloaded": {
+  "one": "%d photo n’a pas pu être téléchargée",
+  "other": "%d photos n’ont pas pu être téléchargées"
+ },
+ "%d photos from %d albums": {
+  "one": "%d photo de %d albums",
+  "other": "%d photos de %d albums"
+ },
  "%s   code %s": "%s   code %s",
  "%s added to Home": "%s ajouté à l’accueil",
  "%s is hidden. Customise > Hidden apps shows it again.": "%s est masquée. Personnaliser > Apps masquées l’affiche à nouveau.",
  "%s key learned: code %s.": "Touche %s apprise : code %s.",
- "%s photos": "%s photos",
  "%s removed from Home": "%s retiré de l’accueil",
  "(empty: short plain answers)": "(vide : réponses courtes et simples)",
  "(one is saved; leave empty to keep it)": "(une est enregistrée ; laisser vide pour la garder)",
@@ -450,8 +464,14 @@
  "Syncing with Immich…": "Synchronisation avec Immich…",
  "syncing…": "synchronisation…",
  "Syncing…": "Synchronisation…",
- "syncing… %d new": "synchronisation… %d nouvelles",
- "Syncing… %d new": "Synchronisation… %d nouvelles",
+ "syncing… %d new": {
+  "one": "synchronisation… %d nouvelle",
+  "other": "synchronisation… %d nouvelles"
+ },
+ "Syncing… %d new": {
+  "one": "Synchronisation… %d nouvelle",
+  "other": "Synchronisation… %d nouvelles"
+ },
  "Take over the Input key": "Prendre la touche Entrée",
  "Tap Copy, then paste it into your message. Addresses and URL paths are masked. This page closes ten minutes after it was opened on the TV.": "Touchez Copier, puis collez-le dans votre message. Adresses et chemins d’URL sont masqués. Cette page se ferme dix minutes après son ouverture sur le téléviseur.",
  "tap to hide or show one": "touchez pour masquer ou afficher",

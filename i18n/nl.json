@@ -1,22 +1,36 @@
 {
  "_name": "Nederlands",
  "_dir": "ltr",
- "%d channels": "%d zenders",
- "%d days ago": "%d dagen geleden",
+ "%d channels": {
+  "one": "%d zender",
+  "other": "%d zenders"
+ },
+ "%d days ago": {
+  "one": "%d dag geleden",
+  "other": "%d dagen geleden"
+ },
  "%d h ago": "%d uur geleden",
  "%d min ago": "%d min geleden",
  "%d of %d": "%d van %d",
  "%d of %d on": "%d van %d aan",
  "%d of %d photos uploaded.": "%d van %d foto’s geüpload.",
  "%d of 150 MB": "%d van 150 MB",
- "%d photos": "%d foto’s",
- "%d photos could not be downloaded": "%d foto’s konden niet worden gedownload",
- "%d photos from %d albums": "%d foto’s uit %d albums",
+ "%d photos": {
+  "one": "%d foto",
+  "other": "%d foto’s"
+ },
+ "%d photos could not be downloaded": {
+  "one": "%d foto kon niet worden gedownload",
+  "other": "%d foto’s konden niet worden gedownload"
+ },
+ "%d photos from %d albums": {
+  "one": "%d foto uit %d albums",
+  "other": "%d foto’s uit %d albums"
+ },
  "%s   code %s": "%s   code %s",
  "%s added to Home": "%s is aan Home toegevoegd",
  "%s is hidden. Customise > Hidden apps shows it again.": "%s is verborgen. Aanpassen > Verborgen apps toont de app weer.",
  "%s key learned: code %s.": "%s-toets geleerd: code %s.",
- "%s photos": "%s foto’s",
  "%s removed from Home": "%s is van Home verwijderd",
  "(empty: short plain answers)": "(leeg: korte eenvoudige antwoorden)",
  "(one is saved; leave empty to keep it)": "(er is er een opgeslagen; leeg laten om die te houden)",

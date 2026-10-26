@@ -54,6 +54,8 @@ const usedIn = (key, text) =>
     .split(/%[sd]/)
     .filter(f => f.trim().length > 0)
     .every(f => text.indexOf(f) >= 0);
+// a translation: a text, or plural forms with at least "other"
+const filled = v => (typeof v === 'string' && v !== '') || (!!v && typeof v === 'object' && typeof v.other === 'string' && v.other !== '');
 function i18nScript(pageText) {
   const text = plain(pageText),
     all = english(),
@@ -61,15 +63,20 @@ function i18nScript(pageText) {
     L = langs(),
     out = {};
   for (const c of Object.keys(L)) {
-    const done = all.filter(k => typeof L[c][k] === 'string' && L[c][k] !== '').length,
+    const done = all.filter(k => filled(L[c][k])).length,
       o = {
         _name: L[c]._name || c,
         _dir: L[c]._dir === 'rtl' ? 'rtl' : 'ltr',
         _pct: all.length ? Math.floor((100 * done) / all.length) : 0,
       };
-    for (const k of used) if (typeof L[c][k] === 'string' && L[c][k] !== '') o[k] = L[c][k];
+    for (const k of used) if (filled(L[c][k])) o[k] = L[c][k];
     out[c] = o;
   }
+  // English plural forms ("%d photo" / "%d photos"): the only English the pages need from a file
+  const en = JSON.parse(fs.readFileSync(path.join(I18N, 'en.json'), 'utf8')),
+    ep = {};
+  for (const k of used) if (en[k] && typeof en[k] === 'object') ep[k] = en[k];
+  if (Object.keys(ep).length) out.en = ep;
   return 'var I18N = ' + JSON.stringify(out) + ';\n' + fs.readFileSync(path.join(I18N, 'runtime.js'), 'utf8').replace(/\n$/, '');
 }
 
@@ -123,4 +130,4 @@ if (require.main === module) {
   }
   process.exit(stale ? 1 : 0);
 }
-module.exports = { build, PAGES, langs, english, usedIn, plain };
+module.exports = { build, PAGES, langs, english, usedIn, plain, filled };

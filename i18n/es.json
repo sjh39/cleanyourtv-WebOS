@@ -1,22 +1,36 @@
 {
  "_name": "Español",
  "_dir": "ltr",
- "%d channels": "%d canales",
- "%d days ago": "hace %d días",
+ "%d channels": {
+  "one": "%d canal",
+  "other": "%d canales"
+ },
+ "%d days ago": {
+  "one": "hace %d día",
+  "other": "hace %d días"
+ },
  "%d h ago": "hace %d h",
  "%d min ago": "hace %d min",
  "%d of %d": "%d de %d",
  "%d of %d on": "%d de %d activados",
  "%d of %d photos uploaded.": "%d de %d fotos subidas.",
  "%d of 150 MB": "%d de 150 MB",
- "%d photos": "%d fotos",
- "%d photos could not be downloaded": "no se pudieron descargar %d fotos",
- "%d photos from %d albums": "%d fotos de %d álbumes",
+ "%d photos": {
+  "one": "%d foto",
+  "other": "%d fotos"
+ },
+ "%d photos could not be downloaded": {
+  "one": "no se pudo descargar %d foto",
+  "other": "no se pudieron descargar %d fotos"
+ },
+ "%d photos from %d albums": {
+  "one": "%d foto de %d álbumes",
+  "other": "%d fotos de %d álbumes"
+ },
  "%s   code %s": "%s   código %s",
  "%s added to Home": "%s añadido a Inicio",
  "%s is hidden. Customise > Hidden apps shows it again.": "%s está oculta. Personalizar > Apps ocultas la muestra de nuevo.",
  "%s key learned: code %s.": "Botón %s aprendido: código %s.",
- "%s photos": "%s fotos",
  "%s removed from Home": "%s quitado de Inicio",
  "(empty: short plain answers)": "(vacío: respuestas cortas y sencillas)",
  "(one is saved; leave empty to keep it)": "(hay una guardada; déjala vacía para mantenerla)",
@@ -450,8 +464,14 @@
  "Syncing with Immich…": "Sincronizando con Immich…",
  "syncing…": "sincronizando…",
  "Syncing…": "Sincronizando…",
- "syncing… %d new": "sincronizando… %d nuevas",
- "Syncing… %d new": "Sincronizando… %d nuevas",
+ "syncing… %d new": {
+  "one": "sincronizando… %d nueva",
+  "other": "sincronizando… %d nuevas"
+ },
+ "Syncing… %d new": {
+  "one": "Sincronizando… %d nueva",
+  "other": "Sincronizando… %d nuevas"
+ },
  "Take over the Input key": "Tomar el botón Entrada",
  "Tap Copy, then paste it into your message. Addresses and URL paths are masked. This page closes ten minutes after it was opened on the TV.": "Toca Copiar y pégalo en tu mensaje. Las direcciones y rutas de URL están ocultas. Esta página se cierra diez minutos después de abrirse en el televisor.",
  "tap to hide or show one": "toca para ocultar o mostrar una",
