@@ -15,6 +15,7 @@ run(async () => {
   const walk = (o, pre) => {
     for (const k of Object.keys(o)) {
       const key = pre ? pre + '.' + k : k;
+      if (key === 'slots') continue; // a list, checked by themeschema.slots
       if (o[k] && typeof o[k] === 'object') walk(o[k], key);
       else if (!known.has(key) && ['name', 'author', 'description', 'extends'].indexOf(key) < 0) unknownKeys.push(key);
     }
@@ -103,6 +104,59 @@ run(async () => {
   ok(
     plain.vars['--greet-d'] === 'none' && plain.vars['--dock-tile-alpha'] === '1',
     'by default there is no greeting and the dock tiles are opaque'
+  );
+  // slots for cards: checked and clamped, placed like the clock, kept by a theme that extends it, and only in replies of themes with slots
+  const slotted = themeMod.normalize(
+    {
+      slots: [
+        { id: 'greeting', anchor: 'top', align: 'left', x: 102, y: 70, w: 900, h: 26, card: 'greeting', grid: 'keep' },
+        { id: 'side', align: 'right', w: 99999, card: 'Bad Type!' },
+        { id: 'side', align: 'center' },
+        { id: '../x' },
+        { id: 'mid', align: 'center', anchor: 'bottom', x: 300, y: 40 },
+      ],
+    },
+    'slotted'
+  );
+  const rs = themeMod.resolve(slotted).slots;
+  ok(
+    rs.length === 3 &&
+      rs[0].l === '102px' &&
+      rs[0].t === '70px' &&
+      rs[0].w === '900px' &&
+      rs[0].card === 'greeting' &&
+      rs[0].keep === true &&
+      rs[1].r === '96px' &&
+      rs[1].w === '1920px' &&
+      rs[1].card === '' &&
+      rs[1].keep === false &&
+      rs[2].l === '50%' &&
+      rs[2].b === '40px' &&
+      rs[2].tx === 'translateX(-50%)',
+    'theme slots are checked, clamped and placed (a duplicate or bad id is dropped)'
+  );
+  ok(
+    themeMod.resolve(themeMod.normalize({ name: 'kid' }, 'kid2', slotted.v)).slots.length === 3 &&
+      !('slots' in themeMod.resolve(themeMod.normalize({ slots: [] }, 'none2', slotted.v))) &&
+      !('slots' in plain),
+    'a theme that extends one with slots keeps them, "slots": [] removes them, and a theme without slots has no slots key'
+  );
+  const cardsShape = req('cards');
+  const cs = cardsShape.sanitize({
+    greeting: { type: 'greeting', name: 'Salih', x: { deep: { deeper: 1 } } },
+    side: { type: 'ha-entities', entities: ['light.a', { entity: 'sensor.b', name: 'B' }, { nested: { no: 1 } }] },
+    'Bad Id': { type: 'greeting' },
+    row: { type: 'Not Valid' },
+    empty: { type: 'none' },
+  });
+  ok(
+    JSON.stringify(cs) ===
+      JSON.stringify({
+        greeting: { type: 'greeting', name: 'Salih' },
+        side: { type: 'ha-entities', entities: ['light.a', { entity: 'sensor.b', name: 'B' }, {}] },
+        empty: { type: 'none' },
+      }) && cardsShape.sanitize([]) === undefined,
+    'cards from the launcher are checked for shape: slot ids, card types, short option values'
   );
   const tbase = themeMod.normalize({ grid: { cols: 7 }, dock: { count: 6 } }, 'base'),
     tkid = themeMod.normalize({ grid: { cols: 'many' }, bar: { style: 'round' } }, 'kid', tbase.v);

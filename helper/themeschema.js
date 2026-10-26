@@ -248,6 +248,8 @@ function normalize(raw, id, base, wallDir) {
       }
     } catch (_) {}
   } else if (f === '') v['type.fontFile'] = '';
+  // slots for cards: a list in the theme (not in SCHEMA, which holds single values); a theme without "slots" keeps its base's
+  if (raw.slots !== undefined) v.slots = slots(raw.slots);
   return {
     id,
     name: String(raw.name || id).slice(0, 40),
@@ -255,6 +257,35 @@ function normalize(raw, id, base, wallDir) {
     description: String(raw.description || '').slice(0, 160),
     v,
   };
+}
+
+// Slots: where cards (small widgets, helper/cards.js) can go in this theme. "slots" is a list of
+//   {id, anchor: top|bottom, align: left|center|right, x, y, w, h, card, grid: keep|hide}
+// id names the place (greeting, clock-side, side, row are the usual ones, so a card stays when the theme changes); x and y place the
+// slot's box like the clock's (x is not used when centred), w and h are its size; card is the card type it shows until the user picks
+// another; grid: keep leaves it on screen while the app grid is open (default: hidden then). Values are clamped like SCHEMA's.
+const SLOT_ID = /^[a-z][a-z0-9-]{0,19}$/,
+  MAX_SLOTS = 8;
+function slots(list) {
+  if (!Array.isArray(list)) return [];
+  const num = (n, lo, hi, d) => (typeof n === 'number' && isFinite(n) ? Math.round(Math.min(hi, Math.max(lo, n))) : d);
+  const out = [];
+  for (const o of list) {
+    if (out.length >= MAX_SLOTS) break;
+    if (!o || typeof o !== 'object' || !SLOT_ID.test(o.id) || out.some(x => x.id === o.id)) continue;
+    out.push({
+      id: o.id,
+      anchor: TOPBOT.indexOf(o.anchor) >= 0 ? o.anchor : 'top',
+      align: POS.indexOf(o.align) >= 0 ? o.align : 'left',
+      x: num(o.x, 0, 1900, 96),
+      y: num(o.y, 0, 1060, 96),
+      w: num(o.w, 60, 1920, 400),
+      h: num(o.h, 30, 1080, 120),
+      card: typeof o.card === 'string' && /^[a-z][a-z0-9-]{0,30}$/.test(o.card) ? o.card : '',
+      keep: o.grid === 'keep',
+    });
+  }
+  return out;
 }
 
 // What the launcher applies: CSS variables, attributes for the few layouts that need more than a variable, and the numbers its scrolling needs.
@@ -395,6 +426,12 @@ function resolve(t, accent) {
     nightRgb: night.join(','),
     wallpaper: w ? { id: t.id, file: w, dim: v['effects.wallpaperDim'] } : null,
   };
+  // only a theme with slots has this key (the same reason)
+  if (v.slots && v.slots.length)
+    out.slots = v.slots.map(sl => {
+      const o = place(sl.anchor, sl.align, sl.x, sl.y);
+      return { id: sl.id, l: o.l, r: o.r, t: o.t, b: o.b, tx: o.tx, w: px(sl.w), h: px(sl.h), card: sl.card, keep: sl.keep };
+    });
   // only a theme with a typeface has this key, so the replies for the other themes stay as they were
   if (v['type.fontFile']) out.font = { id: v.fontTheme || t.id, file: v['type.fontFile'] };
   return out;
@@ -416,6 +453,7 @@ module.exports = {
   POS,
   PREVIEW_PATH,
   SCHEMA,
+  SLOT_ID,
   TOPBOT,
   check,
   dir,
@@ -432,6 +470,7 @@ module.exports = {
   px,
   resolve,
   rgb,
+  slots,
   sniff,
   toHex,
 };

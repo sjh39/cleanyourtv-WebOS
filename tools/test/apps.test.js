@@ -73,6 +73,16 @@ run(async () => {
   const on = config.get().runDots === true;
   await call(apps, '/api/config', 'POST', { dock: ['a.one'], runDots: 'yes' });
   ok(on && config.get().runDots === undefined, 'the green dot on open apps is off by default and saved only when switched on');
+  await call(apps, '/api/config', 'POST', {
+    dock: ['a.one'],
+    cards: { greeting: { type: 'greeting', name: 'Sam' }, 'x y': { type: 'a' } },
+  });
+  const savedCards = JSON.stringify(config.get().cards);
+  await call(apps, '/api/config', 'POST', { dock: ['a.one'] });
+  ok(
+    savedCards === JSON.stringify({ greeting: { type: 'greeting', name: 'Sam' } }) && config.get().cards === undefined,
+    'the launcher saves its cards (checked) with its other settings, and a save without them removes them'
+  );
   await call(apps, '/api/config', 'POST', { wall: { on: true, secs: 10 } });
   const w10 = config.get().wall;
   await call(apps, '/api/config', 'POST', { wall: { on: true, every: 5 } });

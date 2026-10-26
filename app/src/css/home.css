@@ -585,3 +585,40 @@ body {
 body.wpon {
   background-image: none;
 }
+/* cards: small widgets in the theme's slots (app/src/js/cards.js); placed like the clock, from the slot's edges */
+#cards {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1920px;
+  height: 1080px;
+  z-index: 5;
+  pointer-events: none;
+}
+.card {
+  position: absolute;
+  left: var(--cl);
+  right: var(--cr);
+  top: var(--ct);
+  bottom: var(--cb);
+  transform: var(--ctx);
+  overflow: hidden;
+  transition: opacity calc(0.25s * var(--spd)) linear;
+}
+/* while the app grid is open, only the cards the theme keeps (grid: keep) stay */
+.grid-open .card:not(.keep) {
+  opacity: 0;
+}
+/* the greeting: one line in capitals, like the theme greeting above the clock */
+.card-greeting {
+  display: flex;
+  align-items: flex-end;
+  font-size: calc(24px * var(--fs) * var(--date-s));
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(245, 246, 248, 0.88);
+  line-height: 1.2;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}

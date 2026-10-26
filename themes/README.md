@@ -49,7 +49,7 @@ Folder: [`bloom/`](bloom/)
 
 ### Lock Screen
 
-A phone-style lock screen: a greeting and a big clock top left, and a small, translucent dock low in the corner over a calm blue landscape, so the picture fills the screen. Down moves the dock up and shows all apps below it. Turn Wallpapers on in Customise for your own photos behind it.
+A phone-style lock screen: a greeting and a big clock top left, and a small, translucent dock low in the corner over a calm blue landscape, so the picture fills the screen. Down moves the dock up and shows all apps below it. Turn Wallpapers on in Customise for your own photos behind it. It has slots for cards (Customise > Cards): the greeting is one.
 
 [![Lock Screen](lockscreen/preview.jpg)](lockscreen/preview.jpg)
 

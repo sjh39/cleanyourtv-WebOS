@@ -235,6 +235,7 @@ function tick() {
     var h = d.getHours();
     g.textContent = h < 12 ? t('Good morning') : h < 18 ? t('Good afternoon') : t('Good evening');
   }
+  tickCards();
 }
 setInterval(tick, 15000);
 tick();

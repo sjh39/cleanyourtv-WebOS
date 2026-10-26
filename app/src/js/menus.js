@@ -520,6 +520,8 @@ function customizeMenu() {
       },
       { sep: true },
       { label: t('Theme'), stay: true, fn: themeMenu },
+      /* only where the theme has slots for cards */
+      (TH.slots || []).length ? { label: t('Cards'), stay: true, fn: cardsMenu } : null,
       {
         label: t('Wallpapers'),
         sub: cfg.wall && cfg.wall.on ? t('On') : t('Off'),
@@ -537,7 +539,9 @@ function customizeMenu() {
       },
       /* the hidden gestures, said where people already look instead of over Home (issue: hold OK was undiscoverable) */
       { note: t('Hold OK on an app for its options. Back on Home lists the open apps.') },
-    ];
+    ].filter(function (it) {
+      return it;
+    });
   });
 }
 /* Wallpapers: switched on here and how often the photo changes; the photos are added in the manager (uploads from a phone, Immich) */

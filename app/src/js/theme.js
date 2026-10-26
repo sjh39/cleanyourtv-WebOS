@@ -1,5 +1,5 @@
 /* ---------- theme: the service resolves the chosen theme (manager > Theme) into CSS variables and a few numbers ---------- */
-var TH0 = { cols: 10, tileH: 151, gapY: 26, gt: 350, viewH: 780, dockN: 4, overlay: false, push: null, overlayH: 510, glow: '' },
+var TH0 = { cols: 10, tileH: 151, gapY: 26, gt: 350, viewH: 780, dockN: 4, overlay: false, push: null, overlayH: 510, glow: '', slots: [] },
   TH = TH0,
   themeKeys = [],
   themeAttrs = ['data-bar', 'data-labels', 'data-clock', 'data-grid', 'data-galign'];
@@ -54,6 +54,7 @@ function applyTheme(t) {
     push: t.push || null,
     overlayH: t.overlayH || 510,
     glow: t.glowRgb || '',
+    slots: t.slots || [],
   };
 }
 

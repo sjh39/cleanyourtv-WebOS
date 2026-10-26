@@ -37,7 +37,7 @@ folder of the GitHub repository (the `main` branch):
 | Bloom | A flower wallpaper with the dock in a glass panel at the bottom. Down moves the dock up and the apps appear below it, centred. |
 | Horizon | A row of seven square apps along the bottom of a dusk landscape, the clock on the left and the buttons on the right at the top. Down moves the row up and shows all apps below it. |
 | Pixel | Pixel art: a blocky typeface, square tiles and buttons, a yellow focus box and a sunset over a lake drawn in big pixels. Moves without animation, like an old console. |
-| Lock Screen | A phone-style lock screen: a greeting and a big clock top left, and a small, translucent dock low in the corner over a calm blue landscape, so the picture fills the screen. Down moves the dock up and shows all apps below it. Turn Wallpapers on for your own photos. |
+| Lock Screen | A phone-style lock screen: a greeting and a big clock top left, and a small, translucent dock low in the corner over a calm blue landscape, so the picture fills the screen. Down moves the dock up and shows all apps below it. Turn Wallpapers on for your own photos. It has slots for cards (Customise > Cards): the greeting is one. |
 
 ![Classic, Compact, Large print and Midnight](screenshots/themes-1.jpg)
 
@@ -226,6 +226,31 @@ when the focus moves down into it (Back or Up closes it); a dock at the top leav
 | `effects.wallpaper` | a file name | none | A file name in `themes/wallpapers/`: `.jpg`, `.png` or `.webp`, at most 1.5 MB; drawn at 1920 x 1080. |
 | `effects.wallpaperDim` | 0 to 0.9 | `0.4` | How far the wallpaper is darkened with the background colour. |
 <!-- schema:end -->
+
+### Slots for cards
+
+A theme can mark places where **cards** go: small widgets the user chooses in **Customise** > **Cards** (for now the greeting;
+weather and Home Assistant cards follow). A theme without slots shows no cards and has no Cards row in Customise. Slots are a
+list in `theme.json`:
+
+```json
+"slots": [
+  { "id": "greeting", "anchor": "top", "align": "left", "x": 102, "y": 70, "w": 900, "h": 26, "card": "greeting", "grid": "keep" },
+  { "id": "side", "anchor": "top", "align": "right", "x": 96, "y": 170, "w": 520, "h": 520 }
+]
+```
+
+| Key | Values | What it does |
+|---|---|---|
+| `id` | lower-case letters, digits and `-` | The name of the place. Use `greeting` (above the clock), `clock-side` (beside the clock), `side` (a column on the right) or `row` (above the dock) where they fit: the card a user chose stays when they switch to another theme with the same slot, and these four have a name in every language. |
+| `anchor`, `align`, `x`, `y` | as for the clock | Where the slot's box is, counted from that side of the 1920 x 1080 screen; `x` is not used when centred. |
+| `w`, `h` | px | The size of the box. |
+| `card` | a card type, for example `greeting` | What the slot shows until the user chooses something else. Without it the slot starts empty. |
+| `grid` | `keep` or `hide` | `keep` leaves the card on screen while the app grid is open; by default it fades out then. |
+
+At most eight slots; values out of range are clamped and a slot with a bad or repeated `id` is left out. A theme that extends another
+keeps its slots unless it has its own `"slots"` (an empty list removes them). In a right-to-left language the slots are mirrored
+like the rest of the screen.
 
 A theme file holds values only. The service checks every value against the table and clamps numbers to their range; there is no CSS
 and no script, and a wallpaper is accepted only as a plain file name from the theme's folder that is also a real image of the

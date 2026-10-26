@@ -20,10 +20,10 @@
   "align": "left",
   "anchor": "top",
   "x": 96,
-  "y": 70,
+  "y": 104,
   "scale": 1.6,
   "dateScale": 0.95,
-  "greeting": true
+  "greeting": false
  },
  "shelf": {
   "show": true,
@@ -75,5 +75,46 @@
   "glow": 0,
   "wallpaper": "lockscreen.jpg",
   "wallpaperDim": 0.15
- }
+ },
+ "slots": [
+  {
+   "id": "greeting",
+   "anchor": "top",
+   "align": "left",
+   "x": 102,
+   "y": 64,
+   "w": 900,
+   "h": 26,
+   "card": "greeting",
+   "grid": "keep"
+  },
+  {
+   "id": "clock-side",
+   "anchor": "top",
+   "align": "left",
+   "x": 560,
+   "y": 104,
+   "w": 420,
+   "h": 120,
+   "grid": "keep"
+  },
+  {
+   "id": "side",
+   "anchor": "top",
+   "align": "right",
+   "x": 96,
+   "y": 170,
+   "w": 520,
+   "h": 520
+  },
+  {
+   "id": "row",
+   "anchor": "bottom",
+   "align": "right",
+   "x": 96,
+   "y": 200,
+   "w": 900,
+   "h": 150
+  }
+ ]
 }
