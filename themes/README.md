@@ -47,6 +47,14 @@ A flower wallpaper with the dock in a glass panel at the bottom. Down moves the 
 
 Folder: [`bloom/`](bloom/)
 
+### Lock Screen
+
+A phone-style lock screen: a greeting and a big clock top left, and a small, translucent dock low in the corner over a calm blue landscape, so the picture fills the screen. Down moves the dock up and shows all apps below it. Turn Wallpapers on in Customise for your own photos behind it.
+
+[![Lock Screen](lockscreen/preview.jpg)](lockscreen/preview.jpg)
+
+Folder: [`lockscreen/`](lockscreen/)
+
 ### Horizon
 
 A row of seven square apps along the bottom of a dusk landscape, the clock on the left and the buttons on the right at the top. Down moves the row up and shows all apps below it.

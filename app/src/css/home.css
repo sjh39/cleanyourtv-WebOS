@@ -32,6 +32,7 @@
   --date-s: 1;
   --clock-d: flex;
   --date-d: block;
+  --greet-d: none;
   --bar-l: auto;
   --bar-r: 96px;
   --bar-t: 54px;
@@ -54,6 +55,7 @@
   --dock-gap: 32px;
   --dock-rad: 36px;
   --dock-panel: 0;
+  --dock-tile-alpha: 1;
   --dock-pad: 0px;
   --dock-lift: -10px;
   --dock-fs: 1.05;
@@ -129,6 +131,15 @@ body {
   align-items: center;
   height: 76px;
 }
+#greet {
+  display: none;
+  font-size: calc(24px * var(--fs) * var(--date-s));
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(245, 246, 248, 0.88);
+  line-height: 1;
+}
 #time {
   font-size: calc(56px * var(--fs) * var(--clock-s));
   font-weight: 600;
@@ -147,6 +158,10 @@ body {
   flex-direction: column;
   align-items: var(--clock-ai);
   height: auto;
+}
+[data-clock="stack"] #greet {
+  display: var(--greet-d);
+  margin: 0 0 12px 6px;
 }
 [data-clock="stack"] #date {
   margin: 8px 0 0 6px;
@@ -420,6 +435,8 @@ body {
   width: var(--dock-w);
   height: var(--dock-h);
   border-radius: var(--dock-rad);
+  /* below 1 the wallpaper shows through the tile (dock.tileAlpha); a tile that fills with app art stays opaque */
+  background: rgba(var(--b), var(--dock-tile-alpha));
 }
 #dock .tile img {
   height: 56%;
