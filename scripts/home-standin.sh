@@ -15,24 +15,45 @@ log() { echo "$(up) home-standin[$$]: $*" >> $LOG 2>/dev/null; }
 for p in $(pgrep -f "^/bin/sh $0"); do [ "$p" != $$ ] && kill "$p" 2>/dev/null; done
 pkill -f "[l]una-send -i -a com.webos.app.home" 2>/dev/null
 
+# The parameters of a Home launch ({live, guide} from guidekey.sh, {inputs} from inputkey.sh) are passed on to the launcher (issue 26).
+# The key scripts leave them in $PARAMS with the time ("<uptime> <json>"), so they arrive even if what the app manager sends is read
+# wrong; otherwise they are taken from the app manager's relaunch event or this script's start argument ($1).
+PARAMS=/tmp/cleanyourtv-home-params
+params() {  # $1: start or relaunch, $2: the start argument or the relaunch event
+  if [ -f $PARAMS ]; then
+    read -r t p < $PARAMS
+    rm -f $PARAMS
+    read -r now _ < /proc/uptime
+    [ -n "$p" ] && [ $((${now%.*} - ${t%.*})) -le 10 ] && { echo "$p"; return; }
+  fi
+  p=$(echo "$2" | sed -n 's/.*"parameters": *\({[^{}]*}\).*/\1/p')
+  [ -z "$p" ] && [ "$1" = start ] && case "$2" in '{'*'}') p=$2 ;; esac
+  [ -n "$p" ] || p='{}'
+  echo "$p"
+}
+
 show() {
+  p=$(params "$1" "$2")
+  k='"parameters":{}'
   for f in $L/wam-launch.json $L/wam-launch.json.str; do
     [ -f $f ] || continue
-    r=$(luna-send -n 1 -w 8000 luna://com.palm.webappmanager/launchApp "$(cat $f)" </dev/null 2>&1 | tr -d '\n')
-    if echo "$r" | grep -q '"returnValue": *true'; then log "launcher shown ($1)"; return 0; fi
+    req=$(cat $f)
+    case "$req" in *"$k"*) req="${req%%"$k"*}\"parameters\":$p${req#*"$k"}" ;; esac
+    r=$(luna-send -n 1 -w 8000 luna://com.palm.webappmanager/launchApp "$req" </dev/null 2>&1 | tr -d '\n')
+    if echo "$r" | grep -q '"returnValue": *true'; then log "launcher shown ($1) with $(echo "$p" | cut -c1-120)"; return 0; fi
     log "webapp-mgr refused ${f##*/}: $(echo "$r" | cut -c1-200)"
   done
   return 1
 }
 
 log "started as uid $(id -u), arguments: $(echo "$*" | cut -c1-200)"
-show start
+show start "$1"
 
 # the registration: SAM's events arrive one JSON line each
 for m in registerApp registerNativeApp; do
   luna-send -i -a com.webos.app.home "luna://com.webos.applicationManager/$m" '{}' </dev/null 2>&1 | while read -r line; do
     case "$line" in
-      *'"event"'*relaunch*) show relaunch ;;
+      *'"event"'*relaunch*) show relaunch "$line" ;;
       *'"event"'*close*) log "closed by the app manager"; kill $$ 2>/dev/null; exit 0 ;;
       *'"event"'*registered*) log "registered with the app manager ($m)" ;;
       *'"returnValue"'*false*) log "$m refused: $(echo "$line" | cut -c1-200)" ;;

@@ -3423,6 +3423,14 @@ document.addEventListener('keyup', function (e) {
   downEnter = false;
   held = false;
 });
+/* Some TVs (an OLED48C16LA, webOS 6, issue 26) hide the Home window for a moment right after a launch with {live:true}, then show
+   it again with a relaunch of plain {keepAlive:true}. For 5 s after such a launch, neither closes Live TV. A Home key press is also a
+   relaunch with {keepAlive:true} (webOS 25), so that relaunch is only ignored after such a hide. */
+var liveGuard = 0,
+  liveBlip = false;
+function guarded() {
+  return LIVE.on && Date.now() < liveGuard;
+}
 /* launching Home with {inputs:true} opens the Inputs list */
 function wantInputs() {
   var p = {};
@@ -3434,6 +3442,8 @@ function wantInputs() {
     inputsMenu();
   } else if (p && p.live && liveOn()) {
     closeMenus();
+    liveGuard = Date.now() + 5000;
+    liveBlip = false;
     LIVE.enter(!!p.guide);
   }
 }
@@ -3447,16 +3457,30 @@ document.addEventListener('webOSRelaunch', function () {
     LIVE.toggleGuide();
     return;
   } /* the Guide button while Live TV is open */
+  if (guarded() && liveBlip && p && p.keepAlive && !p.inputs && !p.live) {
+    liveBlip = false;
+    LIVE.resume();
+    return;
+  }
   if (LIVE.on) LIVE.exit();
   load();
   wantInputs();
 });
 document.addEventListener('visibilitychange', function () {
   if (document.hidden) {
+    if (guarded()) {
+      liveBlip = true;
+      logLine('launcher hidden right after a Live TV launch: Live TV stays on');
+      return;
+    }
     WALL.hidden();
     if (LIVE.on) LIVE.exit();
     closeRunningMenu();
-  } else {
+  } else if (guarded()) LIVE.resume();
+  else {
+    /* hidden in those 5 s and only shown again later: the TV really went elsewhere */
+    if (liveBlip && LIVE.on) LIVE.exit();
+    liveBlip = false;
     load();
     WALL.shown();
   }
@@ -4477,6 +4501,15 @@ var LIVE = (function () {
         openList();
       }
     } else boot();
+  };
+  /* playback the TV paused while it hid the window for a moment (see liveGuard in input.js) */
+  o.resume = function () {
+    if (o.on && video && video.paused) {
+      try {
+        var r = video.play();
+        if (r && r.catch) r.catch(function () {});
+      } catch (e) {}
+    }
   };
   o.toggleGuide = function () {
     if (!loaded) return;

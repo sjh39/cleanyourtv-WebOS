@@ -8,7 +8,10 @@ read UP _ < /proc/uptime   # when the key was pressed, for tools/perf-tv.sh (log
 mark() { (curl -s -m 2 "http://127.0.0.1:8765/api/log?m=perf%20key%20$1%20$UP" </dev/null >/dev/null 2>&1 &); }
 M=$(cat /media/developer/cleanyourtv/picker-mode 2>/dev/null)
 HOME_INPUTS='{"id":"com.webos.app.home","params":{"inputs":true}}'
+# where home-standin.sh stands in for LG's native Home, it takes the parameters from this file (issue 26)
+standin() { [ -f /tmp/cleanyourtv-home-standin ] && echo "$UP {\"inputs\":true}" > /tmp/cleanyourtv-home-params; }
 if [ "$M" = launcher ]; then
+  standin
   luna-send -n 1 -w 3000 luna://com.webos.applicationManager/launch "$HOME_INPUTS" </dev/null >/dev/null 2>&1
   mark launcher
   exit 0
@@ -16,4 +19,5 @@ fi
 if [ "$M" = ondemand ]; then P='{"id":"com.cleanyourtv.picker","params":{"ondemand":true}}'; else P='{"id":"com.cleanyourtv.picker"}'; fi
 r=$(luna-send -n 1 -w 3000 luna://com.webos.applicationManager/launch "$P" </dev/null 2>/dev/null)
 case "$r" in *'"returnValue":true'*) mark "$M"; exit 0 ;; esac
+standin
 luna-send -n 1 -w 3000 luna://com.webos.applicationManager/launch "$HOME_INPUTS" </dev/null >/dev/null 2>&1

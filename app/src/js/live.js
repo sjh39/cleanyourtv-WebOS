@@ -1003,6 +1003,15 @@ var LIVE = (function () {
       }
     } else boot();
   };
+  /* playback the TV paused while it hid the window for a moment (see liveGuard in input.js) */
+  o.resume = function () {
+    if (o.on && video && video.paused) {
+      try {
+        var r = video.play();
+        if (r && r.catch) r.catch(function () {});
+      } catch (e) {}
+    }
+  };
   o.toggleGuide = function () {
     if (!loaded) return;
     if (L.open) closeList();
