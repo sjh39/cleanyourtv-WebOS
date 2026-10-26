@@ -3,8 +3,11 @@ var LOC_TV = (window.webOSSystem && webOSSystem.locale) || navigator.language ||
   LOC = LOC_TV;
 /* the Language setting from the service's settings: '' follows the TV */
 function useLang(code) {
+  var loc = code ? code : LOC_TV;
   setLang(code || '');
-  LOC = code ? code : LOC_TV;
+  if (loc === LOC) return;
+  LOC = loc;
+  if (window.tick) tick(); /* the date in the new language at once, not at the next quarter minute */
 }
 /* a button's label: built-in buttons are translated, buttons you added keep the app's own name */
 function barLabel(o) {
