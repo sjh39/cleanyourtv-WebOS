@@ -1,4 +1,4 @@
-// Updates from GitHub releases: which release is on offer (the latest stable one, or the test build of a branch), downloading with a
+// Updates from GitHub releases: which release is on offer (the latest stable one, or the dev build), downloading with a
 // SHA-256 check, installing the launcher with a rollback when it does not start, and installing the service package. Used by the
 // manager (manager.js) and, without the service, by selfupdate.js.
 const fs = require('fs');
@@ -8,7 +8,10 @@ const P = require('./paths'),
   { cmp } = require('./version');
 
 const DEFAULT_REPO = 'lasharor/cleanyourtv-WebOS';
-const TEST_TAG = /^test-[a-z0-9-]{1,60}$/;
+// the dev builds: one pre-release named dev, rebuilt on every push to the dev branch. Before 1.6.9 every branch had its own
+// pre-release test-<branch>; a TV still following one of those follows dev.
+const DEV_TAG = 'dev';
+const OLD_TEST_TAG = /^test-[a-z0-9-]{1,60}$/;
 const apiBase = () => process.env.CYTV_API || 'https://api.github.com';
 
 const readJson = (f, d) => {
@@ -25,10 +28,10 @@ const readText = f => {
     return '';
   }
 };
-// the update channel: '' for the stable releases, or a test build tag (test-<branch>). The file can be set by install.sh too.
+// the update channel: '' for the stable releases, or 'dev'. The file can be set by install.sh too.
 const channel = () => {
   const t = readText(P.CHANNEL);
-  return TEST_TAG.test(t) ? t : '';
+  return t === DEV_TAG || OLD_TEST_TAG.test(t) ? DEV_TAG : '';
 };
 // the repository: D/source can name another one ("owner/repo [branch]"), for testing
 const repo = () => {
@@ -49,7 +52,7 @@ const GITHUB = {
 };
 const FILE = { headers: { 'User-Agent': 'cleanyourtv-manager', Accept: 'application/octet-stream, */*' }, allowHttp, redirects: 6 };
 
-// the commit a build was made from (test builds only; a stable install has no BUILD file)
+// the commit a build was made from (dev builds only; a stable install has no BUILD file)
 const buildOf = f => {
   const b = readText(f);
   return /^[0-9a-f]{7,40}$/.test(b) ? b : '';
@@ -71,7 +74,7 @@ function parseRelease(j) {
     if (m && assets[n + '.sha256']) service = m[1];
   }
   return {
-    version: String(j.tag_name || '').replace(/^(v|test-)/, ''),
+    version: j.tag_name === DEV_TAG ? service || '' : String(j.tag_name || '').replace(/^(v|test-)/, ''),
     frontend,
     service,
     assets,
@@ -100,9 +103,9 @@ async function download(release, name, dest) {
     throw new Error('checksum mismatch');
   }
 }
-// is the offered file different from what is installed? A newer version always is; a test build also when it is another commit of the
-// same version; and a test build installed with the channel back on stable offers the stable release, even an older one or one of the same
-// version (a test build carries the version of the release it leads to, but not its files).
+// is the offered file different from what is installed? A newer version always is; a dev build also when it is another commit of the
+// same version; and a dev build installed with the channel back on stable offers the stable release, even an older one or one of the same
+// version (a dev build carries the version of the release it leads to, but not its files).
 function differs(offered, installed, offeredBuild, installedBuild) {
   if (!offered) return false;
   if (cmp(offered, installed) > 0) return true;
@@ -298,7 +301,7 @@ function create(ctx) {
         const ai = await luna('luna://com.webos.applicationManager/getAppInfo', { id: 'com.cleanyourtv.manager' });
         if (!(ai.appInfo && ai.appInfo.version === ver)) continue;
         // the same version number can be a different build: wait until the package's BUILD file is the offered one (or gone, for
-        // stable after a test build); a package that does not touch it is accepted after 30 s
+        // stable after a dev build); a package that does not touch it is accepted after 30 s
         if (!seen) seen = Date.now();
         const now = buildOf(P.SERVICE_DIR + '/BUILD');
         if (release.build ? now === release.build : !before || !now) ok = true;
@@ -315,36 +318,24 @@ function create(ctx) {
     }
   }
 
-  // the test builds on offer: one pre-release per branch
+  // the dev build on offer (the manager's Update channel list): the pre-release named dev, or none while it is being rebuilt
   async function tests() {
     try {
-      const all = JSON.parse((await fetch.read(baseRepo() + '/releases?per_page=40', GITHUB)).body.toString());
-      const builds = all
-        .filter(r => r.prerelease && TEST_TAG.test(r.tag_name || ''))
-        .slice(0, 20)
-        .map(r => {
-          let service = null,
-            frontend = null;
-          for (const a of r.assets || []) {
-            let m = /^com\.cleanyourtv\.manager_(\d+\.\d+\.\d+)_all\.ipk$/.exec(a.name);
-            if (m) service = m[1];
-            m = /^frontend-(\d+\.\d+\.\d+)\.tgz$/.exec(a.name);
-            if (m) frontend = m[1];
-          }
-          const branch = String(r.name || r.tag_name)
-            .replace(/^Test build:\s*/, '')
-            .slice(0, 60);
-          return { tag: r.tag_name, branch, build: buildInBody(r.body), published: r.published_at, service, frontend };
-        });
+      const r = JSON.parse((await fetch.read(baseRepo() + '/releases/tags/' + DEV_TAG, GITHUB)).body.toString());
+      const p = parseRelease(r);
+      const builds = r.prerelease
+        ? [{ tag: DEV_TAG, branch: DEV_TAG, build: p.build, published: r.published_at, service: p.service, frontend: p.frontend }]
+        : [];
       return { channel: channel(), builds };
     } catch (e) {
-      return { channel: channel(), builds: [], error: String(e.message || e) };
+      return { channel: channel(), builds: [], error: e.message === 'HTTP 404' ? '' : String(e.message || e) };
     }
   }
-  // { tag: "test-<branch>" } or { tag: "" } for the stable releases; returns an error text or ''
+  // { tag: "dev" } or { tag: "" } for the stable releases (an old test-<branch> tag means dev); returns an error text or ''
   async function setChannel(tag) {
-    const t = String(tag || '');
-    if (t && !TEST_TAG.test(t)) return 'not a test build';
+    let t = String(tag || '');
+    if (OLD_TEST_TAG.test(t)) t = DEV_TAG;
+    if (t && t !== DEV_TAG) return 'unknown channel';
     if (busy()) return 'an update is running';
     try {
       if (t) fs.writeFileSync(P.CHANNEL, t + '\n');
@@ -378,4 +369,4 @@ function create(ctx) {
   };
 }
 
-module.exports = { create, latest, download, parseRelease, differs, channel, repo, releaseUrl, TEST_TAG };
+module.exports = { create, latest, download, parseRelease, differs, channel, repo, releaseUrl, DEV_TAG };

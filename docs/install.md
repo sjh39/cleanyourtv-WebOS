@@ -84,9 +84,9 @@ For an unlisted firmware the setup continues when LG's Home app is the flutter o
 **Set up anyway**. On a TV whose Home is LG's native program (webOS 5 to 23) the launcher becomes Home through a stand-in, see
 [what differs between webOS versions](tested-tvs.md#what-differs-between-webos-versions). To add a firmware to the list, open an issue with the output of **Share log** ([Troubleshooting](troubleshooting.md)).
 
-## Installing a test build
+## Installing a dev build
 
-To try a change that is not released yet, install from a branch: see [Updating and uninstalling](managing.md#test-builds).
+To try a change that is not released yet, install the dev build: see [Updating and uninstalling](managing.md#dev-builds).
 
 ## Troubleshooting
 

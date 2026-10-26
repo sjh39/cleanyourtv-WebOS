@@ -519,12 +519,12 @@
   "body": {
    "builds": [
     {
-     "branch": "test-branch-a",
+     "branch": "dev",
      "build": "abcdef1",
      "frontend": null,
      "published": "2026-01-02T00:00:00Z",
      "service": null,
-     "tag": "test-branch-a"
+     "tag": "dev"
     }
    ],
    "channel": ""

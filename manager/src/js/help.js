@@ -6,7 +6,7 @@ var INFO = {
     'The background service behind the launcher: Live TV, picture notifications, the Input key, these updates. A failed update restores the previous files.',
   'Check for updates': 'Looks for a newer release on GitHub. Nothing is installed until you choose an update.',
   'Update channel':
-    'Stable releases are what most people want. A test build is a change someone asks you to try, built from a branch of the repository; it can be less finished. Choose a test build here, then use the Launcher and Service rows to install it. Going back to Stable offers the latest release again.',
+    'Stable releases are what most people want: at most one a day, made from the dev builds. Dev builds come with every change and can be less finished; choose Dev here, then use the Launcher and Service rows to install it. Going back to Stable offers the latest release again.',
   'Go back to launcher': 'Swaps the previous launcher version back in. The newer one stays available as an update.',
   'CleanYourTV as Home':
     'On: the Home button opens this launcher. Off: LG\u2019s own Home. Switching restarts the TV (about a minute); the service keeps running either way.',

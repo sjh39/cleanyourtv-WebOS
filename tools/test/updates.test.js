@@ -1,4 +1,4 @@
-// Updates (updates.js through the manager's API): the stable release or a test build, against a stand-in for the GitHub API.
+// Updates (updates.js through the manager's API): the stable release or the dev build, against a stand-in for the GitHub API.
 const fs = require('fs'),
   path = require('path');
 const { ok, call, serve, req, memoryConfig, run } = require('./lib');
@@ -12,7 +12,7 @@ run(async () => {
 
   const rel = (tag, ver, fe, body, pre) => ({
     tag_name: tag,
-    name: pre ? 'Test build: ' + tag.replace(/^test-/, '') : tag,
+    name: pre ? 'Dev build' : tag,
     prerelease: !!pre,
     body,
     published_at: '2026-10-23T10:00:00Z',
@@ -30,14 +30,7 @@ run(async () => {
       r.end(JSON.stringify(o || {}));
     };
     if (q.url === '/repos/o/r/releases/latest') return send(rel('v1.5.3', '1.5.3', '1.4.5', 'stable'));
-    if (q.url === '/repos/o/r/releases/tags/test-foo-bar')
-      return send(rel('test-foo-bar', '1.5.4', '1.4.6', 'build: abc1234\nbranch: foo/bar', true));
-    if (q.url === '/repos/o/r/releases?per_page=40')
-      return send([
-        rel('test-foo-bar', '1.5.4', '1.4.6', 'build: abc1234\nbranch: foo/bar', true),
-        rel('v1.5.3', '1.5.3', '1.4.5', 'stable'),
-        rel('test-main', '9.9.9', '9.9.9', 'x', false),
-      ]);
+    if (q.url === '/repos/o/r/releases/tags/dev') return send(rel('dev', '1.5.4', '1.4.6', 'build: abc1234\nbranch: dev', true));
     send(null);
   });
   process.env.CYTV_API = api.url;
@@ -64,19 +57,19 @@ run(async () => {
   ok(r.j.service.updateTo === null, 'stable: nothing to offer at the same version');
   r = await ask('tests', 'GET');
   ok(
-    r.j.builds.length === 1 &&
-      r.j.builds[0].tag === 'test-foo-bar' &&
-      r.j.builds[0].build === 'abc1234' &&
-      r.j.builds[0].service === '1.5.4',
-    'the list holds pre-releases named test-* only'
+    r.j.builds.length === 1 && r.j.builds[0].tag === 'dev' && r.j.builds[0].build === 'abc1234' && r.j.builds[0].service === '1.5.4',
+    'the list holds the dev build'
   );
   r = await ask('channel', 'POST', { tag: 'test-../x' });
   ok(r.code === 400, 'a bad channel name is refused');
-  r = await ask('channel', 'POST', { tag: 'test-foo-bar' });
+  r = await ask('channel', 'POST', { tag: 'dev' });
   ok(
-    r.j.channel === 'test-foo-bar' && r.j.service.updateTo === '1.5.4' && r.j.release.test === true,
-    'a test channel offers the test build'
+    r.j.channel === 'dev' && r.j.service.updateTo === '1.5.4' && r.j.release.test === true && r.j.release.version === '1.5.4',
+    'the dev channel offers the dev build'
   );
+  fs.writeFileSync(path.join(D, 'channel'), 'test-foo-bar\n');
+  r = await ask('check', 'POST');
+  ok(r.j.channel === 'dev' && r.j.service.updateTo === '1.5.4', 'a TV on an old test-<branch> channel follows the dev build');
   start('1.5.4');
   fs.writeFileSync(bf, 'abc1234\n');
   r = await ask('check', 'POST');
@@ -87,18 +80,18 @@ run(async () => {
   r = await ask('channel', 'POST', { tag: '' });
   ok(
     r.j.channel === '' && r.j.service.updateTo === '1.5.3',
-    'back on stable after a test build offers the stable release, even an older one'
+    'back on stable after a dev build offers the stable release, even an older one'
   );
   start('1.5.3');
   r = await ask('check', 'POST');
   ok(
     r.j.channel === '' && r.j.service.updateTo === '1.5.3',
-    'back on stable after a test build of the same version as the release offers the release (its files differ)'
+    'back on stable after a dev build of the same version as the release offers the release (its files differ)'
   );
   fs.unlinkSync(bf);
   start('1.5.3');
   r = await ask('check', 'POST');
-  ok(r.j.service.updateTo === null, 'stable without a test build installed: no offer at the same version');
+  ok(r.j.service.updateTo === null, 'stable without a dev build installed: no offer at the same version');
   api.server.close();
 
   // a connection that drops after the headers ends the update check with an error, never a hang (issue 5)

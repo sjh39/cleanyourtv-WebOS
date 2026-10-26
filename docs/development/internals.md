@@ -68,7 +68,7 @@ Nothing is written under `/usr`: the mount disappears at reboot. `DISABLE` in `/
 - **Service.** The manager downloads the package, installs it with the system's app installer and runs `bootstrap.sh update`,
   which keeps the running files in `backup/service-prev.tgz`, copies the new ones, restarts the service and waits for it to answer
   with the new version. If it does not, the previous files are restored.
-- **Test builds.** Same flows, from a pre-release; the commit in a `BUILD` file is how two builds with one version number are told apart.
+- **Dev builds.** Same flows, from the pre-release `dev`; the commit in a `BUILD` file is how two builds with one version number are told apart.
 
 ## Older webOS versions
 

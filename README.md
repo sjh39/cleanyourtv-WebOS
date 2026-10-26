@@ -80,7 +80,7 @@ and troubleshooting.
 
 7. **[Setting up, updating and removing it from the TV](https://lasharor.github.io/cleanyourtv-WebOS/manager/).** The manager app
    checks every download against a SHA-256 file, rolls back a launcher or service that does not start, and can follow a
-   [test build](https://lasharor.github.io/cleanyourtv-WebOS/managing/#test-builds) of a branch when you are asked to try a change.
+   [dev build](https://lasharor.github.io/cleanyourtv-WebOS/managing/#dev-builds) to get changes before the daily release.
 
 ---
 
@@ -115,7 +115,7 @@ so a new theme needs a pull request and no release ([how](https://lasharor.githu
 ## Documentation
 
 * [Installing](https://lasharor.github.io/cleanyourtv-WebOS/install/) and [tested TVs](https://lasharor.github.io/cleanyourtv-WebOS/tested-tvs/)
-* [Updating and uninstalling](https://lasharor.github.io/cleanyourtv-WebOS/managing/), including test builds
+* [Updating and uninstalling](https://lasharor.github.io/cleanyourtv-WebOS/managing/), including dev builds
 * Using it: [the launcher](https://lasharor.github.io/cleanyourtv-WebOS/launcher/), [Live TV](https://lasharor.github.io/cleanyourtv-WebOS/live-tv/),
   [the Input key](https://lasharor.github.io/cleanyourtv-WebOS/input-key/), [picture notifications](https://lasharor.github.io/cleanyourtv-WebOS/notifications/),
   [voice](https://lasharor.github.io/cleanyourtv-WebOS/voice/), [debloat](https://lasharor.github.io/cleanyourtv-WebOS/debloat/) and
@@ -136,7 +136,7 @@ The service runs as root on the TV and listens on `127.0.0.1:8765` only. A few s
 request (Live TV pairing, share log, voice setup) and the notification endpoint is off until you switch it on. Everything it
 installs comes from this repository's GitHub releases and carries a SHA-256 file, which detects corruption but **not a compromised
 repository**: download only from this repository's release page. [Security](https://lasharor.github.io/cleanyourtv-WebOS/security/)
-covers the ports, the token for notifications, voice and test builds. To report a vulnerability, see [SECURITY.md](SECURITY.md).
+covers the ports, the token for notifications, voice and dev builds. To report a vulnerability, see [SECURITY.md](SECURITY.md).
 
 ---
 
@@ -148,7 +148,7 @@ Troubleshooting and fixing with an AI assistant (Claude, ChatGPT, a local model)
 
 Reports from other TVs are the most useful contribution: open an [issue](https://github.com/lasharor/cleanyourtv-WebOS/issues)
 with the output of **Share log** in the manager app. For code, see [Contributing](https://lasharor.github.io/cleanyourtv-WebOS/development/):
-the service runs on Node.js 8 (webOS 5), `sh tools/check.sh` runs every check, and every branch push publishes a test build.
+the service runs on Node.js 8 (webOS 5), `sh tools/check.sh` runs every check, every push to `dev` publishes a dev build, and a release goes out daily from `dev`.
 
 ---
 

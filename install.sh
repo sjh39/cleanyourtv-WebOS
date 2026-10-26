@@ -6,8 +6,8 @@
 #   ssh root@<tv-ip> 'curl -fsSL https://raw.githubusercontent.com/lasharor/cleanyourtv-WebOS/main/install.sh | sh'
 #
 # Environment: CYTV_REPO=owner/name (default lasharor/cleanyourtv-WebOS)  CYTV_IPK=/path/to/package.ipk (use a local package)
-#   CYTV_BRANCH=<branch>  install the test build of that branch (a pre-release test-<branch>) and keep following it; the manager app
-#   can switch back to the stable releases (Update channel)
+#   CYTV_CHANNEL=dev  install the dev build (the pre-release dev, rebuilt on every change) and keep following it; the manager app
+#   can switch back to the stable releases (Update channel). CYTV_BRANCH=<anything>, from before the dev builds, means the same.
 
 main() {
   REPO="${CYTV_REPO:-lasharor/cleanyourtv-WebOS}"
@@ -30,15 +30,15 @@ main() {
     IPK="$CYTV_IPK"
   else
     API="https://api.github.com/repos/$REPO/releases/latest"
-    if [ -n "$CYTV_BRANCH" ]; then
-      SLUG=$(printf '%s' "$CYTV_BRANCH" | tr 'A-Z' 'a-z' | sed 's/[^a-z0-9]/-/g; s/--*/-/g; s/^-//; s/-$//' | cut -c1-60)
-      [ -n "$SLUG" ] || die "CYTV_BRANCH is not a usable branch name"
-      API="https://api.github.com/repos/$REPO/releases/tags/test-$SLUG"
-      say "looking for the test build of the branch $CYTV_BRANCH in $REPO"
+    [ -n "$CYTV_BRANCH" ] && [ -z "$CYTV_CHANNEL" ] && { say "CYTV_BRANCH: there is one dev build for all changes now; installing that"; CYTV_CHANNEL=dev; }
+    case "$CYTV_CHANNEL" in ""|stable) CYTV_CHANNEL= ;; dev) ;; *) die "CYTV_CHANNEL must be dev or stable" ;; esac
+    if [ -n "$CYTV_CHANNEL" ]; then
+      API="https://api.github.com/repos/$REPO/releases/tags/dev"
+      say "looking for the dev build of $REPO"
     else
       say "looking for the latest release of $REPO"
     fi
-    curl -fsSL -H 'User-Agent: cleanyourtv-installer' "$API" > $T/release.json || die "could not read the release list (is there a release yet? for a branch: has its build finished?)"
+    curl -fsSL -H 'User-Agent: cleanyourtv-installer' "$API" > $T/release.json || die "could not read the release list (is there a release yet? for dev: has its build finished?)"
     node -e 'var j=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")),a={};(j.assets||[]).forEach(function(x){a[x.name]=x.browser_download_url});var k=Object.keys(a).filter(function(n){return /^com\.cleanyourtv\.manager_.*_all\.ipk$/.test(n)&&a[n+".sha256"]})[0];if(!k)process.exit(1);console.log(a[k]);console.log(a[k+".sha256"])' $T/release.json > $T/assets.txt || die "the release has no package (com.cleanyourtv.manager_<version>_all.ipk with a .sha256 file)"
     IPKURL=$(sed -n 1p $T/assets.txt); SHAURL=$(sed -n 2p $T/assets.txt)
     say "downloading $(basename "$IPKURL")"
@@ -63,7 +63,7 @@ main() {
   done
   rm -f /tmp/cytv-manager.ipk
   [ $ok = 1 ] || die "the package did not install (see Troubleshooting in the documentation: https://lasharor.github.io/cleanyourtv-WebOS/troubleshooting/)"
-  if [ -n "$SLUG" ]; then mkdir -p /media/developer/cleanyourtv && echo "test-$SLUG" > /media/developer/cleanyourtv/channel; say "the manager app now follows the test builds of $CYTV_BRANCH (Update channel in the manager switches back to the stable releases)."; fi
+  if [ -n "$CYTV_CHANNEL" ]; then mkdir -p /media/developer/cleanyourtv && echo dev > /media/developer/cleanyourtv/channel; say "the manager app now follows the dev builds (Update channel in the manager switches back to the stable releases)."; fi
   say "the CleanYourTV app is installed."
   if [ -f /media/developer/cleanyourtv/helper.js ] && [ -e /var/lib/webosbrew/init.d/10-cleanyourtv-home ]; then
     # already set up: this is an update, so bring the running service to the new version

@@ -8,7 +8,7 @@
 |---|---|
 | Launcher, Service | Installed version; offers an update when the latest release is newer. |
 | Check for updates | Asks GitHub for the latest release. |
-| Update channel | Follow the stable releases or a [test build](managing.md#test-builds). |
+| Update channel | Follow the stable releases or the [dev builds](managing.md#dev-builds). |
 | Go back to launcher | Appears after a launcher update. |
 | CleanYourTV as Home | Choose LG's Home or ours. The TV restarts. |
 | Theme | Choose a theme (with its screenshot and description) from the list on GitHub; **Theme options** has the accent colour and going back. See [Themes](themes.md). |
@@ -23,7 +23,7 @@
 ## When the service is not running
 
 The manager works without the service for two things: checking for a newer package and installing it, so a broken service can
-be repaired from the TV. It follows the same **Update channel** as the service: on a test channel it offers that test build's package.
+be repaired from the TV. It follows the same **Update channel** as the service: on the dev channel it offers the dev build's package.
 **Set up now** starts from the options that are already saved (Input key, Debloat), so setting up again does not switch them back
 on.
 

@@ -88,33 +88,30 @@ function build() {
     return;
   }
   if (view === 'channel') {
-    var cc = (st && st.channel) || '';
+    var cc = (st && st.channel) || '',
+      db = ((tst && tst.builds) || [])[0];
     rows.push({
       label: 'Stable releases',
-      sub: (cc ? '' : 'selected \u00B7 ') + 'the latest published release',
+      sub: (cc ? '' : 'selected \u00B7 ') + 'a release a day at most',
       fn: function () {
         setChannel('');
       },
     });
-    ((tst && tst.builds) || []).forEach(function (b) {
-      rows.push({
-        label: 'Test: ' + b.branch,
-        sub:
-          (b.tag === cc ? 'selected \u00B7 ' : '') +
-          (b.build ? 'build ' + b.build : '') +
-          (b.published ? (b.build ? ' \u00B7 ' : '') + String(b.published).slice(0, 10) : ''),
-        fn: function () {
-          setChannel(b.tag);
-        },
-      });
+    rows.push({
+      label: 'Dev builds',
+      sub:
+        (cc ? 'selected \u00B7 ' : '') +
+        (db
+          ? 'every change' +
+            (db.build ? ' \u00B7 build ' + db.build : '') +
+            (db.published ? ' \u00B7 ' + String(db.published).slice(0, 10) : '')
+          : tst && tst.error
+            ? String(tst.error)
+            : 'every change \u00B7 none published right now'),
+      fn: function () {
+        setChannel('dev');
+      },
     });
-    if (!tst || !tst.builds || !tst.builds.length)
-      rows.push({
-        label: 'No test builds right now',
-        sub: tst && tst.error ? String(tst.error) : 'a test build appears when a branch is pushed',
-        dim: true,
-        fn: null,
-      });
     rows.push({ sep: true });
     rows.push({ label: 'Back', fn: pop });
     return;
@@ -645,7 +642,7 @@ function build() {
     busy = st.job && st.job.state === 'working';
   var uptxt = function (u) {
     return u
-      ? 'Update to ' + u + (st.channel ? ' (test build)' : '')
+      ? 'Update to ' + u + (st.channel ? ' (dev build)' : '')
       : st.checking
         ? 'Checking…'
         : st.checkError
@@ -685,7 +682,7 @@ function build() {
   });
   rows.push({
     label: 'Update channel',
-    sub: st.channel ? 'Test: ' + st.channel.replace(/^test-/, '') : 'Stable releases',
+    sub: st.channel ? 'Dev builds' : 'Stable releases',
     dim: busy,
     fn: openChannel,
   });

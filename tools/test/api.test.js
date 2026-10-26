@@ -104,18 +104,15 @@ const release = {
 const gh = http.createServer((q, r) => {
   r.setHeader('content-type', 'application/json');
   if (/\/releases\/latest$/.test(q.url)) return r.end(JSON.stringify(release));
-  if (/\/releases(\?|$)/.test(q.url))
+  if (/\/releases\/tags\/dev$/.test(q.url))
     return r.end(
-      JSON.stringify([
-        release,
-        {
-          tag_name: 'test-branch-a',
-          prerelease: true,
-          body: 'build: abcdef1\nbranch: branch-a',
-          published_at: '2026-01-02T00:00:00Z',
-          assets: [],
-        },
-      ])
+      JSON.stringify({
+        tag_name: 'dev',
+        prerelease: true,
+        body: 'build: abcdef1\nbranch: dev',
+        published_at: '2026-01-02T00:00:00Z',
+        assets: [],
+      })
     );
   // a fixed catalogue (Classic and Bloom from this checkout), so a theme added to the repository does not change the recorded replies
   if (q.url === '/themes/index.json') {

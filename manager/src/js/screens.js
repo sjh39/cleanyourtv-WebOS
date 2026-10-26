@@ -157,7 +157,7 @@ function themeCall(path, b, msg, back) {
   );
 }
 function openChannel() {
-  banner('Looking for test builds\u2026', 'work');
+  banner('Looking for the dev build\u2026', 'work');
   api('/api/manager/tests').then(
     function (r) {
       banner('');
@@ -187,7 +187,7 @@ function setChannel(tag) {
       pop();
       banner(
         tag
-          ? 'Following ' + tag.replace(/^test-/, '') + '. If the Launcher or Service row offers an update, that is the test build.'
+          ? 'Following the dev builds. If the Launcher or Service row offers an update, that is the dev build.'
           : 'Back on the stable releases',
         'ok'
       );

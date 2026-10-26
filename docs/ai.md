@@ -64,8 +64,10 @@ Codex, Cursor, Copilot agent mode and similar). The project's rules are in `AGEN
 3. **Write a test that fails**, then fix the code until it passes. A test in `tools/test/` is expected whenever the bug can be
    tested without a TV. Keep to the compatibility rules (Node 8.12 for the service, ES5 style for the pages).
 4. **Run everything:** `sh tools/check.sh`, and `python3 ipk/build.py` to check that the package builds.
-5. **Try it on a TV** if you can: push the branch and every push publishes a test build (a pre-release named `test-<branch>`); in the manager
-   app **Update channel** installs it, and **Update channel** > **Stable releases** goes back. Say in the pull request what you checked on a
+5. **Try it on a TV** if you can: once your change is merged into `dev` it is in the dev build (the pre-release `dev`); in the manager
+   app **Update channel** > **Dev builds** installs it, and **Update channel** > **Stable releases** goes back. A branch of your own
+   can be installed by hand: build it with `python3 ipk/build.py`, copy the `.ipk` to the TV and run `install.sh` with
+   `CYTV_IPK=/path/to/package.ipk`. Say in the pull request what you checked on a
    TV and what you did not.
 6. **Open a pull request** with the template. Describe the cause, not only the change, and say that AI tools were used.
 

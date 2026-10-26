@@ -150,7 +150,7 @@ function create(ctx) {
     }
     if (act === 'channel') {
       const err = await updates.setChannel(b.tag);
-      if (err) return json({ error: err }, err === 'not a test build' ? 400 : 409);
+      if (err) return json({ error: err }, err === 'unknown channel' ? 400 : 409);
       return json(status());
     }
     if (act === 'notify-api') return json(napi ? napi.set(b) : { enabled: false });

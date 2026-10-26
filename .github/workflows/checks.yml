@@ -1,10 +1,10 @@
-# The same checks as a test build (tools/check.sh: the tests under Node 8.12.0 and the current Node, the built pages), for pull requests
-# and for main, so a change from a fork or a merge is checked too. Branch pushes are checked by test-build.yml.
+# The same checks as a dev build (tools/check.sh: the tests under Node 8.12.0 and the current Node, the built pages), for pull requests
+# and for every branch but dev (dev-build.yml checks dev before it publishes). A branch other than dev builds no package.
 name: Checks
 on:
   pull_request:
   push:
-    branches: [main]
+    branches-ignore: [dev]
     paths-ignore:
       - "docs/**"
       - "zensical.toml"

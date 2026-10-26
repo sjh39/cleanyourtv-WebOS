@@ -19,24 +19,25 @@ latest GitHub release, each checked against its SHA-256 file.
 
 | Channel | What it follows |
 |---|---|
-| **Stable releases** | The latest published release. This is the default. |
-| **Test: *branch*** | A test build of a branch, made for people who are asked to try a change. |
+| **Stable releases** | The latest published release: at most one a day, at 04:00 Amsterdam time, and only when something changed. This is the default. |
+| **Dev builds** | Every change, as soon as it is on the `dev` branch: for people who want fixes early or are asked to try one. |
 
-### Test builds
+### Dev builds
 
-When a change needs to be tried on a TV the maintainer does not have, it is put on a branch. Every push to a branch other than
-`main` builds the package (`.github/workflows/test-build.yml`) and publishes it as a **pre-release** named `test-<branch>`.
-The stable updater never sees pre-releases.
+All work lands on the `dev` branch. Every push to it builds the package (`.github/workflows/dev-build.yml`) and publishes it as
+the **pre-release** named `dev`, replacing the one before. Once a day the release workflow turns what is on `dev` into the
+next stable release. The stable updater never sees pre-releases.
 
 | | |
 |---|---|
-| Choose a test build | **Update channel** lists the test builds (branch, commit, date). Pick one, then install it with the **Launcher** and **Service** rows. |
-| Back to the stable releases | **Update channel** > **Stable releases**. The stable release is offered again, also when it is older than the test build. |
-| Install from scratch | `ssh root@<tv-ip> 'curl -fsSL https://raw.githubusercontent.com/lasharor/cleanyourtv-WebOS/<branch>/install.sh \| CYTV_BRANCH=<branch> sh'`. The manager then follows that branch. |
-| Same version number | A test build records its commit in a `BUILD` file, so a newer push of the same version is still offered. |
+| Follow the dev builds | **Update channel** > **Dev builds** (it shows the commit and date), then install with the **Launcher** and **Service** rows. Expect updates several times a day. |
+| Back to the stable releases | **Update channel** > **Stable releases**. The stable release is offered again, also when it is older than the dev build. |
+| Install from scratch | `ssh root@<tv-ip> 'curl -fsSL https://raw.githubusercontent.com/lasharor/cleanyourtv-WebOS/main/install.sh \| CYTV_CHANNEL=dev sh'`. The manager then follows the dev builds. |
+| Same version number | A dev build records its commit in a `BUILD` file, so a newer push of the same version is still offered. |
+| Old test builds | Before service 1.6.9 every branch had its own test build (`test-<branch>`). A TV that followed one follows the dev builds now. |
 
-!!! warning "A test build can be less finished than a release"
-    It is checked against its SHA-256 file like any release, but nobody has signed it. See [Security](security.md#test-builds).
+!!! warning "A dev build can be less finished than a release"
+    It is checked against its SHA-256 file like any release, but nobody has signed it. See [Security](security.md#dev-builds).
 
 ## Switching between LG's Home and the launcher
 

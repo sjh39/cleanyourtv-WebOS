@@ -29,10 +29,25 @@ python3 ipk/build.py
 
 writes the release files to `dist/`: `com.cleanyourtv.manager_<version>_all.ipk`, `frontend-<version>.tgz` and a `.sha256` file for
 each, and the Homebrew Channel repository: `apps.json` and `com.cleanyourtv.manager.manifest.json`, which point at the package in
-the release tagged `v<version>` (`CYTV_TAG` and `CYTV_REPO` change the tag and the repository). Attach all of them to a GitHub
-release tagged `v<version>`: the channel reads `releases/latest/download/apps.json`, so the newest release is what it offers. The **service** version is `VERSION` in `helper/helper.js`; the
-**launcher** version is `app/version.json` and `VERSION` in `app/src/js/core.js` (the build refuses to run when they differ). Run
-`node tools/build-pages.js` after changing a page's sources.
+the release tagged `v<version>` (`CYTV_TAG` and `CYTV_REPO` change the tag and the repository). The Homebrew Channel reads
+`releases/latest/download/apps.json`, so the newest release is what it offers. The **service** version is `VERSION` in
+`helper/helper.js`; the **launcher** version is `app/version.json` and `VERSION` in `app/src/js/core.js` (the build refuses to run
+when they differ). Run `node tools/build-pages.js` after changing a page's sources.
+
+## Branches and releases
+
+| Branch | What it is |
+|---|---|
+| `dev` | Where all work lands, including pull requests (it is the default branch). Every push publishes the [dev build](../managing.md#dev-builds). |
+| `main` | The last release. Only the release workflow moves it. |
+| any other | Your own work in progress. Pushes run the checks but publish nothing; merge into `dev` to let people try it. |
+
+The release workflow (`.github/workflows/release.yml`) runs every day at 04:00 Amsterdam time. When the files that go into the
+package changed on `dev` since the last release, `tools/release.sh` raises the patch version of the service (and of the launcher
+when `app/` changed), commits that to `dev` and moves `main` to it; the workflow then builds and publishes `v<version>` with the
+commit subjects as release notes. Raise a minor or major version by hand on `dev` and the script keeps it. For an urgent fix, run
+the workflow by hand (Actions > Release > Run workflow). To skip the daily release for a while, set the repository variable
+`RELEASE_HOLD` to `1`. `CYTV_DRY=1 sh tools/release.sh` shows what the next release would contain.
 
 Using an AI assistant to find or fix a bug is welcome: see [Working on problems with an AI assistant](../ai.md) and `AGENTS.md` in the
 repository root.
@@ -54,7 +69,7 @@ repository root.
 Open an issue with the output of **Share log** and say whether it worked. A pull request that adds an entry to `compat.json` is
 welcome too: `firmware`, optionally `sdk`, `homeType`, `status` and a `note`.
 
-## Test builds
+## Dev builds
 
-Push a branch and the workflow publishes a [test build](../managing.md#test-builds) that people can install from the manager app.
+Every push to `dev` publishes the [dev build](../managing.md#dev-builds) that people can install from the manager app.
 See [Testing and CI](testing.md).

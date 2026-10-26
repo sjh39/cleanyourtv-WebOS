@@ -64,8 +64,9 @@ disk, and a reboot without the boot scripts brings LG's Home back.
    checked on a real TV and what was not.
 5. **Documentation must match the code.** Change the page in `docs/` when behaviour changes, and the README if it is mentioned there.
 6. **Licence:** the project is MIT. Do not copy code from GPL projects; describe behaviour and write your own.
-7. **Do not release, tag, force-push or change repository settings.** The maintainer does that. Work on a branch; every branch push publishes a
-   test build (a pre-release named `test-<branch>`) that people can install from the manager app (Update channel).
+7. **Do not release, tag, force-push or change repository settings.** The maintainer does that. Work on a branch and open the pull request
+   against `dev`; once merged, every push to `dev` publishes the dev build (the pre-release `dev`), which people can install from the
+   manager app (Update channel > Dev builds). A release goes out from `dev` once a day.
 
 ## Commands
 
