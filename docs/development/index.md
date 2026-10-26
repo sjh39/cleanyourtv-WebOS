@@ -34,6 +34,12 @@ the release tagged `v<version>` (`CYTV_TAG` and `CYTV_REPO` change the tag and t
 `helper/helper.js`; the **launcher** version is `app/version.json` and `VERSION` in `app/src/js/core.js` (the build refuses to run
 when they differ). Run `node tools/build-pages.js` after changing a page's sources.
 
+## Translations
+
+The screens are written in English and translated from `i18n/<language>.json` (English text as the key); `tools/build-pages.js`
+puts what each page uses into it, and `node tools/i18n.js` shows how complete each language is. See
+[`i18n/README.md`](https://github.com/lasharor/cleanyourtv-WebOS/blob/dev/i18n/README.md) for adding a language or a text.
+
 ## Branches and releases
 
 | Branch | What it is |

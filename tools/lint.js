@@ -42,6 +42,7 @@ step('formatting (prettier --check)', bin('prettier'), [
   'tools/**/*.js',
   'app/src/**/*.{js,css}',
   'manager/src/**/*.{js,css}',
+  'i18n/*.js',
   'scripts/jtool.js',
   'eslint.config.js',
 ]);

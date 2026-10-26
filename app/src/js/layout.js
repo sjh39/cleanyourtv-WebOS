@@ -112,6 +112,7 @@ function load() {
         return a.input ? { id: a.id, title: a.title, input: a.input, off: !!a.off } : { id: a.id, title: a.title };
       });
       cfg = x.config || {};
+      useLang(cfg.lang);
       applyTheme(cfg.theme);
       if (liveOn()) apps.push({ id: '__live', title: t('Live TV') });
       store();

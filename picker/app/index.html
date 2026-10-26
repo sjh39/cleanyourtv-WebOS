@@ -55,14 +55,86 @@ var running={},dots=false;   /* dots: Customise > Open apps in the launcher (con
 var ICON={
   hdmi:'<svg viewBox="0 0 24 24"><path d="M4 8h16v7l-3 3H7l-3-3z"/><path d="M9 11v3M12 11v3M15 11v3"/></svg>',
   tv:'<svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M8 21h8M12 18v3"/></svg>'};
-var TX={
-  nl:{Apps:'Apps',Inputs:'Ingangen',Connected:'Verbonden',Live:'Live TV',LiveSub:'Je afspeellijst',Nothing:'Niets aangesloten',nohelper:'Kan de ingangen niet lezen. Live TV werkt nog.',pinned:'%s is aan Home toegevoegd',unpinned:'%s is van Home verwijderd',pinfail:'Kan Home niet aanpassen'},
-  de:{Apps:'Apps',Inputs:'Eing\u00E4nge',Connected:'Verbunden',Live:'Live-TV',LiveSub:'Deine Playlist',Nothing:'Nichts angeschlossen',nohelper:'Eing\u00E4nge nicht lesbar. Live-TV funktioniert weiter.',pinned:'%s zu Home hinzugef\u00FCgt',unpinned:'%s von Home entfernt',pinfail:'Home konnte nicht ge\u00E4ndert werden'},
-  fr:{Apps:'Apps',Inputs:'Entr\u00E9es',Connected:'Connect\u00E9',Live:'TV en direct',LiveSub:'Votre playlist',Nothing:'Rien de connect\u00E9',nohelper:'Impossible de lire les entr\u00E9es. La TV en direct fonctionne encore.',pinned:'%s ajout\u00E9 \u00E0 l\u2019accueil',unpinned:'%s retir\u00E9 de l\u2019accueil',pinfail:'Impossible de modifier l\u2019accueil'},
-  es:{Apps:'Apps',Inputs:'Entradas',Connected:'Conectado',Live:'TV en directo',LiveSub:'Tu lista',Nothing:'Nada conectado',nohelper:'No se pueden leer las entradas. La TV en directo sigue funcionando.',pinned:'%s a\u00F1adido a Inicio',unpinned:'%s quitado de Inicio',pinfail:'No se pudo cambiar Inicio'}};
-var EN={Apps:'Apps',Inputs:'Inputs',Connected:'Connected',Live:'Live TV',LiveSub:'Your playlist',Nothing:'Nothing connected',nohelper:'Can\u2019t read the inputs. Live TV still works.',pinned:'%s added to Home',unpinned:'%s removed from Home',pinfail:'Could not change Home'};
-var LANG=((window.webOSSystem&&webOSSystem.locale)||navigator.language||'en').slice(0,2);
-function t(k){return (TX[LANG]&&TX[LANG][k])||EN[k]||k}
+/* @i18n */
+var I18N = {"de":{"_name":"Deutsch","_dir":"ltr","_pct":100,"%d of %d on":"%d von %d an","%s added to Home":"%s zu Home hinzugefügt","%s removed from Home":"%s von Home entfernt","Apps":"Apps","Back":"Zurück","build %s":"Build %s","Can’t read the inputs. Live TV still works.":"Eingänge nicht lesbar. Live-TV funktioniert weiter.","Close":"Schließen","Connected":"Verbunden","Could not change Home":"Home konnte nicht geändert werden","Customise":"Anpassen","default":"Standard","Home":"Home","Input":"Input","Input key":"Eingangstaste","Inputs":"Eingänge","Language":"Sprache","Live TV":"Live-TV","More":"Mehr","never":"nie","Nothing connected":"Nichts angeschlossen","On":"An","Open":"Öffnen","Open apps":"Geöffnete Apps","optional":"optional","Start":"Start","Theme":"Design","Your playlist":"Deine Playlist"},"es":{"_name":"Español","_dir":"ltr","_pct":100,"%d of %d on":"%d de %d activados","%s added to Home":"%s añadido a Inicio","%s removed from Home":"%s quitado de Inicio","Apps":"Apps","Back":"Atrás","build %s":"versión %s","Can’t read the inputs. Live TV still works.":"No se pueden leer las entradas. La TV en directo sigue funcionando.","Close":"Cerrar","Connected":"Conectado","Could not change Home":"No se pudo cambiar Inicio","Customise":"Personalizar","default":"predeterminado","Home":"Home","Input":"Input","Input key":"Botón Entrada","Inputs":"Entradas","Language":"Idioma","Live TV":"TV en directo","More":"Más","never":"nunca","Nothing connected":"Nada conectado","On":"Activado","Open":"Abrir","Open apps":"Apps abiertas","optional":"opcional","Start":"Empezar","Theme":"Tema","Your playlist":"Tu lista"},"fr":{"_name":"Français","_dir":"ltr","_pct":100,"%d of %d on":"%d sur %d activés","%s added to Home":"%s ajouté à l’accueil","%s removed from Home":"%s retiré de l’accueil","Apps":"Apps","Back":"Retour","build %s":"version %s","Can’t read the inputs. Live TV still works.":"Impossible de lire les entrées. La TV en direct fonctionne encore.","Close":"Fermer","Connected":"Connecté","Could not change Home":"Impossible de modifier l’accueil","Customise":"Personnaliser","default":"par défaut","Home":"Home","Input":"Input","Input key":"Touche Entrée","Inputs":"Entrées","Language":"Langue","Live TV":"TV en direct","More":"Plus","never":"jamais","Nothing connected":"Rien de connecté","On":"Activé","Open":"Ouvrir","Open apps":"Apps ouvertes","optional":"facultatif","Start":"Démarrer","Theme":"Thème","Your playlist":"Votre playlist"},"nl":{"_name":"Nederlands","_dir":"ltr","_pct":100,"%d of %d on":"%d van %d aan","%s added to Home":"%s is aan Home toegevoegd","%s removed from Home":"%s is van Home verwijderd","Apps":"Apps","Back":"Terug","build %s":"build %s","Can’t read the inputs. Live TV still works.":"Kan de ingangen niet lezen. Live TV werkt nog.","Close":"Sluiten","Connected":"Verbonden","Could not change Home":"Kan Home niet aanpassen","Customise":"Aanpassen","default":"standaard","Home":"Home","Input":"Input","Input key":"Ingangtoets","Inputs":"Ingangen","Language":"Taal","Live TV":"Live TV","More":"Meer","never":"nooit","Nothing connected":"Niets aangesloten","On":"Aan","Open":"Openen","Open apps":"Geopende apps","optional":"optioneel","Start":"Start","Theme":"Thema","Your playlist":"Je afspeellijst"}};
+/* ---------- language: the pages are written in English and translated where text is shown ----------
+   I18N holds the translations this page uses, from i18n/<language>.json, put in by tools/build-pages.js ({language: {English: text}}).
+   The language is the TV's, unless the manager's Language setting chose another (setLang). t() looks a text up whole, then the parts
+   of a text joined by line breaks or " · ", and fills in templates: "%s" is any text, "%d" a number ("Launcher %s", "%d photos").
+   A text without a translation stays English. */
+var LANG_TV = String((window.webOSSystem && window.webOSSystem.locale) || navigator.language || 'en')
+    .slice(0, 2)
+    .toLowerCase(),
+  LANG = 'en',
+  LT = null,
+  LTPL = null;
+/* '' or undefined: the TV's language; a language without translations here falls back to English */
+function setLang(code) {
+  var c = code || LANG_TV;
+  LANG = I18N[c] ? c : 'en';
+  LT = LANG === 'en' ? null : I18N[LANG];
+  LTPL = null;
+  if (document.documentElement) document.documentElement.lang = LANG;
+}
+setLang('');
+function tTemplates() {
+  if (LTPL) return LTPL;
+  LTPL = [];
+  for (var k in LT)
+    if (k.charAt(0) !== '_' && /%[sd]/.test(k))
+      LTPL.push([
+        new RegExp(
+          '^' +
+            k
+              .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+              .replace(/%s/g, '([\\s\\S]+?)')
+              .replace(/%d/g, '([0-9][0-9.,]*)') +
+            '$'
+        ),
+        k,
+        /\n| · /.test(k),
+      ]);
+  LTPL.sort(function (a, b) {
+    return b[1].length - a[1].length;
+  });
+  return LTPL;
+}
+function tTpl(s, joined) {
+  var tp = tTemplates();
+  for (var i = 0; i < tp.length; i++) {
+    if (tp[i][2] !== joined) continue;
+    var m = tp[i][0].exec(s);
+    if (m) {
+      var j = 1;
+      return LT[tp[i][1]].replace(/%[sd]/g, function () {
+        return t(m[j++]);
+      });
+    }
+  }
+  return null;
+}
+function t(s) {
+  if (!LT || s === null || s === undefined || s === '') return s;
+  s = String(s);
+  if (Object.prototype.hasOwnProperty.call(LT, s)) return LT[s];
+  var r = tTpl(s, true);
+  if (r !== null) return r;
+  if (s.indexOf('\n') >= 0) return s.split('\n').map(t).join('\n');
+  if (s.indexOf(' · ') >= 0) return s.split(' · ').map(t).join(' · ');
+  r = tTpl(s, false);
+  return r !== null ? r : s;
+}
+/* the manager calls it tr: its code has local variables named t */
+function tr(s) {
+  return t(s);
+}
+/* the languages for the manager's Language list: English and every language this page has, with how complete it is */
+function languages() {
+  var out = [{ code: 'en', name: 'English', pct: 100 }];
+  for (var c in I18N) out.push({ code: c, name: I18N[c]._name || c, pct: I18N[c]._pct || 0 });
+  return out;
+}
+/* @i18n end */
 function $(i){return document.getElementById(i)}
 function call(uri,p){try{var b=new PalmServiceBridge();b.onservicecallback=function(){};b.call(uri,JSON.stringify(p));return true}catch(e){return false}}
 function log(m){try{var x=new XMLHttpRequest();x.open('GET',API+'/api/log?m='+encodeURIComponent('picker '+m));x.send()}catch(e){}}
@@ -126,8 +198,8 @@ function pinCur(){var r=cur()[col[row]];if(row!==1||!r||!/^com\.webos\.app\.hdmi
   var on=!pins[r.id],x=new XMLHttpRequest();x.open('POST',API+'/api/inputs/pin');x.timeout=4000;
   x.onload=function(){var ok=false;try{ok=JSON.parse(x.responseText).returnValue===true}catch(e){}
     if(ok){if(on)pins[r.id]=1;else delete pins[r.id]}
-    $('msg').textContent=ok?t(on?'pinned':'unpinned').replace('%s',r.label):t('pinfail')};
-  x.onerror=x.ontimeout=function(){$('msg').textContent=t('pinfail')};
+    $('msg').textContent=ok?t(on?'%s added to Home':'%s removed from Home').replace('%s',r.label):t('Could not change Home')};
+  x.onerror=x.ontimeout=function(){$('msg').textContent=t('Could not change Home')};
   x.send(JSON.stringify({id:r.id,on:on}));log('pin '+r.id+' '+on);return true}
 function choose(){log('choose row '+row+' col '+col[row]);var r=cur()[col[row]];if(!r)return;if(row===0)launch(r.id);else launch(r.id,r.params);setTimeout(hide,200)}
 
@@ -137,9 +209,9 @@ function buildInputs(devs){
     var port='HDMI '+v.port,named=v.label&&v.label!==port,parts=[];
     // as in the launcher's Inputs list: the device's name first, then the port and whether something is connected
     if(named)parts.push(port);
-    parts.push(v.hdmiPlugIn?t('Connected'):t('Nothing'));
+    parts.push(v.hdmiPlugIn?t('Connected'):t('Nothing connected'));
     return {id:v.appId,icon:'hdmi',label:named?v.label:port,sub:parts.join(' \u00B7 '),dim:!v.hdmiPlugIn,active:!!v.activate}});
-  if(liveOn)r.push({id:'com.webos.app.home',params:{live:true},icon:'tv',label:t('Live'),sub:t('LiveSub')});
+  if(liveOn)r.push({id:'com.webos.app.home',params:{live:true},icon:'tv',label:t('Live TV'),sub:t('Your playlist')});
   return r}
 function setData(d,fresh){
   apps=d.apps;inputs=d.inputs;
@@ -155,14 +227,15 @@ function refresh(){
   var got={apps:null,inputs:null};
   function done(){if(!got.apps||!got.inputs)return;cache.apps=got.apps;cache.inputs=got.inputs;persist();$('msg').textContent='';setData(cache,false)}
   get('/api/apps',function(x){liveOn=!(x.config&&x.config.options&&x.config.options.liveTv===false);
+    var lg=(x.config&&x.config.lang)||'';if(lg!==(cache.lang||'')){cache.lang=lg;setLang(lg);built=''}   /* Manager > More > Language */
     var th=(x.config&&x.config.theme)||null;if(JSON.stringify(th)!==JSON.stringify(cache.theme||null)){cache.theme=th;applyTheme(th);persist()}dots=!!(x.config&&x.config.runDots===true);var by={};(x.apps||[]).forEach(function(a){by[a.id]=a});
     pins={};(x.apps||[]).forEach(function(a){if(a.input)pins[a.id]=1});
     got.apps=((x.config&&x.config.dock)||[]).filter(function(id){return by[id]}).map(function(id){return by[id].input?{id:id,title:by[id].title,input:by[id].input}:{id:id,title:by[id].title}});done()},function(){});
-  get('/api/inputs',function(x){got.inputs=buildInputs(x.devices);done()},function(){if(shown&&inputs.length<=1)$('msg').textContent=t('nohelper')});
+  get('/api/inputs',function(x){got.inputs=buildInputs(x.devices);done()},function(){if(shown&&inputs.length<=1)$('msg').textContent=t('Can\u2019t read the inputs. Live TV still works.')});
   get('/api/running',function(x){var r={};(x.apps||[]).forEach(function(a){r[a.id]=1});if(JSON.stringify(r)!==JSON.stringify(running)){running=r;paint()}},function(){})}
 function load(){   // the last known layout, ready before the first open
   try{var c=JSON.parse(localStorage.getItem(KEY)||'null');if(c&&c.inputs&&c.inputs.length){cache=c;cache.icons=cache.icons||{};cache.colors=cache.colors||{}}}catch(e){}
-  applyTheme(cache.theme);
+  applyTheme(cache.theme);setLang(cache.lang||'');
   setData(cache.inputs.length?cache:{apps:[],inputs:buildInputs([])},true)}
 function show(){
   shown=true;moved=false;shownAt=Date.now();downAt=0;log('show');idle();

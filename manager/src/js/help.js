@@ -20,7 +20,10 @@ var INFO = {
   'Suggestions and nudges': 'Stops contentminer and nudge (recommendations and pop-up tips) and keeps sportsalarm from starting.',
   'Switch all on': 'Switches every group on.',
   'Switch all off': 'Switches the debloat off: the services start again and the hosts lines are removed.',
-  'More': 'Voice and network notifications.',
+  'More': 'Voice, the language of the screens and network notifications.',
+  'Language':
+    'The language of CleanYourTV\u2019s screens: the launcher, this app and the Inputs list. Automatic follows the TV\u2019s menu language. The percentage says how much of a language is translated; the rest stays English. Translations are files in the repository that anyone can add to.',
+  'Automatic': 'Follows the TV\u2019s menu language. English when CleanYourTV has no translation for it.',
   'Wallpapers':
     'Your own photos behind Home: uploaded from a phone, or synced from Immich albums. Switch them on in the launcher: Customise > Wallpapers.',
   'Manage from your phone':

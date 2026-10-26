@@ -17,7 +17,14 @@ function scrollList() {
   wrap.classList.toggle('mu', listY > 0);
   wrap.classList.toggle('md', listY + wh < lh - 2);
 }
+var curLang = null;
 function draw() {
+  /* the Language setting (Manager > More > Language) arrives with the status */
+  var want = (st && st.lang) || '';
+  if (want !== curLang) {
+    curLang = want;
+    setLang(want);
+  }
   var h = '';
   rows.forEach(function (r, i) {
     h += r.sep

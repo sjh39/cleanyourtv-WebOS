@@ -803,7 +803,7 @@ function accentMenu() {
         return (data.accents || []).map(function (a, i) {
           if (a.hex === cur) at = i;
           return {
-            label: t(a.name),
+            label: a.name === 'Theme default' ? t('Theme default') : t(a.name), // the other names are colours the service lists
             sub: a.hex === cur ? t('Selected') : '',
             stay: true,
             fn: function () {

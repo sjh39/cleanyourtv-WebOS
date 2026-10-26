@@ -403,6 +403,7 @@
         "learned": true,
         "voice": ""
       },
+      "lang": "",
       "notifyApi": {
         "enabled": false,
         "port": 8767
@@ -483,6 +484,7 @@
         "learned": true,
         "voice": ""
       },
+      "lang": "",
       "notifyApi": {
         "enabled": false,
         "port": 8767
@@ -581,6 +583,7 @@
         "learned": true,
         "voice": ""
       },
+      "lang": "",
       "notifyApi": {
         "enabled": false,
         "port": 8767

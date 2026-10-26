@@ -598,6 +598,33 @@ function build() {
     rows.push({ label: 'Back', fn: pop });
     return;
   }
+  if (view === 'language') {
+    var curL = (st && st.lang) || '';
+    var tvName = 'English';
+    languages().forEach(function (x) {
+      if (x.code === LANG_TV) tvName = x.name;
+    });
+    rows.push({
+      label: 'Automatic',
+      sub: (curL ? '' : 'selected \u00B7 ') + 'TV language: ' + tvName,
+      fn: function () {
+        opt({ lang: '' });
+      },
+    });
+    languages().forEach(function (x) {
+      rows.push({
+        label: x.name,
+        info: { t: x.name, d: x.pct + '%' },
+        sub: (curL === x.code ? 'selected \u00B7 ' : '') + x.pct + '%',
+        fn: function () {
+          opt({ lang: x.code });
+        },
+      });
+    });
+    rows.push({ sep: true });
+    rows.push({ label: 'Back', fn: pop });
+    return;
+  }
   if (view === 'more') {
     rows.push({
       label: 'Voice',
@@ -613,6 +640,19 @@ function build() {
             banner('The service did not answer', 'err');
           }
         );
+      },
+    });
+    rows.push({
+      label: 'Language',
+      sub: (function () {
+        var n = 'Automatic';
+        languages().forEach(function (x) {
+          if (x.code === st.lang) n = x.name;
+        });
+        return n;
+      })(),
+      fn: function () {
+        push('language');
       },
     });
     rows.push({
@@ -823,7 +863,7 @@ function build() {
   });
   rows.push({
     label: 'More',
-    sub: 'voice, network notifications',
+    sub: 'voice, language, network notifications',
     fn: function () {
       push('more');
     },

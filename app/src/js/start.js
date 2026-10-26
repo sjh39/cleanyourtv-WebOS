@@ -4,6 +4,7 @@ try {
   if (cached && cached.apps && cached.apps.length) {
     apps = cached.apps;
     cfg = cached.cfg || {};
+    useLang(cfg.lang);
     applyTheme(cfg.theme);
     usage = cached.usage || {};
     colors = cached.colors || {};

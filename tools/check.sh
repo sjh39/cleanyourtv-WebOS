@@ -4,7 +4,8 @@
 # 1. the tests (tools/test.js) under Node.js 8.12.0, the version on webOS 5 and 6 (downloaded once from nodejs.org, checksum
 #    verified, cached in ~/.cache/cleanyourtv; on an Apple-silicon Mac the x64 build runs through Rosetta);
 # 2. the same tests under the Node.js of this computer, when it is a different version;
-# 3. the pages built from their sources are up to date (tools/build-pages.js --check);
+# 3. the pages built from their sources are up to date (tools/build-pages.js --check), and the translations in i18n/ (tools/i18n.js:
+#    how complete each language is; it fails only on a broken file);
 #    types, lint and formatting (tools/lint.js), when the development tools are installed (npm install);
 # 4. with --chromium: the pages in Chromium 68 and 79, the engines of webOS 5 and 6 (tools/oldchrome.js, about 200 MB downloaded once).
 # Nothing is installed and nothing leaves this machine, apart from the one Node download.
@@ -34,6 +35,10 @@ fi
 if [ -f tools/build-pages.js ]; then
   echo; echo "== pages"
   "$N8" tools/build-pages.js --check
+fi
+if [ -f tools/i18n.js ]; then
+  echo; echo "== translations"
+  "$N8" tools/i18n.js
 fi
 if command -v node >/dev/null; then
   echo; echo "== types, lint, formatting"

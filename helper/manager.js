@@ -64,6 +64,7 @@ function create(ctx) {
       voice: voice ? (v => ({ installed: v.installed, enabled: v.enabled }))(voice.status()) : null,
       notifyApi: napi ? { enabled: napi.info().enabled, port: napi.info().port } : { enabled: false },
       wallpapers: wp ? (w => ({ total: w.total, uploads: w.uploads, immich: w.immich.photos }))(wp.status()) : null,
+      lang: config.get().lang || '', // the Language setting: '' follows the TV
       home: { enabled: !fs.existsSync(P.DISABLE), fullhome: fs.existsSync(P.FULLHOME_APP), ours },
       inputhook: inputhook.status(keys().input),
       keys: keys(),
@@ -78,6 +79,11 @@ function create(ctx) {
     for (const k of ['debloat', 'inputKey', 'liveTv']) if (typeof o[k] === 'boolean') next[k] = o[k];
     if (Array.isArray(o.debloatOff)) next.debloatOff = debloat.cleanOff(o.debloatOff);
     config.update('manager', c => {
+      // the language of every screen: a two-letter code, or '' to follow the TV
+      if (typeof o.lang === 'string' && /^([a-z]{2})?$/.test(o.lang)) {
+        if (o.lang) c.lang = o.lang;
+        else delete c.lang;
+      }
       if (typeof o.pickerPrewarm === 'boolean')
         c.picker = Object.assign(
           {},
