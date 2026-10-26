@@ -2,6 +2,14 @@
 
 # CleanYourTV for LG webOS
 
+<p align="center">
+  <a href="https://github.com/lasharor/cleanyourtv-WebOS/stargazers"><img src="https://img.shields.io/github/stars/lasharor/cleanyourtv-WebOS?style=flat&cacheSeconds=1800&color=cfffcf&labelColor=15181e" alt="Stars"></a>
+  <a href="https://github.com/lasharor/cleanyourtv-WebOS/pulls?q=is%3Amerged"><img src="https://img.shields.io/github/issues-search?query=repo%3Alasharor%2Fcleanyourtv-WebOS%20is%3Apr%20is%3Amerged&style=flat&cacheSeconds=1800&color=cfffcf&labelColor=15181e&label=merged%20PRs" alt="Merged PRs"></a>
+  <a href="https://github.com/lasharor/cleanyourtv-WebOS/network/members"><img src="https://img.shields.io/github/forks/lasharor/cleanyourtv-WebOS?style=flat&cacheSeconds=1800&color=cfffcf&labelColor=15181e" alt="Forks"></a>
+  <a href="https://github.com/lasharor/cleanyourtv-WebOS/graphs/contributors"><img src="https://img.shields.io/github/contributors/lasharor/cleanyourtv-WebOS?style=flat&cacheSeconds=1800&color=cfffcf&labelColor=15181e" alt="Contributors"></a>
+  <a href="https://discord.gg/9hHAmCfqB"><img src="https://img.shields.io/badge/Discord-join-5865F2?style=flat&logo=discord&logoColor=white&labelColor=15181e" alt="Discord"></a>
+</p>
+
 A fast home screen for rooted LG webOS TVs, with Live TV from your own playlist, an Inputs list on the Input key,
 picture notifications, optional on-device voice recognition and an optional debloat of LG's ads and telemetry.
 
