@@ -2330,7 +2330,20 @@ function inputTile(d, a) {
   return d;
 }
 /* ---------- theme: the service resolves the chosen theme (manager > Theme) into CSS variables and a few numbers ---------- */
-var TH0 = { cols: 10, tileH: 151, gapY: 26, gt: 350, viewH: 780, dockN: 4, overlay: false, push: null, overlayH: 510, glow: '', slots: [] },
+var TH0 = {
+    cols: 10,
+    tileH: 151,
+    gapY: 26,
+    gt: 350,
+    viewH: 780,
+    dockN: 4,
+    overlay: false,
+    push: null,
+    overlayH: 510,
+    glow: '',
+    slots: [],
+    shelfDock: null,
+  },
   TH = TH0,
   themeKeys = [],
   themeAttrs = ['data-bar', 'data-labels', 'data-clock', 'data-grid', 'data-galign'];
@@ -2386,7 +2399,31 @@ function applyTheme(t) {
     overlayH: t.overlayH || 510,
     glow: t.glowRgb || '',
     slots: t.slots || [],
+    shelfDock: t.shelf || null,
   };
+  /* the name follows the dock (shelf.dockAlign) only while that is on; otherwise it keeps the theme's own margin (--name-x) */
+  var sh = $('shelf');
+  sh.style.paddingLeft = '';
+  sh.style.paddingRight = '';
+}
+
+/* line the app name up with the left edge of the dock (shelf.dockAlign). The dock is centred on a width that depends on how many apps
+   are shown, so its left edge is not known until rebuild: work it out from the tile count (n), the tile width, the gap and the panel
+   padding, with no layout read, and set the name's leading padding to match. Exact for a centred dock in either text direction. */
+function placeShelf(n) {
+  var sh = $('shelf'),
+    s = TH.shelfDock;
+  sh.style.paddingLeft = '';
+  sh.style.paddingRight = '';
+  if (!s || !s.dock || n < 1) return;
+  var W = n * s.w + (n - 1) * s.gap + 2 * s.pad,
+    left;
+  if (s.align === 'left') left = s.x;
+  else if (s.align === 'right') left = 1920 - s.x - W;
+  else left = Math.round((1920 - W) / 2);
+  left = Math.max(0, left);
+  if (document.documentElement.getAttribute('dir') === 'rtl') sh.style.paddingRight = Math.max(0, 1920 - left - W) + 'px';
+  else sh.style.paddingLeft = left + 'px';
 }
 
 function setFocus(nr, nc, first) {
@@ -4096,6 +4133,7 @@ function rebuild() {
   /* cards come first, so the ones OK can switch (a Home Assistant light) join the top row */
   drawCards();
   var top = tb.concat(cardTargets());
+  placeShelf(d.length);
   rows = [top, d.length ? d : top];
   for (var i = 0; i < g.length; i += TH.cols) rows.push(g.slice(i, i + TH.cols));
   var nr = Math.min(r, rows.length - 1),

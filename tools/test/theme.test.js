@@ -112,6 +112,23 @@ run(async () => {
     'dock.tileFrost sets the frost and dock.tileFrostColor becomes its rgb tint'
   );
   ok(plain.vars['--dock-tile-frost'] === '0' && plain.vars['--dock-frost-rgb'] === '255,255,255', 'by default there is no dock-tile frost');
+  // shelf.dockAlign: the name follows the dock, so the dock's geometry is carried to the page; off by default, so other replies are unchanged
+  const nameDock = themeMod.resolve(
+    themeMod.normalize(
+      { shelf: { dockAlign: true }, dock: { align: 'center', x: 40, w: 150, gap: 24, panel: 0.2, panelPad: 18 } },
+      'namedock'
+    )
+  );
+  ok(
+    nameDock.shelf &&
+      nameDock.shelf.dock === true &&
+      nameDock.shelf.align === 'center' &&
+      nameDock.shelf.w === 150 &&
+      nameDock.shelf.gap === 24 &&
+      nameDock.shelf.pad === 18,
+    'shelf.dockAlign carries the dock width, gap and panel padding to the page'
+  );
+  ok(plain.shelf === undefined, 'a theme that does not line the name up with the dock has no shelf key');
   // slots for cards: checked and clamped, placed like the clock, kept by a theme that extends it, and only in replies of themes with slots
   const slotted = themeMod.normalize(
     {

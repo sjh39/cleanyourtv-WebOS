@@ -28,7 +28,8 @@
  "shelf": {
   "show": true,
   "align": "left",
-  "x": 363,
+  "dockAlign": true,
+  "x": 345,
   "y": 800,
   "scale": 0.5
  },

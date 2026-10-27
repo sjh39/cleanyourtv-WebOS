@@ -183,6 +183,7 @@ when the focus moves down into it (Back or Up closes it); a dock at the top leav
 | `shelf.x` | 0 to 900 | `96` | Margin on both sides, in px. |
 | `shelf.y` | 0 to 900 | `150` | Distance from the top edge, in px. |
 | `shelf.scale` | 0.4 to 1.6 | `1` | Scale of the name. |
+| `shelf.dockAlign` | `true` or `false` | `false` | Line the name up with the left edge of the dock, even when the dock is centred and the number of apps changes its width. Overrides `shelf.x` (`shelf.align` still sets the text alignment). Set `shelf.show` off to hide the name instead. |
 | **dock** | | | |
 | `dock.anchor` | `top`, `bottom` | `top` | Which screen edge `dock.y` counts from. |
 | `dock.align` | `left`, `center`, `right` | `left` | Which side `dock.x` counts from; `center` centres the dock. |

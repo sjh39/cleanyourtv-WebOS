@@ -49,6 +49,7 @@ function rebuild() {
   /* cards come first, so the ones OK can switch (a Home Assistant light) join the top row */
   drawCards();
   var top = tb.concat(cardTargets());
+  placeShelf(d.length);
   rows = [top, d.length ? d : top];
   for (var i = 0; i < g.length; i += TH.cols) rows.push(g.slice(i, i + TH.cols));
   var nr = Math.min(r, rows.length - 1),

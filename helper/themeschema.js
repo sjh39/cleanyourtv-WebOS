@@ -98,6 +98,13 @@ const SCHEMA = [
   ['shelf.x', 'int', [0, 900], 96, 'Margin on both sides, in px.'],
   ['shelf.y', 'int', [0, 900], 150, 'Distance from the top edge, in px.'],
   ['shelf.scale', 'num', [0.4, 1.6], 1, 'Scale of the name.'],
+  [
+    'shelf.dockAlign',
+    'bool',
+    null,
+    false,
+    'Line the name up with the left edge of the dock, even when the dock is centred and the number of apps changes its width. Overrides `shelf.x` (`shelf.align` still sets the text alignment). Set `shelf.show` off to hide the name instead.',
+  ],
   ['dock.anchor', 'enum', TOPBOT, 'top', 'Which screen edge `dock.y` counts from.'],
   ['dock.align', 'enum', POS, 'left', 'Which side `dock.x` counts from; `center` centres the dock.'],
   ['dock.x', 'int', [0, 900], 96, 'Distance from that side, in px. Not used when centred.'],
@@ -461,6 +468,9 @@ function resolve(t, accent) {
       };
     });
   // only a theme with a typeface has this key, so the replies for the other themes stay as they were
+  // only a theme that lines the name up with the dock carries this; the dock's own width at a given app count is worked out on the page
+  // (the number of apps shown, not dock.count), so the name tracks the dock's left edge however many apps are present
+  if (v['shelf.dockAlign']) out.shelf = { dock: true, align: v['dock.align'], x: v['dock.x'], w: v['dock.w'], gap: v['dock.gap'], pad };
   if (v['type.fontFile']) out.font = { id: v.fontTheme || t.id, file: v['type.fontFile'] };
   return out;
 }
