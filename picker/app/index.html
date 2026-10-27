@@ -313,6 +313,11 @@ document.addEventListener('keydown',function(e){
 document.addEventListener('keyup',function(e){if(e.keyCode!==13||!downAt)return;downAt=0;clearTimeout(holdT);if(!shown)return;if(!heldOk)choose();heldOk=false});
 document.addEventListener('click',function(e){if(!shown)return;idle();var r=e.target.closest&&e.target.closest('[data-r]');if(r){row=+r.getAttribute('data-r');col[row]=+r.getAttribute('data-i');paint();choose()}else hide()});
 document.addEventListener('mousemove',function(e){var r=e.target.closest&&e.target.closest('[data-r]');if(!r)return;var a=+r.getAttribute('data-r'),i=+r.getAttribute('data-i');if(a!==row||i!==col[row]){moved=true;row=a;col[row]=i;paint()}});
+var lastWheel=0;   // the Magic Remote's wheel moves along the row
+document.addEventListener('wheel',function(e){
+  if(!shown||!e.deltaY)return;
+  e.preventDefault();var n=Date.now();if(n-lastWheel<90)return;lastWheel=n;
+  idle();move(0,e.deltaY>0?1:-1)},{passive:false});
 document.addEventListener('webOSRelaunch',function(){
   log('relaunch shown='+shown);
   if(params().prewarm)return;
