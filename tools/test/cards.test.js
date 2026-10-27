@@ -1,7 +1,7 @@
 // Cards (cards.js): the phone page opens with a code, lists the theme's slots and the card types with their options, saves the cards
 // (checked for shape) where the launcher reads them, and the launcher page draws the greeting and a text card.
 const http = require('http');
-const { ok, call, sleep, req, memoryConfig, run } = require('./lib');
+const { ok, call, sleep, serve, req, memoryConfig, run } = require('./lib');
 
 function phone(method, p, body, code) {
   return new Promise((resolve, reject) => {
@@ -23,6 +23,29 @@ function phone(method, p, body, code) {
 }
 
 run(async () => {
+  // Open-Meteo stand-ins: the forecast and the place search
+  let asked = 0;
+  const om = await serve((rq, rs) => {
+    rs.writeHead(200, { 'content-type': 'application/json' });
+    if (/\/search/.test(rq.url))
+      return rs.end(
+        JSON.stringify({ results: [{ name: 'Utrecht', admin1: 'Utrecht', country: 'Nederland', latitude: 52.0908, longitude: 5.1222 }] })
+      );
+    asked++;
+    rs.end(
+      JSON.stringify({
+        current: { temperature_2m: 11.6, weather_code: 3, is_day: 1 },
+        daily: {
+          time: ['2026-10-27', '2026-10-28'],
+          weather_code: [3, 61],
+          temperature_2m_max: [13.2, 12],
+          temperature_2m_min: [7.9, 6.1],
+        },
+      })
+    );
+  });
+  process.env.CYTV_WEATHER_URL = om.url + '/v1/forecast';
+  process.env.CYTV_GEO_URL = om.url + '/v1/search';
   const C = req('cards');
   const config = memoryConfig({ lang: 'nl', cards: { greeting: { type: 'greeting', name: 'Sam' } } });
   const theme = {
@@ -68,8 +91,22 @@ run(async () => {
   );
   await phone('POST', '/api/save', { cards: {} }, code);
   ok(config.get().cards === undefined, 'saving no cards removes them');
+  p = await phone('POST', '/api/places', { q: 'Utrecht' }, code);
+  ok(
+    p.j.places.length === 1 && p.j.places[0].lat === 52.09 && p.j.places[0].area === 'Utrecht, Nederland',
+    'the phone page finds a place by name'
+  );
+  r = await call(cards, '/api/cards/weather', 'POST', { lat: 52.09, lon: 5.12 });
+  const r2 = await call(cards, '/api/cards/weather', 'POST', { lat: 52.09, lon: 5.12 });
+  ok(
+    r.j.now.temp === 12 && r.j.now.code === 3 && r.j.days.length === 2 && r.j.days[1].max === 12 && r2.j.at === r.j.at && asked === 1,
+    'the weather of a place is asked once and then kept (at most every 30 minutes)'
+  );
+  r = await call(cards, '/api/cards/weather', 'POST', { lat: 'x' });
+  ok(r.j.error === 'no place chosen', 'no weather without a place');
   await call(cards, '/api/cards/pair', 'POST', { stop: true });
   await sleep(50);
   p = await phone('GET', '/').catch(() => ({ code: 0 }));
   ok(p.code === 0, 'the page is closed after stop');
+  om.server.close();
 });

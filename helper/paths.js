@@ -19,6 +19,7 @@ module.exports = {
   LIVE: env.CYTV_LIVE_DIR || D + '/live',
   THEMES: env.CYTV_THEMES || path.join(__dirname, 'themes'),
   VOICE: D + '/voice',
+  WEATHER: D + '/weather.json', // the weather card's last answers (weather.js)
   HOOK: D + '/inputhook',
   APP: D + '/app',
   COMPAT: [D + '/compat.json', SERVICE_DIR + '/compat.json'],

@@ -60,6 +60,32 @@ const TYPES = [
         choices: [
           ['', 'None'],
           ['date', 'The date'],
+          ['weather', 'The weather (from a weather card)'],
+        ],
+      },
+    ],
+  },
+  {
+    type: 'weather',
+    name: 'Weather',
+    fields: [
+      { key: 'place', kind: 'place', label: 'Place' },
+      {
+        key: 'unit',
+        kind: 'choice',
+        label: 'Temperature',
+        choices: [
+          ['', '°C'],
+          ['f', '°F'],
+        ],
+      },
+      {
+        key: 'show',
+        kind: 'choice',
+        label: 'Show',
+        choices: [
+          ['', 'Now'],
+          ['days', 'Now and the next days'],
         ],
       },
     ],
@@ -88,7 +114,8 @@ const PAIR_PORT = 8792, // after the Wallpapers page (8791)
   PAIR_MS = 10 * 60 * 1000;
 
 function create(ctx) {
-  const config = ctx.config;
+  const config = ctx.config,
+    weather = require('./weather').create({ path: require('./paths').WEATHER });
   const slots = () => {
     const th = ctx.feature('theme'),
       r = th && th.resolved();
@@ -166,6 +193,13 @@ function create(ctx) {
     touch();
     if (u === '/api/state') return json(state(lang));
     if (u === '/api/save' && req.method === 'POST') return json({ ok: true, cards: save((await web.body(req, 65536)).cards) });
+    if (u === '/api/places' && req.method === 'POST') {
+      try {
+        return json({ places: await weather.search((await web.body(req, 4096)).q, lang) });
+      } catch (e) {
+        return json({ error: String(e.message || e) });
+      }
+    }
     json({ error: 'not found' }, 404);
   }
 
@@ -173,9 +207,11 @@ function create(ctx) {
     if (req.method !== 'POST') return web.notFound(res);
     const b = await body(req);
     if (u === '/api/cards/pair') return web.json(res, b.stop ? (stopPair(), {}) : await startPair());
+    // the weather card: {lat, lon, unit} -> the weather there (Open-Meteo, at most every 30 minutes)
+    if (u === '/api/cards/weather') return web.json(res, await weather.get(b.lat, b.lon, b.unit));
     web.notFound(res);
   }
-  return { name: 'cards', paths: ['/api/cards/pair'], handle, stop: stopPair };
+  return { name: 'cards', paths: ['/api/cards/pair', '/api/cards/weather'], handle, stop: stopPair };
 }
 
 // the phone page: a form per slot (the card type, then its options), and all cards as JSON. Plain script for iOS Safari and Android
@@ -198,12 +234,18 @@ function draw(){var box=$('slots');box.innerHTML='';$('sum').textContent=S.slots
  $('raw').value=JSON.stringify(S.cards,null,2)}
 function fields(f,c){f.innerHTML='';var ty=typeOf(c.type);if(!ty)return;ty.fields.forEach(function(fd){var l=el('label',{},fd.label),i;
   if(fd.kind==='choice'){i=el('select',{'data-k':fd.key});fd.choices.forEach(function(ch){i.appendChild(el('option',{value:ch[0]},ch[1]))})}
-  else if(fd.kind==='long'){i=el('textarea',{'data-k':fd.key,rows:4})}else i=el('input',{'data-k':fd.key,type:'text',autocomplete:'off'});
+  else if(fd.kind==='long'){i=el('textarea',{'data-k':fd.key,rows:4})}else if(fd.kind==='place'){f.appendChild(l);place(f,c);return}else i=el('input',{'data-k':fd.key,type:'text',autocomplete:'off'});
   i.value=c[fd.key]===undefined?'':String(c[fd.key]);f.appendChild(l);f.appendChild(i)});
- if(c.type==='template')f.appendChild(el('p',{'class':'h'},t('Use {{greeting}}, {{time}}, {{date}} and {{weekday}} for what changes; **bold**, *italic* and a line starting with # for a heading.')))}
+ if(c.type==='template')f.appendChild(el('p',{'class':'h'},t('Use {{greeting}}, {{time}}, {{date}} and {{weekday}} for what changes, and {{weather.temp}} and {{weather.text}} when a weather card is on Home; **bold**, *italic* and a line starting with # for a heading.')))}
+/* a place for the weather: searched by name (Open-Meteo, through the TV), its coordinates kept in two hidden fields */
+function place(f,c){var i=el('input',{'data-k':'place',type:'search',autocomplete:'off',placeholder:t('City or town')}),la=el('input',{'data-k':'lat','data-n':'1',type:'hidden'}),lo=el('input',{'data-k':'lon','data-n':'1',type:'hidden'}),
+  b=el('button',{type:'button'},t('Search')),r=el('div',{'class':'pl'});i.value=c.place||'';la.value=c.lat===undefined?'':c.lat;lo.value=c.lon===undefined?'':c.lon;
+  [i,b,r,la,lo].forEach(function(x){f.appendChild(x)});
+  b.onclick=function(){r.textContent=t('Searching...');api('places',{q:i.value}).then(function(j){r.innerHTML='';if(j.error)return r.appendChild(el('p',{},t(j.error)));if(!(j.places||[]).length)return r.appendChild(el('p',{},t('Not found')));
+   j.places.forEach(function(p){var o=el('button',{type:'button','class':'po'},p.name+(p.area?' \\u00B7 '+p.area:''));o.onclick=function(){i.value=p.name;la.value=p.lat;lo.value=p.lon;r.innerHTML='';r.appendChild(el('p',{},t('Chosen: %s').replace('%s',p.name)))};r.appendChild(o)})})}}
 /* the forms into cards; options of a type the page has no form for stay as they were */
 function fromForms(){var out={};[].forEach.call(document.querySelectorAll('section.sl'),function(sec){var id=sec.getAttribute('data-id'),ty=sec.querySelector('[data-k=type]').value,old=S.cards[id]||{},c={type:ty};
-  if(!typeOf(ty)&&old.type===ty)c=old;[].forEach.call(sec.querySelectorAll('.f [data-k]'),function(i){if(i.value!=='')c[i.getAttribute('data-k')]=i.value});
+  if(!typeOf(ty)&&old.type===ty)c=old;[].forEach.call(sec.querySelectorAll('.f [data-k]'),function(i){if(i.value!=='')c[i.getAttribute('data-k')]=i.getAttribute('data-n')?+i.value:i.value});
   var sl=null;S.slots.forEach(function(x){if(x.id===id)sl=x});if(ty==='none'&&!(sl&&sl.card))return;out[id]=c});
  for(var k in S.cards)if(!(k in out)&&!S.slots.some(function(x){return x.id===k}))out[k]=S.cards[k];return out}
 function save(cards){msg(t('Saving…'));api('save',{cards:cards}).then(function(r){if(r.error)return msg(t(r.error),1);S.cards=r.cards||{};draw();msg(t('Saved. Open Home on the TV to see it.'))},function(e){msg(e.error,1)})}
@@ -222,7 +264,7 @@ h1{font-size:26px;margin:4px 0 4px}h2{font-size:20px;margin:0 0 10px}p{color:#aa
 button,input,select,textarea{font:inherit;display:block;width:100%;padding:14px;border-radius:12px;border:1px solid #333;background:#1a1b21;color:#eee;margin:8px 0}
 button{text-align:center}button.p{background:#f5f6f8;color:#111;font-weight:600;border:0}textarea{resize:vertical}label{display:block;color:#aaa;margin:12px 0 0;font-size:15px}
 .sl{padding:16px;border-radius:14px;background:#15161b;margin:14px 0}.h{font-size:14px}.hide{display:none}details{margin:28px 0}summary{color:#aaa}
-#raw{font:13px ui-monospace,Menlo,monospace;min-height:220px}[dir=rtl] body{text-align:right}</style>
+.pl .po{text-align:left;margin:6px 0}#raw{font:13px ui-monospace,Menlo,monospace;min-height:220px}[dir=rtl] body{text-align:right}</style>
 <h1>${T('Cards')}</h1><p id=sum>${T('Connecting to the TV…')}</p>
 <div id=login class=hide><p>${T('Enter the code shown on the TV.')}</p><input id=code inputmode=numeric autocomplete=one-time-code><button class=p id=go>${T('Continue')}</button></div>
 <div id=main class=hide><div id=msg></div><div id=slots></div><button class=p id=save>${T('Save')}</button>

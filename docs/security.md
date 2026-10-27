@@ -37,6 +37,12 @@ limits the sizes (theme 32 KB, wallpaper 1.5 MB, screenshot 600 KB), checks that
 no script or CSS in a theme. Anything merged into `main` becomes available to every TV, which is the same trust you place in the
 releases of this repository; there is no signature.
 
+## Weather card
+
+Only with a weather card on Home. The service asks `api.open-meteo.com` over HTTPS for the weather at the card's place, at most every
+30 minutes, and keeps the last answer in `weather.json`; the request carries the place's coordinates (rounded to about a kilometre) and
+nothing else. Searching a place on the phone page sends the name you type to `geocoding-api.open-meteo.com`. No account or key.
+
 ## Voice
 
 Optional and off by default. Installing it downloads files over HTTPS from PyPI, Ubuntu's archive and Moonshine's model server;

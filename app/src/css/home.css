@@ -661,3 +661,64 @@ body.wpon {
   font-weight: 700;
   line-height: 1.15;
 }
+/* the weather card: the icon and the temperature, the place and the sky in words, and the next days in a row */
+.card-weather {
+  color: var(--ink);
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+}
+.wx-now {
+  display: flex;
+  align-items: center;
+}
+[data-align="right"] .wx-now {
+  justify-content: flex-end;
+}
+[data-align="center"] .wx-now {
+  justify-content: center;
+}
+.wx-i svg {
+  display: block;
+  width: calc(64px * var(--fs));
+  height: calc(64px * var(--fs));
+  margin: 0 16px 0 0;
+}
+.wx-t {
+  font-size: calc(64px * var(--fs));
+  font-weight: 600;
+  line-height: 1;
+}
+.wx-p,
+.wx-none {
+  margin-top: 6px;
+  font-size: calc(24px * var(--fs));
+  color: var(--ink2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wx-days {
+  display: flex;
+  margin-top: 16px;
+  font-size: calc(22px * var(--fs));
+}
+[data-align="right"] .wx-days {
+  justify-content: flex-end;
+}
+.wx-days > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 96px;
+}
+.wx-days > div + div {
+  margin-left: 18px;
+}
+.wx-days svg {
+  width: 34px;
+  height: 34px;
+  margin: 6px 0;
+}
+.wx-days small {
+  color: var(--ink2);
+  font-size: 1em;
+}

@@ -83,3 +83,17 @@
 [dir="rtl"] .card-greeting .l1 {
   letter-spacing: 0;
 }
+[dir="rtl"] .wx-i svg {
+  margin: 0 0 0 16px;
+}
+[dir="rtl"] .wx-days > div + div {
+  margin-left: 0;
+  margin-right: 18px;
+}
+/* temperatures keep their minus sign in front */
+[dir="rtl"] .wx-t,
+[dir="rtl"] .wx-days b,
+[dir="rtl"] .wx-days small {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
