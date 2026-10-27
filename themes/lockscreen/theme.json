@@ -1,7 +1,7 @@
 {
  "name": "Lock Screen",
  "author": "CleanYourTV",
- "description": "A phone-style lock screen: a greeting and big clock top-left, and a small translucent dock low in the corner over a calm landscape. Turn Wallpapers on for your photos.",
+ "description": "A phone-style lock screen: a greeting and big clock top-left, and a centred dock of rounded tiles on a glass panel. Turn Wallpapers on for your photos.",
  "colors": {
   "night": "#0a1426",
   "panel": "#15243a",
@@ -28,9 +28,9 @@
  "shelf": {
   "show": true,
   "align": "left",
-  "x": 96,
-  "y": 740,
-  "scale": 1
+  "x": 363,
+  "y": 800,
+  "scale": 0.5
  },
  "bar": {
   "style": "pill",
@@ -43,15 +43,18 @@
  },
  "dock": {
   "anchor": "bottom",
-  "align": "left",
-  "x": 96,
-  "y": 72,
+  "align": "center",
+  "x": 0,
+  "y": 64,
   "count": 7,
   "w": 150,
-  "h": 104,
-  "gap": 48,
-  "radius": 52,
-  "tileAlpha": 0.3,
+  "h": 112,
+  "gap": 24,
+  "radius": 24,
+  "tileAlpha": 1,
+  "tileFrost": 0.4,
+  "panel": 0.16,
+  "panelPad": 18,
   "lift": 6,
   "focusScale": 1.08
  },

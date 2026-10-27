@@ -110,6 +110,14 @@ const SCHEMA = [
   ['dock.panel', 'num', [0, 0.6], 0, 'Opacity of a translucent panel behind the dock tiles; 0 for none.'],
   ['dock.panelPad', 'int', [0, 60], 24, 'Space between the panel and the tiles, in px.'],
   ['dock.tileAlpha', 'num', [0, 1], 1, 'Opacity of the dock tile background; below 1 lets the wallpaper show through the tiles.'],
+  [
+    'dock.tileFrost',
+    'num',
+    [0, 1],
+    0,
+    'Frost over the resting (unfocused) dock tiles and their icons; 0 for none. Calms loud tile colours without leaving a floating icon square, because the tile and its icon dim together. The focused tile keeps its full colour.',
+  ],
+  ['dock.tileFrostColor', 'color', null, '#ffffff', 'Tint of the dock-tile frost (`dock.tileFrost`): a light colour for a glassy frost, a dark one to deepen the tiles.'],
   ['dock.lift', 'int', [0, 40], 10, 'How far the focused dock tile rises, in px.'],
   ['dock.focusScale', 'num', [1, 1.3], 1.05, 'Scale of the focused dock tile.'],
   [
@@ -386,6 +394,8 @@ function resolve(t, accent) {
     '--dock-rad': px(v['dock.radius']),
     '--dock-panel': String(v['dock.panel']),
     '--dock-tile-alpha': String(v['dock.tileAlpha']),
+    '--dock-tile-frost': String(v['dock.tileFrost']),
+    '--dock-frost-rgb': rgb(v['dock.tileFrostColor']).join(','),
     '--dock-pad': px(pad),
     '--dock-lift': px(-v['dock.lift']),
     '--dock-fs': String(v['dock.focusScale']),
