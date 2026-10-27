@@ -117,7 +117,13 @@ const SCHEMA = [
     0,
     'Frost over the resting (unfocused) dock tiles and their icons; 0 for none. Calms loud tile colours without leaving a floating icon square, because the tile and its icon dim together. The focused tile keeps its full colour.',
   ],
-  ['dock.tileFrostColor', 'color', null, '#ffffff', 'Tint of the dock-tile frost (`dock.tileFrost`): a light colour for a glassy frost, a dark one to deepen the tiles.'],
+  [
+    'dock.tileFrostColor',
+    'color',
+    null,
+    '#ffffff',
+    'Tint of the dock-tile frost (`dock.tileFrost`): a light colour for a glassy frost, a dark one to deepen the tiles.',
+  ],
   ['dock.lift', 'int', [0, 40], 10, 'How far the focused dock tile rises, in px.'],
   ['dock.focusScale', 'num', [1, 1.3], 1.05, 'Scale of the focused dock tile.'],
   [
