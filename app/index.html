@@ -61,6 +61,8 @@
   --dock-rad: 36px;
   --dock-panel: 0;
   --dock-tile-alpha: 1;
+  --dock-tile-frost: 0;
+  --dock-frost-rgb: 255, 255, 255;
   --dock-pad: 0px;
   --dock-lift: -10px;
   --dock-fs: 1.05;
@@ -449,6 +451,20 @@ body {
   border-radius: var(--dock-rad);
   /* below 1 the wallpaper shows through the tile (dock.tileAlpha); a tile that fills with app art stays opaque */
   background: rgba(var(--b), var(--dock-tile-alpha));
+}
+/* frosted glass: a tint over the whole tile and its icon (dock.tileFrost), so the loud brand colour is calmed
+   without a floating square (tile and icon dim together); the focused tile keeps its ring and full colour.
+   dock.tileFrostColor sets the tint (--dock-frost-rgb): light for a glassy frost, dark to deepen. */
+#dock .tile:not(.f)::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: rgba(var(--dock-frost-rgb), var(--dock-tile-frost));
 }
 #dock .tile img {
   height: 56%;

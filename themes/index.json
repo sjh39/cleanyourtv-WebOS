@@ -40,7 +40,7 @@
    "id": "lockscreen",
    "name": "Lock Screen",
    "author": "CleanYourTV",
-   "description": "A phone-style lock screen: a greeting and big clock top-left, and a small translucent dock low in the corner over a calm landscape. Turn Wallpapers on for your photos.",
+   "description": "A phone-style lock screen: a greeting and big clock top-left, and a centred dock of rounded tiles on a glass panel. Turn Wallpapers on for your photos.",
    "preview": "lockscreen/preview.jpg"
   },
   {
