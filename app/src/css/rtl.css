@@ -97,3 +97,15 @@
   direction: ltr;
   unicode-bidi: isolate;
 }
+[dir="rtl"] .ha-ri svg {
+  margin-right: 0;
+  margin-left: 14px;
+}
+[dir="rtl"] .ha-rs {
+  margin-left: 0;
+  margin-right: 16px;
+}
+[dir="rtl"] .ha-i svg {
+  margin-right: 0;
+  margin-left: 20px;
+}

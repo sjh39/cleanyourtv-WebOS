@@ -78,6 +78,7 @@ function act(e) {
     return launch(a.id);
   }
   var o = e._o || {};
+  if (o.action === 'card') return cardAct(e);
   if (o.action === 'customize') return customizeMenu();
   if (o.action === 'live') return LIVE.enter();
   if (o.action === 'inputs') return inputsMenu();

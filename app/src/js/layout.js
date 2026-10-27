@@ -46,7 +46,10 @@ function rebuild() {
       bar.appendChild(p);
       return p;
     });
-  rows = [tb, d.length ? d : tb];
+  /* cards come first, so the ones OK can switch (a Home Assistant light) join the top row */
+  drawCards();
+  var top = tb.concat(cardTargets());
+  rows = [top, d.length ? d : top];
   for (var i = 0; i < g.length; i += TH.cols) rows.push(g.slice(i, i + TH.cols));
   var nr = Math.min(r, rows.length - 1),
     nc = c;
@@ -59,7 +62,6 @@ function rebuild() {
   }
   setFocus(nr, nc, true);
   markRunning();
-  drawCards();
 }
 
 /* the apps that are open get a green dot; read each time Home is shown, kept only in memory */

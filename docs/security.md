@@ -43,6 +43,12 @@ Only with a weather card on Home. The service asks `api.open-meteo.com` over HTT
 30 minutes, and keeps the last answer in `weather.json`; the request carries the place's coordinates (rounded to about a kilometre) and
 nothing else. Searching a place on the phone page sends the name you type to `geocoding-api.open-meteo.com`. No account or key.
 
+## Home Assistant cards
+
+They use the Home Assistant address and token that Voice already has; nothing new is stored. The service reads the states with one
+request every 20 seconds at most, switches only lights, switches, fans, input booleans and automations (and runs scenes and scripts)
+when you press OK on a card, and passes a camera's picture to the launcher. Locks, alarms and covers are never switched.
+
 ## Voice
 
 Optional and off by default. Installing it downloads files over HTTPS from PyPI, Ubuntu's archive and Moonshine's model server;

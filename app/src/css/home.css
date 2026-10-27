@@ -722,3 +722,114 @@ body.wpon {
   color: var(--ink2);
   font-size: 1em;
 }
+/* a list keeps its height to its rows (at most the slot's), and its text starts on the reading side */
+.card-ha-entities {
+  height: auto !important;
+  max-height: var(--ch);
+  text-align: start !important;
+}
+/* Home Assistant cards: an entity (icon, state, name) on a glass panel, a list of entities, a camera picture */
+.card-ha-entity,
+.card-ha-entities {
+  padding: 16px 24px;
+  border-radius: calc(var(--tile-r) * 1.2);
+  background: var(--pill-bg);
+  box-shadow: inset 0 0 0 1px var(--pill-ring);
+  color: var(--ink);
+}
+.card-ha-entity {
+  display: flex;
+  align-items: center;
+  transition:
+    transform calc(0.15s * var(--spd)) ease-out,
+    background-color calc(0.15s * var(--spd)) linear;
+}
+.card-ha-entity.on .ha-i {
+  color: var(--acc);
+}
+.card-ha-entity.f {
+  background: var(--acc);
+  color: var(--acc-ink);
+  transform: scale(1.04);
+}
+.card-ha-entity.f .ha-i,
+.card-ha-entity.f .ha-n {
+  color: inherit;
+}
+.ha-i svg {
+  display: block;
+  width: 48px;
+  height: 48px;
+  margin-right: 20px;
+}
+.ha-tx {
+  flex: 1;
+  min-width: 0;
+  text-align: start;
+}
+.ha-s {
+  font-size: calc(40px * var(--fs));
+  font-weight: 600;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ha-n {
+  margin-top: 4px;
+  font-size: calc(22px * var(--fs));
+  color: var(--ink2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ha-title {
+  font-size: calc(26px * var(--fs));
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.ha-row {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+  font-size: calc(24px * var(--fs));
+}
+.ha-row + .ha-row {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.ha-ri svg {
+  display: block;
+  width: 28px;
+  height: 28px;
+  margin-right: 14px;
+  color: var(--ink2);
+}
+.ha-rn {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ha-rs {
+  margin-left: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.card-ha-camera {
+  border-radius: calc(var(--tile-r) * 1.2);
+  background: rgba(0, 0, 0, 0.35);
+}
+.card-ha-camera img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.card-ha-camera .ha-n {
+  padding: 22px 26px;
+}
+/* OLED care (cards.js): dimmed after three minutes without a key; the slow shift of the whole layer is not animated */
+.cards-idle .card {
+  opacity: 0.45;
+  transition: opacity 2s linear;
+}

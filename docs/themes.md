@@ -34,8 +34,8 @@ folder of the GitHub repository (the `main` branch):
 | Compact | Twelve columns of smaller tiles: more apps on screen. |
 | Large print | Eight columns of big tiles and larger text. |
 | Still | No animation and a quiet glow. |
-| Bloom | A flower wallpaper with the dock in a glass panel at the bottom. Down moves the dock up and the apps appear below it, centred. |
-| Horizon | A row of seven square apps along the bottom of a dusk landscape, the clock on the left and the buttons on the right at the top. Down moves the row up and shows all apps below it. |
+| Bloom | A flower wallpaper with the dock in a glass panel at the bottom. Down moves the dock up and the apps appear below it, centred. It has slots for cards. |
+| Horizon | A row of seven square apps along the bottom of a dusk landscape, the clock on the left and the buttons on the right at the top. Down moves the row up and shows all apps below it. It has slots for cards. |
 | Pixel | Pixel art: a blocky typeface, square tiles and buttons, a yellow focus box and a sunset over a lake drawn in big pixels. Moves without animation, like an old console. |
 | Lock Screen | A phone-style lock screen: a greeting and a big clock top left, and a small, translucent dock low in the corner over a calm blue landscape, so the picture fills the screen. Down moves the dock up and shows all apps below it. Turn Wallpapers on for your own photos. It has slots for cards (Customise > Cards): the greeting is one. |
 
@@ -229,8 +229,8 @@ when the focus moves down into it (Back or Up closes it); a dock at the top leav
 
 ### Slots for cards
 
-A theme can mark places where **cards** go: small widgets the user chooses in **Customise** > **Cards** (for now the greeting;
-weather and Home Assistant cards follow). A theme without slots shows no cards and has no Cards row in Customise. Slots are a
+A theme can mark places where **cards** go: small widgets the user chooses in **Customise** > **Cards** (greeting, weather,
+text and Home Assistant cards). A theme without slots shows no cards and has no Cards row in Customise. Slots are a
 list in `theme.json`:
 
 ```json

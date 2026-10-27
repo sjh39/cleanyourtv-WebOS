@@ -65,5 +65,35 @@
   "glow": 0,
   "wallpaper": "horizon.jpg",
   "wallpaperDim": 0.05
- }
+ },
+ "slots": [
+  {
+   "id": "greeting",
+   "anchor": "top",
+   "align": "left",
+   "x": 102,
+   "y": 140,
+   "w": 800,
+   "h": 30,
+   "grid": "keep"
+  },
+  {
+   "id": "side",
+   "anchor": "top",
+   "align": "right",
+   "x": 96,
+   "y": 150,
+   "w": 520,
+   "h": 460
+  },
+  {
+   "id": "row",
+   "anchor": "bottom",
+   "align": "left",
+   "x": 96,
+   "y": 245,
+   "w": 900,
+   "h": 250
+  }
+ ]
 }

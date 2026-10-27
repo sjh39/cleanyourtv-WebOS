@@ -104,6 +104,64 @@ run(async () => {
   );
   r = await call(cards, '/api/cards/weather', 'POST', { lat: 'x' });
   ok(r.j.error === 'no place chosen', 'no weather without a place');
+  // Home Assistant cards, with the address and token set for Voice
+  const calls = [];
+  const has = await serve((rq, rs) => {
+    calls.push(rq.method + ' ' + rq.url + ' ' + rq.headers.authorization);
+    if (rq.url === '/api/states') {
+      rs.writeHead(200, { 'content-type': 'application/json' });
+      return rs.end(
+        JSON.stringify([
+          { entity_id: 'light.living', state: 'on', attributes: { friendly_name: 'Living room' } },
+          { entity_id: 'sensor.temp', state: '8.4', attributes: { friendly_name: 'Outside', unit_of_measurement: '°C' } },
+          { entity_id: 'lock.door', state: 'locked', attributes: {} },
+        ])
+      );
+    }
+    if (rq.url === '/api/camera_proxy/camera.door') {
+      rs.writeHead(200, { 'content-type': 'image/jpeg' });
+      return rs.end(Buffer.from([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3]));
+    }
+    if (/^\/api\/services\//.test(rq.url)) {
+      rs.writeHead(200, { 'content-type': 'application/json' });
+      return rs.end('[]');
+    }
+    rs.writeHead(404);
+    rs.end();
+  });
+  r = await call(cards, '/api/cards/ha', 'POST', { ids: ['light.living'] });
+  ok(r.j.error === 'Home Assistant is not set up', 'Home Assistant cards need the address and token from Voice');
+  config.update('test', c => {
+    c.voice = { ha: { url: has.url, token: 'tok' } };
+  });
+  r = await call(cards, '/api/cards/ha', 'POST', { ids: ['light.living', 'sensor.temp', 'switch.gone', 'bad id'] });
+  const st = r.j.states || [];
+  ok(
+    st.length === 3 &&
+      st[0].name === 'Living room' &&
+      st[0].state === 'on' &&
+      st[0].can === true &&
+      st[1].unit === '°C' &&
+      st[1].can === false &&
+      st[2].state === 'unavailable' &&
+      calls.filter(c => /states/.test(c)).length === 1 &&
+      /Bearer tok/.test(calls[0]),
+    'the states come from one request with the Voice token; a missing entity is unavailable and a bad id is left out'
+  );
+  await call(cards, '/api/cards/ha', 'POST', { ids: ['sensor.temp'] });
+  ok(calls.filter(c => /states/.test(c)).length === 1, 'the states are kept for a while, however many cards ask');
+  r = await call(cards, '/api/cards/ha/toggle', 'POST', { id: 'light.living' });
+  const r3 = await call(cards, '/api/cards/ha/toggle', 'POST', { id: 'lock.door' });
+  ok(
+    r.j.ok && calls.some(c => /POST \/api\/services\/light\/toggle/.test(c)) && /cannot be switched/.test(r3.j.error),
+    'OK switches a light, but never a lock'
+  );
+  r = await call(cards, '/api/cards/ha/camera/camera.door');
+  const r4 = await call(cards, '/api/cards/ha/camera/light.living');
+  ok(r.code === 200 && r4.code === 404, "a camera's picture is passed on, and only for camera entities");
+  p = await phone('GET', '/api/entities', undefined, code);
+  ok(p.j.entities.length === 3 && p.j.entities[0].id === 'light.living', 'the phone page lists the entities to choose from');
+  has.server.close();
   await call(cards, '/api/cards/pair', 'POST', { stop: true });
   await sleep(50);
   p = await phone('GET', '/').catch(() => ({ code: 0 }));
