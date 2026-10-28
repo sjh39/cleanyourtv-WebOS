@@ -155,8 +155,7 @@ covers the ports, the token for notifications, voice and dev builds. To report a
 
 ## Community
 
-Questions, ideas and showing off your home screen: join the [couchOS Discord](https://discord.gg/9hHAmCfqB). Bugs and reports of TVs
-that work go in the [issues](https://github.com/sjh39/couchOS/issues), so they stay findable.
+Questions, ideas and reports of TVs that work go in the [issues](https://github.com/sjh39/couchOS/issues), so they stay findable.
 
 ---
 
