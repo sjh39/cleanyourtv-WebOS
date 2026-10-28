@@ -9,7 +9,7 @@ const P = require('./paths'),
 
 // couchOS: the standalone fork's repo. Change this (and the GitHub repo name) if the repo is renamed.
 const DEFAULT_REPO = 'sjh39/couchOS';
-// the dev builds: one pre-release named dev, rebuilt on every push to the dev branch. Before 1.6.9 every branch had its own
+// the dev builds: one pre-release named dev, rebuilt from main after each release. Before 1.6.9 every branch had its own
 // pre-release test-<branch>; a TV still following one of those follows dev.
 const DEV_TAG = 'dev';
 const OLD_TEST_TAG = /^test-[a-z0-9-]{1,60}$/;
