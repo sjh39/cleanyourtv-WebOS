@@ -46,6 +46,13 @@ if command -v node >/dev/null; then
 fi
 if [ "$1" = "--chromium" ]; then
   echo; echo "== pages in old Chromium"
-  "$N8" tools/oldchrome.js ${CYTV_SHOTS:+--shots "$CYTV_SHOTS"}
+  # the headless Chromium 68/79 builds crash a render now and then (e.g. "Failed to serialize document"); retry before giving up,
+  # so a transient hiccup does not fail a release. A real regression fails every attempt and still stops here.
+  n=0
+  until "$N8" tools/oldchrome.js ${CYTV_SHOTS:+--shots "$CYTV_SHOTS"}; do
+    n=$((n + 1))
+    [ "$n" -ge 3 ] && { echo "old Chromium checks still failing after $n attempts"; exit 1; }
+    echo "old Chromium check failed; retry $n of 2"
+  done
 fi
 echo; echo "all checks passed"
