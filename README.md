@@ -2,12 +2,16 @@
   <a href="https://github.com/sjh39/couchOS/stargazers"><img src="https://img.shields.io/github/stars/sjh39/couchOS?style=flat&cacheSeconds=1800&color=ffc857&labelColor=101218" alt="Stars"></a>
   <a href="https://github.com/sjh39/couchOS/pulls?q=is%3Amerged"><img src="https://img.shields.io/github/issues-search?query=repo%3Asjh39%2FcouchOS%20is%3Apr%20is%3Amerged&style=flat&cacheSeconds=1800&color=7c6cff&labelColor=101218&label=merged%20PRs" alt="Merged PRs"></a>
   <a href="https://github.com/sjh39/couchOS/network/members"><img src="https://img.shields.io/github/forks/sjh39/couchOS?style=flat&cacheSeconds=1800&color=2fd3c0&labelColor=101218" alt="Forks"></a>
-  <a href="https://discord.gg/9hHAmCfqB"><img src="https://img.shields.io/badge/Discord-join-f5f6f8?style=flat&logo=discord&logoColor=white&labelColor=101218" alt="Discord"></a>
 </p>
 
 <p align="center"><img src="assets/icon.svg" width="128" alt="couchOS icon"></p>
 
 # couchOS for LG webOS
+
+> [!IMPORTANT]
+> couchOS is a fork of **[cleanyourtv-WebOS](https://github.com/lasharor/cleanyourtv-WebOS)** by
+> **[@lasharor](https://github.com/lasharor)**. Huge thanks for building the foundation this stands on — go star the
+> original. ❤️
 
 A fast home screen for rooted LG webOS TVs, with Live TV from your own playlist, an Inputs list on the Input key,
 picture notifications, optional on-device voice recognition and an optional debloat of LG's ads and telemetry.
