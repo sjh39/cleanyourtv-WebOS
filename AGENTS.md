@@ -80,6 +80,7 @@ npm run format                     # formats the code (Prettier) and rebuilds th
 node tools/test.js live            # one area of tests (the files in tools/test)
 node tools/build-pages.js          # builds app/index.html and manager/app/index.html from app/src and manager/src
 python3 ipk/build.py               # writes dist/: the package, the launcher bundle (.sha256 files) and the Homebrew Channel apps.json
+gh workflow run release.yml        # cut a release now (CI also releases on every push to main)
 node tools/theme-docs.js           # regenerates the settings table in docs/themes.md from helper/themeschema.js
 node tools/theme-index.js          # writes themes/index.json
 node tools/theme-preview.mjs <id>  # renders a theme in headless Chrome (Node 22+)
