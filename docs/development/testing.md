@@ -80,10 +80,10 @@ only a rough comparison: a TV is slower.
 
 | Workflow | When | What |
 |---|---|---|
-| `dev-build.yml` | Every push to `dev`, and after each release | Runs `tools/check.sh --chromium`, builds the package with the commit in a `BUILD` file and publishes it as the pre-release `dev` |
-| `release.yml` | Daily at 04:00 Amsterdam time, or by hand | When the package changed since the last release: checks, raises the version (`tools/release.sh`), moves `main` to `dev`, publishes `v<version>` |
-| `checks.yml` | Pull requests and pushes to any branch but `dev` | Runs `tools/check.sh --chromium` and builds the package |
-| `docs.yml` | Pushes that touch the documentation, and after a release that changed it | Builds this site; deploys it to GitHub Pages from `main` |
+| `release.yml` | Every push to `main`, or by hand | When the package changed since the last release: checks, raises the version (`tools/release.sh`), commits the bump to `main`, publishes `v<version>`, then mirrors it into the `dev` pre-release |
+| `dev-build.yml` | After each release, or by hand | Runs `tools/check.sh --chromium`, builds the package with the commit in a `BUILD` file and publishes it as the pre-release `dev` |
+| `checks.yml` | Pull requests and pushes to any branch but `main` | Runs `tools/check.sh --chromium` and builds the package |
+| `docs.yml` | Pushes to `main` that touch the documentation | Builds this site; deploys it to GitHub Pages from `main` |
 
 The dev build appears in the manager app's **Update channel** list; see [Dev builds](../managing.md#dev-builds).
 

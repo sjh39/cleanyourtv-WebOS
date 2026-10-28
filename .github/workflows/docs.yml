@@ -1,5 +1,4 @@
-# Builds the documentation (https://zensical.org) on every change to it, and publishes it to GitHub Pages from main (which the daily
-# release moves to dev, release.yml).
+# Builds the documentation (https://zensical.org) on every change to it on main and publishes it to GitHub Pages.
 # GitHub Pages must be set to "GitHub Actions" as its source (repository Settings > Pages).
 name: Documentation
 on:
@@ -12,7 +11,7 @@ on:
     paths:
       - "docs/**"
       - "zensical.toml"
-  workflow_dispatch:   # the daily release starts it: main moved by a workflow does not count as a push
+  workflow_dispatch:   # to rebuild the pages by hand
 permissions:
   contents: read
 jobs:

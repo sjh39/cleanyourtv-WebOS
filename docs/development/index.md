@@ -44,16 +44,15 @@ puts what each page uses into it, and `node tools/i18n.js` shows how complete ea
 
 | Branch | What it is |
 |---|---|
-| `dev` | Where all work lands, including pull requests (it is the default branch). Every push publishes the [dev build](../managing.md#dev-builds). |
-| `main` | The last release. Only the release workflow moves it. |
-| any other | Your own work in progress. Pushes run the checks but publish nothing; merge into `dev` to let people try it. |
+| `main` | Where all work lands, including pull requests (it is the default branch). A push that changes the package publishes a release, mirrored into the [dev build](../managing.md#dev-builds). |
+| any other | Your own work in progress. Pushes run the checks but publish nothing; merge into `main` to release it. |
 
-The release workflow (`.github/workflows/release.yml`) runs every day at 04:00 Amsterdam time. When the files that go into the
-package changed on `dev` since the last release, `tools/release.sh` raises the patch version of the service (and of the launcher
-when `app/` changed), commits that to `dev` and moves `main` to it; the workflow then builds and publishes `v<version>` with the
-commit subjects as release notes. Raise a minor or major version by hand on `dev` and the script keeps it. For an urgent fix, run
-the workflow by hand (Actions > Release > Run workflow). To skip the daily release for a while, set the repository variable
-`RELEASE_HOLD` to `1`. `CYTV_DRY=1 sh tools/release.sh` shows what the next release would contain.
+The release workflow (`.github/workflows/release.yml`) runs on every push to `main`. When the files that go into the package
+changed since the last release, `tools/release.sh` raises the patch version of the service (and of the launcher when `app/`
+changed), commits that bump to `main`, and the workflow builds and publishes `v<version>` with the commit subjects as release
+notes, then mirrors it into the `dev` pre-release. Raise a minor or major version by hand and the script keeps it. The first
+release (no `v*` tag yet) publishes the current version as it stands. Run the workflow by hand (Actions > Release > Run workflow)
+to force a check. `CYTV_DRY=1 sh tools/release.sh` shows what the next release would contain.
 
 Using an AI assistant to find or fix a bug is welcome: see [Working on problems with an AI assistant](../ai.md) and `AGENTS.md` in the
 repository root.
@@ -77,5 +76,5 @@ welcome too: `firmware`, optionally `sdk`, `homeType`, `status` and a `note`.
 
 ## Dev builds
 
-Every push to `dev` publishes the [dev build](../managing.md#dev-builds) that people can install from the manager app.
+Every release is mirrored into the [dev build](../managing.md#dev-builds) pre-release that people can install from the manager app.
 See [Testing and CI](testing.md).

@@ -1,10 +1,10 @@
-# The same checks as a dev build (tools/check.sh: the tests under Node 8.12.0 and the current Node, the built pages), for pull requests
-# and for every branch but dev (dev-build.yml checks dev before it publishes). A branch other than dev builds no package.
+# The checks (tools/check.sh: the tests under Node 8.12.0 and the current Node, the built pages) for pull requests and for pushes to
+# any branch but main (release.yml runs the same checks on main before it publishes). It builds the package but publishes nothing.
 name: Checks
 on:
   pull_request:
   push:
-    branches-ignore: [dev]
+    branches-ignore: [main]
     paths-ignore:
       - "docs/**"
       - "zensical.toml"

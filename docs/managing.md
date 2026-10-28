@@ -19,18 +19,18 @@ latest GitHub release, each checked against its SHA-256 file.
 
 | Channel | What it follows |
 |---|---|
-| **Stable releases** | The latest published release: at most one a day, at 04:00 Amsterdam time, and only when something changed. This is the default. |
-| **Dev builds** | Every change, as soon as it is on the `dev` branch: for people who want fixes early or are asked to try one. |
+| **Stable releases** | The latest published release. A release goes out on every change that touches the package. This is the default. |
+| **Dev builds** | The pre-release that tracks `main`: the same code as the latest release, carrying the commit it was built from, for people who are asked to try a build. |
 
 ### Dev builds
 
-All work lands on the `dev` branch. Every push to it builds the package (`.github/workflows/dev-build.yml`) and publishes it as
-the **pre-release** named `dev`, replacing the one before. Once a day the release workflow turns what is on `dev` into the
-next stable release. The stable updater never sees pre-releases.
+Every push to `main` that changes the package publishes a release (`.github/workflows/release.yml`). Each release is then mirrored
+into the **pre-release** named `dev` (`.github/workflows/dev-build.yml`), replacing the one before, with the commit it was built
+from recorded in a `BUILD` file. The stable updater never sees the pre-release; the dev channel follows it.
 
 | | |
 |---|---|
-| Follow the dev builds | **Update channel** > **Dev builds** (it shows the commit and date), then install with the **Launcher** and **Service** rows. Expect updates several times a day. |
+| Follow the dev builds | **Update channel** > **Dev builds** (it shows the commit and date), then install with the **Launcher** and **Service** rows. |
 | Back to the stable releases | **Update channel** > **Stable releases**. The stable release is offered again, also when it is older than the dev build. |
 | Install from scratch | `ssh root@<tv-ip> 'curl -fsSL https://raw.githubusercontent.com/sjh39/couchOS/main/install.sh \| CYTV_CHANNEL=dev sh'`. The manager then follows the dev builds. |
 | Same version number | A dev build records its commit in a `BUILD` file, so a newer push of the same version is still offered. |

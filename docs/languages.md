@@ -17,7 +17,7 @@ The Russian, Turkish and Arabic translations were machine-made and have not been
 are very welcome.
 
 Translations are plain text files in the repository, one per language, so no programming is needed. Anyone can add a language or
-fix a translation with a pull request; the next daily release then brings it to every TV.
+fix a translation with a pull request; the next release then brings it to every TV.
 
 1. Open [`i18n/en.json`](https://github.com/sjh39/couchOS/blob/main/i18n/en.json). It lists every English text the
    screens use, as `"English text": "English text"`.
@@ -31,7 +31,7 @@ fix a translation with a pull request; the next daily release then brings it to 
    `other`); `other` is required, and the form follows the first number in the text.
 6. Keep translations short where you can: the TV is read from a few metres away, and a text too long for its row or button ends
    in "...".
-7. Open a pull request against the `dev` branch. If you cannot use git, open a
+7. Open a pull request against `main`. If you cannot use git, open a
    [New language issue](https://github.com/sjh39/couchOS/issues/new?template=new_language.yml) and attach the file.
 
 The checks of the pull request run `node tools/i18n.js`: it shows how complete each language is, and it fails only when a file is

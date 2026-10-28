@@ -92,8 +92,8 @@ and troubleshooting.
    telemetry services and blocks a few ad servers, only while the launcher is Home, and undoes cleanly.
 
 7. **[Setting up, updating and removing it from the TV](https://sjh39.github.io/couchOS/manager/).** The manager app
-   checks every download against a SHA-256 file, rolls back a launcher or service that does not start, and can follow a
-   [dev build](https://sjh39.github.io/couchOS/managing/#dev-builds) to get changes before the daily release.
+   checks every download against a SHA-256 file, rolls back a launcher or service that does not start, and can follow the
+   [dev build](https://sjh39.github.io/couchOS/managing/#dev-builds) pre-release.
 
 ---
 
@@ -169,7 +169,7 @@ Troubleshooting and fixing with an AI assistant (Claude, ChatGPT, a local model)
 Translations are welcome too: a language is one file in [`i18n/`](i18n/), no programming needed
 ([how](https://sjh39.github.io/couchOS/languages/)). Reports from other TVs are the most useful contribution: open an [issue](https://github.com/sjh39/couchOS/issues)
 with the output of **Share log** in the manager app. For code, see [Contributing](https://sjh39.github.io/couchOS/development/):
-the service runs on Node.js 8 (webOS 5), `sh tools/check.sh` runs every check, every push to `dev` publishes a dev build, and a release goes out daily from `dev`.
+the service runs on Node.js 8 (webOS 5), `sh tools/check.sh` runs every check, and every push to `main` that changes the package publishes a release (mirrored into a dev build).
 
 ---
 
