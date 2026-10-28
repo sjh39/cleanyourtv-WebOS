@@ -52,7 +52,7 @@ changed since the last release, `tools/release.sh` raises the patch version of t
 changed), commits that bump to `main`, and the workflow builds and publishes `v<version>` with the commit subjects as release
 notes, then mirrors it into the `dev` pre-release. Raise a minor or major version by hand and the script keeps it. The first
 release (no `v*` tag yet) publishes the current version as it stands. Run the workflow by hand (Actions > Release > Run workflow)
-to force a check. `CYTV_DRY=1 sh tools/release.sh` shows what the next release would contain.
+to force a release check without waiting for a push. `CYTV_DRY=1 sh tools/release.sh` shows what the next release would contain.
 
 Using an AI assistant to find or fix a bug is welcome: see [Working on problems with an AI assistant](../ai.md) and `AGENTS.md` in the
 repository root.
