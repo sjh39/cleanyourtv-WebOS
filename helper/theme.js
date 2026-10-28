@@ -195,6 +195,13 @@ function create(ctx) {
       wall = await fetchBuf(base() + '/' + id + '/' + w, MAX_WALLPAPER, 25000);
       if (!imageOk(wall, w, MAX_WALLPAPER)) throw new Error('the wallpaper is not an image of that type');
     }
+    const fg = getPath(raw, 'effects.foreground');
+    let fore = null;
+    if (typeof fg === 'string' && fg !== '') {
+      if (!FILE.test(fg)) throw new Error('the foreground name is not valid');
+      fore = await fetchBuf(base() + '/' + id + '/' + fg, MAX_WALLPAPER, 25000);
+      if (!imageOk(fore, fg, MAX_WALLPAPER)) throw new Error('the foreground is not an image of that type');
+    }
     const f = getPath(raw, 'type.fontFile');
     let font = null;
     if (typeof f === 'string' && f !== '') {
@@ -206,6 +213,7 @@ function create(ctx) {
       had = fs.existsSync(path.join(d, 'theme.json'));
     mkdirs(d);
     if (wall) writeAtomic(path.join(d, w), wall);
+    if (fore) writeAtomic(path.join(d, fg), fore);
     if (font) writeAtomic(path.join(d, f), font);
     writeAtomic(path.join(d, 'theme.json'), JSON.stringify(raw));
     cache = null;

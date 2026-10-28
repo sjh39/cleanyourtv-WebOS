@@ -313,6 +313,15 @@ run(async () => {
     r.code === 200 && th.resolved().font && th.resolved().font.id === 'pixel' && th.resolved().dockN === 4,
     'a theme that extends one with a typeface uses that file from its folder'
   );
+  // a theme's foreground cutout (the depth effect): downloaded with the theme and served from its folder, a 404 otherwise
+  r = await tcall('set', { id: 'couch' });
+  ok(r.code === 200 && fs.existsSync(path.join(tlocal, 'couch', 'couch-01-fg.webp')), "a theme's foreground cutout is downloaded with it");
+  r = await tcall('foreground/couch/couch-01-fg.webp', null, 'GET');
+  ok(r.code === 200, 'the foreground cutout is served');
+  r = await tcall('foreground/couch/other.webp', null, 'GET');
+  ok(r.code === 404, 'a foreground the theme does not name is not served');
+  r = await tcall('foreground/bloom/couch-01-fg.webp', null, 'GET');
+  ok(r.code === 404, 'a foreground is not served for a theme that names none');
   r = await tcall('set', { id: 'badfont' });
   ok(r.code !== 200 && !fs.existsSync(path.join(tlocal, 'badfont')), 'a typeface that is not a font is refused and nothing is kept');
   r = await tcall('set', { id: 'kid' });
