@@ -2,7 +2,7 @@
 // close them, as LG's own Home does with its Recents panel on a second Back.
 //   GET /api/running                               {apps: [{id, title}]}
 //   POST /api/running/close {id} or {all: true}    {returnValue, closed: [ids]}
-// Only apps the launcher knows are listed (the apps of listApps), never Home and never CleanYourTV's own apps (the manager, and the
+// Only apps the launcher knows are listed (the apps of listApps), never Home and never couchOS's own apps (the manager, and the
 // picker and notify apps that are meant to stay up). Only listed apps can be closed. Closing also drops the app from LG's recents, as
 // LG's panel does.
 const web = require('./web');

@@ -408,15 +408,15 @@ function build() {
       on = !(st.home && st.home.enabled);
     rows.push({ label: 'Cancel', fn: pop });
     rows.push({
-      label: un ? 'Yes, remove CleanYourTV' : on ? 'Yes, use CleanYourTV as Home' : 'Yes, use LG’s Home',
+      label: un ? 'Yes, remove couchOS' : on ? 'Yes, use couchOS as Home' : 'Yes, use LG’s Home',
       sub: un ? 'settings and apps are deleted; the TV restarts' : 'the TV restarts',
       fn: function () {
         api(un ? '/api/manager/uninstall' : '/api/manager/home', un ? {} : { enabled: on }).catch(function () {});
         banner(
           un
-            ? 'Removing CleanYourTV… the TV restarts in a moment and LG’s Home comes back.'
+            ? 'Removing couchOS… the TV restarts in a moment and LG’s Home comes back.'
             : on
-              ? 'Switching to CleanYourTV… the TV restarts in a moment.'
+              ? 'Switching to couchOS… the TV restarts in a moment.'
               : 'Switching to LG’s Home… the TV restarts in a moment.',
           'work'
         );
@@ -544,7 +544,7 @@ function build() {
     rows.push({
       label: 'Input key shows',
       sub:
-        (pk.released ? 'LG\u2019s own list: CleanYourTV is not the Home' : PKT[pkMode]) +
+        (pk.released ? 'LG\u2019s own list: couchOS is not the Home' : PKT[pkMode]) +
         (pk.reason && !pk.released ? ' \u00B7 ' + pk.reason : ''),
       fn: function () {
         var o = ['overlay', 'ondemand', 'launcher'];
@@ -557,7 +557,7 @@ function build() {
   }
   if (view === 'home') {
     rows.push({
-      label: 'Use CleanYourTV as Home',
+      label: 'Use couchOS as Home',
       sub: onoff(st.home && st.home.enabled) + ' \u00B7 switching restarts the TV',
       fn: function () {
         push('confirm-home');
@@ -830,7 +830,7 @@ function build() {
     });
   rows.push({ sep: true });
   rows.push({
-    label: 'CleanYourTV as Home',
+    label: 'couchOS as Home',
     sub: onoff(st.home && st.home.enabled),
     fn: function () {
       push('home');

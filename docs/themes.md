@@ -12,7 +12,7 @@ Your own photos can replace a theme's background: see [Wallpapers](wallpapers.md
 
 ## Where the themes come from
 
-Themes are not part of the service. They are read from the [`themes/`](https://github.com/lasharor/cleanyourtv-WebOS/tree/main/themes)
+Themes are not part of the service. They are read from the [`themes/`](https://github.com/sjh39/cleanyourtv-WebOS/tree/main/themes)
 folder of the GitHub repository (the `main` branch):
 
 - The service downloads `themes/index.json` (the list) when you open **Theme**.
@@ -55,7 +55,7 @@ The pictures are the launcher page rendered in a browser with each theme.
 
 Themes live in the repository, so a new one is a pull request:
 
-1. Copy a folder from [`themes/`](https://github.com/lasharor/cleanyourtv-WebOS/tree/main/themes), for example `classic`, to `themes/<id>/`.
+1. Copy a folder from [`themes/`](https://github.com/sjh39/cleanyourtv-WebOS/tree/main/themes), for example `classic`, to `themes/<id>/`.
    The id is lower-case letters, digits and `-`.
 2. Edit `theme.json`; the rest keeps its default, or the value of the theme named in `"extends"`.
 3. Add `preview.jpg`: a screenshot of the home screen with your theme (16:9, about 800 px wide, at most 600 KB).
@@ -105,7 +105,7 @@ checkout of the repository (or these files) and the rules below.
 
 **A prompt to start with**
 
-> Create a theme for CleanYourTV. Read the settings table in `docs/themes.md`, `themes/classic/theme.json` and `themes/bloom/theme.json`.
+> Create a theme for couchOS. Read the settings table in `docs/themes.md`, `themes/classic/theme.json` and `themes/bloom/theme.json`.
 > The theme: *describe the look and the layout you want*. Write `themes/<id>/theme.json` using only keys from the table (data only; ranges
 > are enforced), generate an original wallpaper if it needs one (1920 x 1080, under 1.5 MB, saved in the theme's folder), render it with
 > `node tools/theme-preview.mjs <id> --out /tmp/preview`, look at `rest.png`, `grid.png` and `menu.png`, fix problems and render again, then
@@ -121,7 +121,7 @@ theme lists only what it changes. Positions and sizes are in pixels on a 1920 x 
 ```json
 {
   "name": "Midnight",
-  "author": "CleanYourTV",
+  "author": "couchOS",
   "description": "Deep blue with a soft wallpaper and a blue focus.",
   "extends": "classic",
   "colors": { "night": "#060a18", "panel": "#101830", "ink": "#eaf0ff", "accent": "#7aa2ff" },

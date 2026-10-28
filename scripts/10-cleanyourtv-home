@@ -1,5 +1,5 @@
 #!/bin/sh
-# Replace LG's Home with the CleanYourTV launcher (RAM-only; reboot without this script restores stock).
+# Replace LG's Home with the couchOS launcher (RAM-only; reboot without this script restores stock).
 # Use LG's Home instead: the switch in the manager app (creates /media/developer/cleanyourtv/DISABLE and restarts the TV).
 # Two ways, chosen by helper/tvprofile.js (homeTakeover) from LG's Home as it came with the TV:
 #   mount    (flutter and web Home) the launcher's folder is mounted over LG's Home app and the app manager (sam) is restarted

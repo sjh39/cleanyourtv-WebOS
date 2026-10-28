@@ -16,7 +16,7 @@ ssh -o BatchMode=yes -o ConnectTimeout=8 "root@$IP" 'sh -s' <<'REMOTE' | mask
 D=/media/developer/cleanyourtv
 export PATH=/usr/bin:/usr/sbin:/bin:/sbin:$PATH
 echo "===== diagnose.sh ($(date -u +%Y-%m-%dT%H:%M:%SZ)) ====="
-echo; echo "===== The CleanYourTV report (the same as Share log) ====="
+echo; echo "===== The couchOS report (the same as Share log) ====="
 node $D/sharelog.js --print 2>&1
 echo; echo "===== System ====="
 uname -a; echo "uptime: $(cut -d' ' -f1 /proc/uptime) s"; free 2>/dev/null | head -3; df -h /media/developer 2>/dev/null | tail -1

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Standalone updater for the CleanYourTV package, run as root by the manager app when the service is not running (for example before
+// Standalone updater for the couchOS package, run as root by the manager app when the service is not running (for example before
 // the setup, or when the setup failed). It does not need the service.
 //   node selfupdate.js check      prints {installed, latest, updateTo} as JSON
 //   node selfupdate.js install    downloads the latest package, checks its SHA-256, installs it; if the TV is already set up it also
@@ -88,7 +88,7 @@ async function install() {
       );
       if (out.status !== 0) throw new Error('the new service did not start; the previous files were restored');
     }
-    say('DONE updated to ' + l.service + '. Close CleanYourTV and open it again.');
+    say('DONE updated to ' + l.service + '. Close couchOS and open it again.');
   } catch (e) {
     say('ERROR ' + String(e.message || e));
     process.exitCode = 1;

@@ -40,10 +40,7 @@ const {
 } = require('./themeschema');
 
 const BUILTIN = () =>
-  normalize(
-    { name: 'Classic', author: 'CleanYourTV', description: 'The original look: near-black, white focus, ten columns.' },
-    DEFAULT_ID
-  );
+  normalize({ name: 'Classic', author: 'couchOS', description: 'The original look: near-black, white focus, ten columns.' }, DEFAULT_ID);
 let cache = null;
 // the themes on the TV: Classic (built in) and every downloaded folder
 function load() {
@@ -262,7 +259,7 @@ function create(ctx) {
       });
     };
     const cc = cat.themes.find(t => t.id === DEFAULT_ID);
-    add(DEFAULT_ID, cc || { name: 'Classic', author: 'CleanYourTV', description: all[DEFAULT_ID].description, preview: '' });
+    add(DEFAULT_ID, cc || { name: 'Classic', author: 'couchOS', description: all[DEFAULT_ID].description, preview: '' });
     for (const t of cat.themes) add(t.id, t);
     for (const id of Object.keys(all))
       add(id, { name: all[id].name, author: all[id].author, description: all[id].description, preview: '' });

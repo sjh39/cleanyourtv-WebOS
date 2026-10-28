@@ -1,4 +1,4 @@
-# CleanYourTV for LG webOS
+# couchOS for LG webOS
 
 A fast home screen for rooted LG webOS TVs. It replaces LG's Home with a dock of four apps, a top shelf and an app grid,
 and adds Live TV from your own playlist, an Inputs list on the Input key, picture notifications from your network, optional
@@ -50,16 +50,16 @@ services you choose (update checks go to GitHub). See [What it changes on the TV
 ## Where to start
 
 1. Make sure the TV is rooted and has the Homebrew Channel ([rootmy.tv](https://rootmy.tv)).
-2. Follow [Installing](install.md): add CleanYourTV's repository to the Homebrew Channel (or run one command from your computer), then
+2. Follow [Installing](install.md): add couchOS's repository to the Homebrew Channel (or run one command from your computer), then
    **Set up now** in the app on the TV.
 3. Check the [tested TVs](tested-tvs.md) and report yours if it is not listed.
 
-Questions and ideas are welcome on the [CleanYourTV Discord](https://discord.gg/9hHAmCfqB); bugs go in the
-[issues](https://github.com/lasharor/cleanyourtv-WebOS/issues).
+Questions and ideas are welcome on the [couchOS Discord](https://discord.gg/9hHAmCfqB); bugs go in the
+[issues](https://github.com/sjh39/cleanyourtv-WebOS/issues).
 
 ## Disclaimer
 
-CleanYourTV is an independent project. It is not affiliated with, endorsed by or supported by LG Electronics. LG and webOS are
+couchOS is an independent project. It is not affiliated with, endorsed by or supported by LG Electronics. LG and webOS are
 trademarks of LG Electronics. Live TV plays only the playlists you add; the project provides no channels and no playlist.
 
 ## Licence

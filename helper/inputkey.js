@@ -23,7 +23,7 @@ function create(ctx) {
   const guideKey = () => (config.options().liveTv !== false ? String(config.keys().guide || '') : '');
   // overlay, ondemand or launcher: the manager's choice, else this TV's default (tvprofile.js)
   const mode = () => picker.modeOf(config.get().picker || {}, profile.get().pickerMode);
-  // with the launcher's list as the target, CleanYourTV has to be the Home: while LG's Home is chosen the key stays with LG
+  // with the launcher's list as the target, couchOS has to be the Home: while LG's Home is chosen the key stays with LG
   const on = () => config.options().inputKey && !(mode() === 'launcher' && fs.existsSync(P.DISABLE));
   const syncMode = () => {
     try {

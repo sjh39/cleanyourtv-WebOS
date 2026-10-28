@@ -1,11 +1,11 @@
 # Documentation site (https://zensical.org). Build locally: pip install zensical && zensical serve
 [project]
-site_name = "CleanYourTV for LG webOS"
+site_name = "couchOS for LG webOS"
 site_description = "A fast home screen for rooted LG webOS TVs, with Live TV from your own playlist, an Inputs list, picture notifications, optional voice and an optional debloat."
-site_author = "CleanYourTV contributors"
-site_url = "https://lasharor.github.io/cleanyourtv-WebOS/"
-repo_url = "https://github.com/lasharor/cleanyourtv-WebOS"
-repo_name = "lasharor/cleanyourtv-WebOS"
+site_author = "couchOS contributors"
+site_url = "https://sjh39.github.io/cleanyourtv-WebOS/"
+repo_url = "https://github.com/sjh39/cleanyourtv-WebOS"
+repo_name = "sjh39/cleanyourtv-WebOS"
 edit_uri = "edit/main/docs/"
 copyright = "MIT licence. Not affiliated with LG Electronics."
 docs_dir = "docs"

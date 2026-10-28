@@ -8,7 +8,7 @@ var INFO = {
   'Update channel':
     'Stable releases are what most people want: at most one a day, made from the dev builds. Dev builds come with every change and can be less finished; choose Dev here, then use the Launcher and Service rows to install it. Going back to Stable offers the latest release again.',
   'Go back to launcher': 'Swaps the previous launcher version back in. The newer one stays available as an update.',
-  'CleanYourTV as Home': 'Whether this launcher is Home, and learning the Home key.',
+  'couchOS as Home': 'Whether this launcher is Home, and learning the Home key.',
   'Debloat LG\u2019s ads and telemetry':
     'Stops LG\u2019s ad, recommendation and telemetry services and blocks a few ad servers. Nothing is uninstalled, and it only applies while this launcher is Home.',
   'Debloat':
@@ -22,8 +22,8 @@ var INFO = {
   'Switch all off': 'Switches the debloat off: the services start again and the hosts lines are removed.',
   'More': 'Voice, the language of the screens and network notifications.',
   'Language':
-    'The language of CleanYourTV\u2019s screens: the launcher, this app and the Inputs list. Automatic follows the TV\u2019s menu language. The percentage says how much of a language is translated; the rest stays English. Translations are files in the repository that anyone can add to.',
-  'Automatic': 'Follows the TV\u2019s menu language. English when CleanYourTV has no translation for it.',
+    'The language of couchOS\u2019s screens: the launcher, this app and the Inputs list. Automatic follows the TV\u2019s menu language. The percentage says how much of a language is translated; the rest stays English. Translations are files in the repository that anyone can add to.',
+  'Automatic': 'Follows the TV\u2019s menu language. English when couchOS has no translation for it.',
   'Wallpapers':
     'Your own photos behind Home: uploaded from a phone, or synced from Immich albums. Switch them on in the launcher: Customise > Wallpapers.',
   'Manage from your phone':
@@ -40,7 +40,7 @@ var INFO = {
   'Reset Home customisation':
     'Puts the dock, the top buttons, hidden apps, the app order and the clock back to the defaults. The theme stays.',
   'Yes, reset Home': 'The launcher\u2019s own settings go back to the defaults. Apps, the theme and everything in this app stay.',
-  'Use CleanYourTV as Home':
+  'Use couchOS as Home':
     'On: the Home button opens this launcher. Off: LG\u2019s own Home. Switching restarts the TV (about a minute); the service keeps running either way.',
 
   'Network notifications':
@@ -77,7 +77,7 @@ var INFO = {
   'Try it now': 'Starts listening without the button: speak when the card appears.',
   'Send the text to':
     'Where the recognised text goes. Shows how to set the address of your server. Without one, the text is only shown on screen.',
-  'Remove voice': 'Deletes the downloaded engine and model. The rest of CleanYourTV is not affected.',
+  'Remove voice': 'Deletes the downloaded engine and model. The rest of couchOS is not affected.',
   'Input key':
     'The remote\u2019s Input button opens our Inputs list over the running app instead of LG\u2019s picker. Open this screen to switch it off or to learn the button.',
   'Share log':
@@ -98,12 +98,12 @@ var INFO = {
   'Learn the Guide key':
     'Records the Guide button\u2019s code. Afterwards it opens the Live TV channel guide over whatever is running (only while Live TV is on). Clear it to get LG\u2019s guide back.',
   'Input key shows':
-    'How the Input button shows the Inputs. Over the running app, ready in the background: instant, tested on webOS 25. Over the running app, started when pressed: nothing runs hidden, so it cannot keep the remote; the default on older webOS, where the background one showed a loading circle. The launcher\u2019s Inputs list: the TV goes to our Home (needs CleanYourTV as Home; otherwise the key stays with LG). Choose to go to the next one.',
+    'How the Input button shows the Inputs. Over the running app, ready in the background: instant, tested on webOS 25. Over the running app, started when pressed: nothing runs hidden, so it cannot keep the remote; the default on older webOS, where the background one showed a loading circle. The launcher\u2019s Inputs list: the TV goes to our Home (needs couchOS as Home; otherwise the key stays with LG). Choose to go to the next one.',
   'Learn the Home key': 'Optional. Records the Home button\u2019s code. The Home key keeps working exactly as before.',
   'Back': 'Back to the previous list.',
   'Cancel': 'Nothing changes.',
-  'Yes, remove CleanYourTV': 'Deletes the apps, the boot scripts and the settings, then restarts the TV.',
-  'Yes, use CleanYourTV as Home': 'Restarts the TV; this launcher is Home after it starts.',
+  'Yes, remove couchOS': 'Deletes the apps, the boot scripts and the settings, then restarts the TV.',
+  'Yes, use couchOS as Home': 'Restarts the TV; this launcher is Home after it starts.',
   'Yes, use LG\u2019s Home': 'Restarts the TV; LG\u2019s own Home is Home after it starts. You can switch back here.',
   'Update to': 'A newer package is available. Install it before the setup: it may contain fixes for your firmware.',
   'Take over the Input key': 'The remote\u2019s Input button opens our Inputs list instead of LG\u2019s picker. You can change this later.',
@@ -118,7 +118,7 @@ function infoFor(r) {
   var k = r.label.replace(/ [0-9][0-9.]*$/, '');
   if (k === 'Check for updates' && offline)
     return { t: k, d: 'Works without the service: looks for a newer package and installs it through the root service.' };
-  if (k === 'Use CleanYourTV as Home' && st.home && st.home.fullhome)
+  if (k === 'Use couchOS as Home' && st.home && st.home.fullhome)
     return {
       t: k,
       d:

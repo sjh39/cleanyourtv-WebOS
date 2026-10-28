@@ -1,11 +1,11 @@
 name: New language or translation fix
-description: Add a language to CleanYourTV, or correct a translation
+description: Add a language to couchOS, or correct a translation
 body:
   - type: markdown
     attributes:
       value: |
         Thanks for helping! A pull request against `dev` with the file `i18n/<code>.json` is the quickest way in; this form is for
-        when that is not possible. How to make the file: [Languages](https://lasharor.github.io/cleanyourtv-WebOS/languages/).
+        when that is not possible. How to make the file: [Languages](https://sjh39.github.io/cleanyourtv-WebOS/languages/).
   - type: input
     id: language
     attributes:

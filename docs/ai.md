@@ -2,7 +2,7 @@
 
 If something does not work on your TV, an AI assistant (Claude, ChatGPT, Gemini, a local model) can help you find out why, and, if you
 want, help you fix the bug in the code and send the fix. This page says what to give it and how to keep it safe. Nothing here is
-required: **Share log** and an [issue](https://github.com/lasharor/cleanyourtv-WebOS/issues) work as before.
+required: **Share log** and an [issue](https://github.com/sjh39/cleanyourtv-WebOS/issues) work as before.
 
 ## The ground rules
 
@@ -10,7 +10,7 @@ required: **Share log** and an [issue](https://github.com/lasharor/cleanyourtv-W
   service, edit a file, install, delete, reboot) is proposed first, you say yes, and it names the command that undoes it.
 - **You decide what leaves your house.** A report goes to whatever AI service you use. Addresses, MAC addresses, stream URLs and tokens are
   masked, but masking is best effort: read the file before you paste or upload it. A local model keeps it on your computer.
-- **An assistant can be wrong.** Do not run a command you do not understand. The way back is always the same: switch **CleanYourTV as Home**
+- **An assistant can be wrong.** Do not run a command you do not understand. The way back is always the same: switch **couchOS as Home**
   off in the manager app, or `sh /media/developer/cleanyourtv/undo-home.sh`, or start the TV in the Homebrew Channel's failsafe mode.
 
 ## Part 1: find out what is wrong on your TV
@@ -18,14 +18,14 @@ required: **Share log** and an [issue](https://github.com/lasharor/cleanyourtv-W
 1. **Collect a report.** In the manager app **Share log** shows a QR code for a masked report, or from your computer:
 
    ```sh
-   git clone https://github.com/lasharor/cleanyourtv-WebOS && cd cleanyourtv-WebOS
+   git clone https://github.com/sjh39/cleanyourtv-WebOS && cd cleanyourtv-WebOS
    sh tools/diagnose.sh <tv-ip> > cytv-diagnose.txt
    ```
 
    `diagnose.sh` logs in as root over SSH (key authentication, as set up by the Homebrew Channel) and only reads: the Share log report, the
    foreground and running apps, the media pipelines, the processes, the Input key mode, the configuration with secrets hidden, the themes
    on the TV, the service's last operations and the Live TV status. It changes nothing. Open the file and remove anything private.
-2. **Give the assistant the context.** Start the conversation with [`AGENTS.md`](https://github.com/lasharor/cleanyourtv-WebOS/blob/main/AGENTS.md)
+2. **Give the assistant the context.** Start the conversation with [`AGENTS.md`](https://github.com/sjh39/cleanyourtv-WebOS/blob/main/AGENTS.md)
    (what the project is, where the TV keeps things, what has gone wrong before, the rules) and the report. Tools that read the repository
    (Claude Code, Codex, Cursor and similar) pick `AGENTS.md` up by themselves when you open the folder you cloned.
 3. **Ask for a diagnosis, not a fix.** See the prompts below. Ask it to name the evidence in the report for each conclusion.
@@ -36,7 +36,7 @@ required: **Share log** and an [issue](https://github.com/lasharor/cleanyourtv-W
 
 **Diagnose a report**
 
-> I use CleanYourTV on an LG webOS TV. Read AGENTS.md first. Below is a diagnostic report (`tools/diagnose.sh`) and this is what is wrong:
+> I use couchOS on an LG webOS TV. Read AGENTS.md first. Below is a diagnostic report (`tools/diagnose.sh`) and this is what is wrong:
 > *describe it: what you did, what you expected, what happened, how often*. Work out the most likely causes from the report. For each, quote
 > the lines of the report that support it, and say what would show that it is wrong. Propose read-only checks first. Do not suggest a change
 > to the TV without the exact command, what it does and the command that undoes it. Do not ask me for secrets.

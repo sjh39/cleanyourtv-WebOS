@@ -1,6 +1,6 @@
 # Third-party components
 
-CleanYourTV for LG webOS is MIT licensed (see `LICENSE`). The package also contains the following unmodified
+couchOS for LG webOS is MIT licensed (see `LICENSE`). The package also contains the following unmodified
 third-party files. They are separate programs that our service starts; none of our code is linked with them.
 
 ## inputhook (Input key)
@@ -45,5 +45,5 @@ the file header). The manager app loads it to draw the QR code.
 
 ## Design
 
-The home-screen design follows the Android TV project [CleanYourTV](https://github.com/Gathin23/cleanyourtv) (MIT).
+The home-screen design follows the Android TV project [couchOS](https://github.com/Gathin23/cleanyourtv) (MIT).
 No code from it is used.

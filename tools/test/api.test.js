@@ -1,5 +1,5 @@
 // Contract test: starts the service (helper/helper.js) on this machine with a stand-in for luna-send, a stand-in for the GitHub
-// API and a temporary CleanYourTV folder, calls the HTTP API and compares the replies with tools/test/golden/api.json.
+// API and a temporary couchOS folder, calls the HTTP API and compares the replies with tools/test/golden/api.json.
 // It proves that a change inside the service leaves what the launcher, the manager and the scripts see unchanged.
 //   node tools/test/contract.js                  compare with the golden file
 //   node tools/test/contract.js --record         write the golden file (only when a change of the API is intended)

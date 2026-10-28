@@ -2,7 +2,7 @@
 
 ## Updating
 
-Open **CleanYourTV**. The **launcher** (the home screen) and the **service** (the background part) update separately from the
+Open **couchOS**. The **launcher** (the home screen) and the **service** (the background part) update separately from the
 latest GitHub release, each checked against its SHA-256 file.
 
 - A launcher that does not start is replaced by the previous one, and a service that does not start by the previous files.
@@ -32,7 +32,7 @@ next stable release. The stable updater never sees pre-releases.
 |---|---|
 | Follow the dev builds | **Update channel** > **Dev builds** (it shows the commit and date), then install with the **Launcher** and **Service** rows. Expect updates several times a day. |
 | Back to the stable releases | **Update channel** > **Stable releases**. The stable release is offered again, also when it is older than the dev build. |
-| Install from scratch | `ssh root@<tv-ip> 'curl -fsSL https://raw.githubusercontent.com/lasharor/cleanyourtv-WebOS/main/install.sh \| CYTV_CHANNEL=dev sh'`. The manager then follows the dev builds. |
+| Install from scratch | `ssh root@<tv-ip> 'curl -fsSL https://raw.githubusercontent.com/sjh39/cleanyourtv-WebOS/main/install.sh \| CYTV_CHANNEL=dev sh'`. The manager then follows the dev builds. |
 | Same version number | A dev build records its commit in a `BUILD` file, so a newer push of the same version is still offered. |
 | Old test builds | Before service 1.6.9 every branch had its own test build (`test-<branch>`). A TV that followed one follows the dev builds now. |
 
@@ -45,8 +45,8 @@ Switching restarts the TV (about a minute).
 
 | Action | How |
 |---|---|
-| Use LG's Home | **CleanYourTV as Home** off in the manager app. |
-| Use the launcher again | **CleanYourTV as Home** on, from LG's app list. |
+| Use LG's Home | **couchOS as Home** off in the manager app. |
+| Use the launcher again | **couchOS as Home** on, from LG's app list. |
 | Over SSH | `touch /media/developer/cleanyourtv/DISABLE; reboot` for LG's Home, `rm /media/developer/cleanyourtv/DISABLE; reboot` for ours. |
 | Failed boot | The Homebrew Channel's failsafe mode skips all boot scripts; reboot again. |
 

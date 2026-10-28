@@ -433,7 +433,7 @@
         "test": false,
         "version": "99.1.0"
       },
-      "repo": "lasharor/cleanyourtv-WebOS",
+      "repo": "sjh39/cleanyourtv-WebOS",
       "service": {
         "build": "",
         "updateTo": "99.1.0",
@@ -514,7 +514,7 @@
         "test": false,
         "version": "99.1.0"
       },
-      "repo": "lasharor/cleanyourtv-WebOS",
+      "repo": "sjh39/cleanyourtv-WebOS",
       "service": {
         "build": "",
         "updateTo": "99.1.0",
@@ -613,7 +613,7 @@
         "test": false,
         "version": "99.1.0"
       },
-      "repo": "lasharor/cleanyourtv-WebOS",
+      "repo": "sjh39/cleanyourtv-WebOS",
       "service": {
         "build": "",
         "updateTo": "99.1.0",
@@ -734,7 +734,7 @@
       "previous": null,
       "themes": [
         {
-          "author": "CleanYourTV",
+          "author": "couchOS",
           "description": "The original look: near-black, white focus, ten columns.",
           "id": "classic",
           "installed": true,
@@ -742,7 +742,7 @@
           "preview": true
         },
         {
-          "author": "CleanYourTV",
+          "author": "couchOS",
           "description": "A flower wallpaper with the dock in a glass panel at the bottom. Down moves the dock up and the apps appear below it, centred.",
           "id": "bloom",
           "installed": false,

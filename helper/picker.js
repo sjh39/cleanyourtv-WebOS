@@ -8,7 +8,7 @@ const PICKER = 'com.cleanyourtv.picker';
 //   'overlay'  = the picker app over the running app, started hidden after boot so the key opens it at once (tested on webOS 25);
 //   'ondemand' = the same app, started when the key is pressed and closed after use: nothing hidden is left running that could keep the
 //                remote (what other overlay apps for rooted TVs do);
-//   'launcher' = the launcher's own Inputs list (needs CleanYourTV as Home).
+//   'launcher' = the launcher's own Inputs list (needs couchOS as Home).
 const MODES = ['overlay', 'ondemand', 'launcher'];
 // The default for this TV comes from tvprofile.js; a saved choice (manager) wins.
 // fallback: the profile's pickerMode, or (older callers, tests) the webOS SDK major version

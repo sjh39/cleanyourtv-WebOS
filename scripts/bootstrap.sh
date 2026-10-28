@@ -1,5 +1,5 @@
 #!/bin/sh
-# CleanYourTV service bootstrap. Runs as root on the TV, from the service folder of the installed package:
+# couchOS service bootstrap. Runs as root on the TV, from the service folder of the installed package:
 #   sh bootstrap.sh install [--no-debloat] [--no-input-key] [--debloat] [--input-key] [--no-start] [--no-verify] [--force]
 #   sh bootstrap.sh update <version>      after the manager installed a newer package (restarts the service, undoes it if it fails)
 # It copies the service files to /media/developer/cleanyourtv, installs the boot scripts, replaces LG's Home and starts the service.
@@ -44,8 +44,8 @@ preflight() {
   [ -w $MD ] || die "/media/developer is not writable"
   for t in tar node; do command -v $t >/dev/null || die "missing tool: $t"; done
   # hard requirements: --force does not skip these (older webOS has no systemd and an old Node that cannot run the service)
-  command -v systemctl >/dev/null || die "this TV has no systemd (webOS older than 5): CleanYourTV needs a newer webOS and cannot be set up here. Nothing was changed."
-  node -e '(()=>1)()' >/dev/null 2>&1 || die "this TV's Node.js ($(node -v 2>&1 | head -1)) is too old for the service: CleanYourTV needs a newer webOS and cannot be set up here. Nothing was changed."
+  command -v systemctl >/dev/null || die "this TV has no systemd (webOS older than 5): couchOS needs a newer webOS and cannot be set up here. Nothing was changed."
+  node -e '(()=>1)()' >/dev/null 2>&1 || die "this TV's Node.js ($(node -v 2>&1 | head -1)) is too old for the service: couchOS needs a newer webOS and cannot be set up here. Nothing was changed."
   [ -f $S/helper/helper.js ] && [ -f $S/scripts/10-cleanyourtv-home ] || die "the service files are incomplete in $S"
   [ -f $HOME_DIR/appinfo.json ] || die "stock Home app not found at $HOME_DIR"
   if grep -q " $HOME_DIR " /proc/mounts && [ ! -f $D/backup/home-appinfo.orig.json ]; then
@@ -78,7 +78,7 @@ fix_notify_window() {
 check_compat() {
   say "TV: ${model:-unknown model}, firmware ${fw:-?}, webOS SDK ${sdk:-?}"
   mkdir -p $D
-  COMPATREPO=$(cut -d' ' -f1 $D/source 2>/dev/null); [ -n "$COMPATREPO" ] || COMPATREPO=lasharor/cleanyourtv-WebOS
+  COMPATREPO=$(cut -d' ' -f1 $D/source 2>/dev/null); [ -n "$COMPATREPO" ] || COMPATREPO=sjh39/cleanyourtv-WebOS
   [ -z "$R" ] && curl -fsSL -m 6 "https://raw.githubusercontent.com/$COMPATREPO/main/compat.json" -o /tmp/cytv-compat.json 2>/dev/null && node -e 'JSON.parse(require("fs").readFileSync("/tmp/cytv-compat.json","utf8"))' 2>/dev/null && cp /tmp/cytv-compat.json $D/compat.json
   COMPATNOTE=$($TV get testedNote --firmware "$fw" --sdk "$sdk" --compat $D/compat.json $S/compat.json)
 
@@ -229,8 +229,8 @@ verify() {
 finish() {
   ensure_apps
   say "done. Hold OK on an app to customise the dock, or use the Customise button at the top right."
-  [ -d $R/usr/palm/applications/com.webos.app.fullhome ] && say "This TV also has LG's full-screen Home. If the Home button opens that instead of CleanYourTV: TV Settings > General > Home Settings > Home Style > Basic."
-  say "Back to LG's Home any time: switch off 'CleanYourTV as Home' in the manager app, or run: sh $D/undo-home.sh"
+  [ -d $R/usr/palm/applications/com.webos.app.fullhome ] && say "This TV also has LG's full-screen Home. If the Home button opens that instead of couchOS: TV Settings > General > Home Settings > Home Style > Basic."
+  say "Back to LG's Home any time: switch off 'couchOS as Home' in the manager app, or run: sh $D/undo-home.sh"
 }
 
 # ---- the order ----

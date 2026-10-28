@@ -2,7 +2,7 @@
 
 ## What this changes on a TV
 
-CleanYourTV runs a service as root on a rooted TV. It listens on `127.0.0.1:8765` only. Three short-lived pages open on
+couchOS runs a service as root on a rooted TV. It listens on `127.0.0.1:8765` only. Three short-lived pages open on
 the local network on request, and an optional notification endpoint (off by default): the Live TV pairing page (port 8766, a 6-digit code shown on the TV, ten minutes) and the
 share-log page (port 8768 and up, a random address, ten minutes, masked report) and, for the optional voice function, the voice setup page (port 8769, a random address, ten minutes; see Voice below).
 

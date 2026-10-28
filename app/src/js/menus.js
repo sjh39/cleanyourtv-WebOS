@@ -583,7 +583,7 @@ function wallMenu() {
       { sep: true },
       {
         label: t('Add photos...'),
-        sub: t('in the CleanYourTV app'),
+        sub: t('in the couchOS app'),
         fn: function () {
           launch('com.cleanyourtv.manager', { open: 'wallpapers' });
         },

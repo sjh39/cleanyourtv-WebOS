@@ -2,7 +2,7 @@
 
 ## What this changes on a TV
 
-CleanYourTV runs a service **as root** on a rooted TV. It listens on `127.0.0.1:8765` only. A few short-lived pages open on the
+couchOS runs a service **as root** on a rooted TV. It listens on `127.0.0.1:8765` only. A few short-lived pages open on the
 local network on request, and an optional notification endpoint is off by default.
 
 | Port | What | When it is open |
@@ -93,5 +93,5 @@ the package and launcher names the updater already expects.
 
 ## Reporting
 
-Open a private security advisory on the [GitHub repository](https://github.com/lasharor/cleanyourtv-WebOS/security/advisories),
+Open a private security advisory on the [GitHub repository](https://github.com/sjh39/cleanyourtv-WebOS/security/advisories),
 or an issue that does not include exploit details.

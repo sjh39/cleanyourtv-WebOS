@@ -1,5 +1,5 @@
 #!/bin/sh
-# CleanYourTV for LG webOS: uninstaller. Run on the TV as root:  sh /media/developer/cleanyourtv/uninstall.sh
+# couchOS for LG webOS: uninstaller. Run on the TV as root:  sh /media/developer/cleanyourtv/uninstall.sh
 # Restores LG's Home and services, gives the Input key back to LG, removes the apps, the boot scripts and
 # /media/developer/cleanyourtv. (The inputhook stays loaded in LG's input process until the next reboot; without
 # a bind it does nothing.) Pass --keep-config to keep your settings (config.json) and usage history.

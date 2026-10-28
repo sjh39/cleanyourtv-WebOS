@@ -43,7 +43,7 @@ function redact(t) {
 function report() {
   const o = [];
   const sec = (title, body) => o.push('\n===== ' + title + ' =====\n' + String(body).trim());
-  sec('CleanYourTV report', new Date().toISOString());
+  sec('couchOS report', new Date().toISOString());
   const ver = f => (/const VERSION = '([^']+)'/.exec(read(f)) || [])[1] || '?';
   const info = sh(
     'luna-send -n 1 -w 5000 -f luna://com.webos.service.tv.systemproperty/getSystemInfo \'{"keys":["modelName","firmwareVersion","sdkVersion"]}\' </dev/null'
@@ -145,12 +145,12 @@ const page = (text, lang) => {
     '<!doctype html><html lang="' +
     lang +
     '"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' +
-    T('CleanYourTV report') +
+    T('couchOS report') +
     '</title>' +
     '<style>body{margin:0;padding:16px;font:16px/1.4 -apple-system,Helvetica,Arial,sans-serif;background:#111;color:#eee}h1{font-size:20px;margin:0 0 8px}p{margin:0 0 12px;color:#bbb}' +
     'button{font:inherit;font-weight:600;padding:12px 18px;margin:0 8px 12px 0;border:0;border-radius:10px;background:#f5f6f8;color:#111}textarea{width:100%;height:60vh;box-sizing:border-box;background:#000;color:#ddd;border:1px solid #333;border-radius:8px;padding:10px;font:12px/1.35 ui-monospace,Menlo,monospace}</style></head><body>' +
     '<h1>' +
-    T('CleanYourTV report') +
+    T('couchOS report') +
     '</h1><p>' +
     T(
       'Tap Copy, then paste it into your message. Addresses and URL paths are masked. This page closes ten minutes after it was opened on the TV.'

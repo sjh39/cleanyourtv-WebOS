@@ -27,7 +27,7 @@ that row goes to the next one.
 |---|---|---|
 | Over the running app, ready in the background | A small app, `com.cleanyourtv.picker`, is started hidden after boot and the key only wakes it: instant. | webOS 25 (SDK 10) |
 | Over the running app, started when pressed | The same app is started by the key and closes itself after use (Back, a choice, or ten idle seconds). Nothing runs hidden, so it cannot keep the remote. The first moment takes longer. | every other webOS version (5, 6, and 26 until the background app has been tried there) |
-| The launcher's Inputs list | The TV goes to Home with the Inputs list open. Needs CleanYourTV as Home; when LG's Home is selected the key stays with LG. | none |
+| The launcher's Inputs list | The TV goes to Home with the Inputs list open. Needs couchOS as Home; when LG's Home is selected the key stays with LG. | none |
 
 On webOS 6.5 (reports) the hidden background app kept the remote and showed a loading circle, which is why older webOS starts it on
 demand. The background app is only kept while the hook attached: without the hook the key cannot open it. If the TV closes the background app three times in ten minutes, the service switches to *started when pressed* by itself
@@ -50,7 +50,7 @@ longer controlled a set-top box and eARC stopped working (issue 23).
 Remotes differ. In the manager app, **Input key** > **Learn the Input key** reads the code of the button you press and tests that
 the picker opens. **Clear** restores the default.
 
-The switch in the same menu removes the bind and gives the button back to LG's own picker. The optional **Learn the Home key** is under **CleanYourTV as Home**.
+The switch in the same menu removes the bind and gives the button back to LG's own picker. The optional **Learn the Home key** is under **couchOS as Home**.
 
 The Guide button can be bound the same way; that is part of [Live TV](live-tv.md#the-guide-button) (manager app > **Live TV** > **Learn the Guide key**).
 

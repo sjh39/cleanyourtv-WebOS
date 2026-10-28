@@ -173,7 +173,7 @@ async function doInstall() {
 function install() {
   if (job.state === 'working') return;
   if (!fs.existsSync(SERVICE_DIR + '/voice/cytv-asr')) {
-    setJob('error', 'This package has no voice program (cytv-asr); update CleanYourTV first.');
+    setJob('error', 'This package has no voice program (cytv-asr); update couchOS first.');
     return;
   }
   setJob('working', 'Starting');

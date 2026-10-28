@@ -129,7 +129,7 @@ function draw() {
     return;
   }
   if (view === 'confirm-home' || view === 'confirm-uninstall') {
-    $('sub').textContent = tr(view === 'confirm-uninstall' ? 'Remove CleanYourTV?' : 'Switch Home?');
+    $('sub').textContent = tr(view === 'confirm-uninstall' ? 'Remove couchOS?' : 'Switch Home?');
     return;
   }
   if (!offline && st) {

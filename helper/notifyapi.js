@@ -107,11 +107,11 @@ function create(ctx) {
     const addr = 'http://' + ip + ':' + n.port + '/notify',
       t = esc(n.token),
       a = esc(addr);
-    return `<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>CleanYourTV notifications</title>
+    return `<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>couchOS notifications</title>
 <style>:root{color-scheme:light dark}*{box-sizing:border-box}body{font:18px/1.45 system-ui,sans-serif;max-width:640px;margin:28px auto;padding:0 18px}h1{font-size:24px;margin:0 0 4px}small,p{color:#777}
 .box{border:1px solid #8884;border-radius:12px;padding:12px 14px;margin:6px 0 14px;word-break:break-all;font:16px/1.4 ui-monospace,Menlo,monospace;user-select:all}button{font:inherit;padding:8px 14px;border-radius:10px;border:1px solid #8886;background:#8882;color:inherit}
 label{display:block;margin-top:16px;font-weight:600}</style>
-<h1>CleanYourTV notifications</h1><p>Your TV accepts picture notifications at this address. The token is a secret: anyone who has it can show cards on the TV.</p>
+<h1>couchOS notifications</h1><p>Your TV accepts picture notifications at this address. The token is a secret: anyone who has it can show cards on the TV.</p>
 <label>Address (POST)</label><div class=box id=a>${a}</div><button onclick="cp('a')">Copy</button>
 <label>Token</label><div class=box id=t>${t}</div><button onclick="cp('t')">Copy</button>
 <label>Header to send</label><div class=box id=h>Authorization: Bearer ${t}</div><button onclick="cp('h')">Copy</button>

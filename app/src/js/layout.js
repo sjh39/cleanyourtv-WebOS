@@ -97,7 +97,7 @@ function load() {
     .then(function (x) {
       if (x.version && oldSvc(x.version) && !warned) {
         warned = true;
-        toast('The service (' + x.version + ') is older than this launcher needs: update it in the CleanYourTV manager');
+        toast('The service (' + x.version + ') is older than this launcher needs: update it in the couchOS manager');
       }
       usage = x.usage || {};
       var rank = Object.keys(usage).sort(function (a, b) {

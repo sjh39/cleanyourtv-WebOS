@@ -1,6 +1,6 @@
 # Themes
 
-The themes of CleanYourTV. A theme changes how the home screen looks: colours, the position and size of the clock, buttons, app name,
+The themes of couchOS. A theme changes how the home screen looks: colours, the position and size of the clock, buttons, app name,
 dock and grid, text, effects and a wallpaper. In the manager app, **Theme** lists them with these screenshots; the TV reads this folder
 from GitHub (the `main` branch) and downloads a theme when you choose it. A new theme is available to every TV as soon as it is merged,
 without a release.
@@ -15,11 +15,11 @@ without a release.
 | `<id>/<wallpaper>` | The wallpaper, if the theme uses one. |
 | `<id>/<typeface>` | A typeface (`type.fontFile`), if the theme uses one, with its licence file. |
 
-Every setting, with its range and default, is in the [Themes page of the documentation](https://lasharor.github.io/cleanyourtv-WebOS/themes/).
+Every setting, with its range and default, is in the [Themes page of the documentation](https://sjh39.github.io/cleanyourtv-WebOS/themes/).
 
 ## Make your own
 
-A step-by-step guide, including how to make one with an AI assistant, is on the [Themes page](https://lasharor.github.io/cleanyourtv-WebOS/themes/#making-a-theme-with-an-ai-assistant). The short version:
+A step-by-step guide, including how to make one with an AI assistant, is on the [Themes page](https://sjh39.github.io/cleanyourtv-WebOS/themes/#making-a-theme-with-an-ai-assistant). The short version:
 
 1. Copy a folder, for example `classic/`, to `<id>/` (lower-case letters, digits and `-`).
 2. Change only what you want to change in `theme.json`. A missing value keeps the default, or the value of the theme named in `"extends"`.

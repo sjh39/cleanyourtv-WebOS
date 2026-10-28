@@ -1,4 +1,4 @@
-// Root service of CleanYourTV: the launcher's bridge to the TV (apps, inputs, launching), Live TV, picture notifications, voice,
+// Root service of couchOS: the launcher's bridge to the TV (apps, inputs, launching), Live TV, picture notifications, voice,
 // themes, the Input key and the manager's API (updates, options). Listens on 127.0.0.1:8765 only.
 // This file only wires the parts together. Each part is a feature module with create(ctx) -> { name, paths/prefix, handle, start };
 // ctx carries what they share (config, the TV profile, luna). A part that fails to load is left out and reported at /api/service;

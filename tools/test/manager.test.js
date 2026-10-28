@@ -71,7 +71,7 @@ run(async () => {
   r = await ask('options', 'POST', { liveTv: true });
   ok(
     keyOn === false && r.j.picker.released === true,
-    "the Input key is released to LG when its target needs CleanYourTV as Home and LG's Home is selected"
+    "the Input key is released to LG when its target needs couchOS as Home and LG's Home is selected"
   );
 
   r = await ask('learn-state', 'GET');

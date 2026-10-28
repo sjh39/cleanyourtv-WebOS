@@ -1,16 +1,16 @@
 #!/bin/sh
-# CleanYourTV for LG webOS: installs the manager app only. Run ON the TV, as root (see the README and https://lasharor.github.io/cleanyourtv-WebOS/install/). It downloads the latest
+# couchOS for LG webOS: installs the manager app only. Run ON the TV, as root (see the README and https://sjh39.github.io/cleanyourtv-WebOS/install/). It downloads the latest
 # release package (an .ipk), checks its SHA-256 and installs it. The setup itself (replacing LG's Home, the Input key,
-# the debloat) is done afterwards in the CleanYourTV app on the TV: open it and choose "Set up now".
+# the debloat) is done afterwards in the couchOS app on the TV: open it and choose "Set up now".
 #
-#   ssh root@<tv-ip> 'curl -fsSL https://raw.githubusercontent.com/lasharor/cleanyourtv-WebOS/main/install.sh | sh'
+#   ssh root@<tv-ip> 'curl -fsSL https://raw.githubusercontent.com/sjh39/cleanyourtv-WebOS/main/install.sh | sh'
 #
-# Environment: CYTV_REPO=owner/name (default lasharor/cleanyourtv-WebOS)  CYTV_IPK=/path/to/package.ipk (use a local package)
+# Environment: CYTV_REPO=owner/name (default sjh39/cleanyourtv-WebOS)  CYTV_IPK=/path/to/package.ipk (use a local package)
 #   CYTV_CHANNEL=dev  install the dev build (the pre-release dev, rebuilt on every change) and keep following it; the manager app
 #   can switch back to the stable releases (Update channel). CYTV_BRANCH=<anything>, from before the dev builds, means the same.
 
 main() {
-  REPO="${CYTV_REPO:-lasharor/cleanyourtv-WebOS}"
+  REPO="${CYTV_REPO:-sjh39/cleanyourtv-WebOS}"
   ID=com.cleanyourtv.manager
   export PATH=/usr/bin:/usr/sbin:/bin:/sbin:$PATH
   say() { echo "[cleanyourtv] $*"; }
@@ -22,7 +22,7 @@ main() {
   [ -d /var/lib/webosbrew/init.d ] || die "/var/lib/webosbrew/init.d not found: root with the Homebrew Channel is required (https://rootmy.tv)"
   for t in curl node; do command -v $t >/dev/null || die "missing tool: $t"; done
 
-  command -v systemctl >/dev/null && node -e '(()=>1)()' >/dev/null 2>&1 || die "this TV is too old (webOS 4 or earlier: no systemd, old Node.js). CleanYourTV needs webOS 5 or newer."
+  command -v systemctl >/dev/null && node -e '(()=>1)()' >/dev/null 2>&1 || die "this TV is too old (webOS 4 or earlier: no systemd, old Node.js). couchOS needs webOS 5 or newer."
   T=$(mktemp -d /tmp/cytv.XXXXXX) || die "mktemp failed"
   trap 'rm -rf "$T"' EXIT
   if [ -n "$CYTV_IPK" ]; then
@@ -62,14 +62,14 @@ main() {
     n=$((n+1))
   done
   rm -f /tmp/cytv-manager.ipk
-  [ $ok = 1 ] || die "the package did not install (see Troubleshooting in the documentation: https://lasharor.github.io/cleanyourtv-WebOS/troubleshooting/)"
+  [ $ok = 1 ] || die "the package did not install (see Troubleshooting in the documentation: https://sjh39.github.io/cleanyourtv-WebOS/troubleshooting/)"
   if [ -n "$CYTV_CHANNEL" ]; then mkdir -p /media/developer/cleanyourtv && echo dev > /media/developer/cleanyourtv/channel; say "the manager app now follows the dev builds (Update channel in the manager switches back to the stable releases)."; fi
-  say "the CleanYourTV app is installed."
+  say "the couchOS app is installed."
   if [ -f /media/developer/cleanyourtv/helper.js ] && [ -e /var/lib/webosbrew/init.d/10-cleanyourtv-home ]; then
     # already set up: this is an update, so bring the running service to the new version
     sh /media/developer/apps/usr/palm/services/$ID.service/bootstrap.sh update "$(sed -n "s/^const VERSION = '\(.*\)';/\1/p" /media/developer/apps/usr/palm/services/$ID.service/helper/helper.js | head -1)"
   else
-    say "Next, on the TV: open CleanYourTV in the app list and choose 'Set up now'."
+    say "Next, on the TV: open couchOS in the app list and choose 'Set up now'."
   fi
 }
 main "$@"
