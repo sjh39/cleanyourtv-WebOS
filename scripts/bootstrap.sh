@@ -78,7 +78,7 @@ fix_notify_window() {
 check_compat() {
   say "TV: ${model:-unknown model}, firmware ${fw:-?}, webOS SDK ${sdk:-?}"
   mkdir -p $D
-  COMPATREPO=$(cut -d' ' -f1 $D/source 2>/dev/null); [ -n "$COMPATREPO" ] || COMPATREPO=sjh39/cleanyourtv-WebOS
+  COMPATREPO=$(cut -d' ' -f1 $D/source 2>/dev/null); [ -n "$COMPATREPO" ] || COMPATREPO=sjh39/couchOS
   [ -z "$R" ] && curl -fsSL -m 6 "https://raw.githubusercontent.com/$COMPATREPO/main/compat.json" -o /tmp/cytv-compat.json 2>/dev/null && node -e 'JSON.parse(require("fs").readFileSync("/tmp/cytv-compat.json","utf8"))' 2>/dev/null && cp /tmp/cytv-compat.json $D/compat.json
   COMPATNOTE=$($TV get testedNote --firmware "$fw" --sdk "$sdk" --compat $D/compat.json $S/compat.json)
 

@@ -2,7 +2,7 @@
 
 If something does not work on your TV, an AI assistant (Claude, ChatGPT, Gemini, a local model) can help you find out why, and, if you
 want, help you fix the bug in the code and send the fix. This page says what to give it and how to keep it safe. Nothing here is
-required: **Share log** and an [issue](https://github.com/sjh39/cleanyourtv-WebOS/issues) work as before.
+required: **Share log** and an [issue](https://github.com/sjh39/couchOS/issues) work as before.
 
 ## The ground rules
 
@@ -18,14 +18,14 @@ required: **Share log** and an [issue](https://github.com/sjh39/cleanyourtv-WebO
 1. **Collect a report.** In the manager app **Share log** shows a QR code for a masked report, or from your computer:
 
    ```sh
-   git clone https://github.com/sjh39/cleanyourtv-WebOS && cd cleanyourtv-WebOS
+   git clone https://github.com/sjh39/couchOS && cd couchOS
    sh tools/diagnose.sh <tv-ip> > cytv-diagnose.txt
    ```
 
    `diagnose.sh` logs in as root over SSH (key authentication, as set up by the Homebrew Channel) and only reads: the Share log report, the
    foreground and running apps, the media pipelines, the processes, the Input key mode, the configuration with secrets hidden, the themes
    on the TV, the service's last operations and the Live TV status. It changes nothing. Open the file and remove anything private.
-2. **Give the assistant the context.** Start the conversation with [`AGENTS.md`](https://github.com/sjh39/cleanyourtv-WebOS/blob/main/AGENTS.md)
+2. **Give the assistant the context.** Start the conversation with [`AGENTS.md`](https://github.com/sjh39/couchOS/blob/main/AGENTS.md)
    (what the project is, where the TV keeps things, what has gone wrong before, the rules) and the report. Tools that read the repository
    (Claude Code, Codex, Cursor and similar) pick `AGENTS.md` up by themselves when you open the folder you cloned.
 3. **Ask for a diagnosis, not a fix.** See the prompts below. Ask it to name the evidence in the report for each conclusion.

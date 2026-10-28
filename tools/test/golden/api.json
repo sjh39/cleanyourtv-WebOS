@@ -443,7 +443,7 @@
         "test": false,
         "version": "99.1.0"
       },
-      "repo": "sjh39/cleanyourtv-WebOS",
+      "repo": "sjh39/couchOS",
       "service": {
         "build": "",
         "updateTo": "99.1.0",
@@ -524,7 +524,7 @@
         "test": false,
         "version": "99.1.0"
       },
-      "repo": "sjh39/cleanyourtv-WebOS",
+      "repo": "sjh39/couchOS",
       "service": {
         "build": "",
         "updateTo": "99.1.0",
@@ -623,7 +623,7 @@
         "test": false,
         "version": "99.1.0"
       },
-      "repo": "sjh39/cleanyourtv-WebOS",
+      "repo": "sjh39/couchOS",
       "service": {
         "build": "",
         "updateTo": "99.1.0",

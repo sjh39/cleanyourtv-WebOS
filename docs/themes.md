@@ -12,7 +12,7 @@ Your own photos can replace a theme's background: see [Wallpapers](wallpapers.md
 
 ## Where the themes come from
 
-Themes are not part of the service. They are read from the [`themes/`](https://github.com/sjh39/cleanyourtv-WebOS/tree/main/themes)
+Themes are not part of the service. They are read from the [`themes/`](https://github.com/sjh39/couchOS/tree/main/themes)
 folder of the GitHub repository (the `main` branch):
 
 - The service downloads `themes/index.json` (the list) when you open **Theme**.
@@ -55,7 +55,7 @@ The pictures are the launcher page rendered in a browser with each theme.
 
 Themes live in the repository, so a new one is a pull request:
 
-1. Copy a folder from [`themes/`](https://github.com/sjh39/cleanyourtv-WebOS/tree/main/themes), for example `classic`, to `themes/<id>/`.
+1. Copy a folder from [`themes/`](https://github.com/sjh39/couchOS/tree/main/themes), for example `classic`, to `themes/<id>/`.
    The id is lower-case letters, digits and `-`.
 2. Edit `theme.json`; the rest keeps its default, or the value of the theme named in `"extends"`.
 3. Add `preview.jpg`: a screenshot of the home screen with your theme (16:9, about 800 px wide, at most 600 KB).

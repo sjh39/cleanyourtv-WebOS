@@ -55,7 +55,7 @@ services you choose (update checks go to GitHub). See [What it changes on the TV
 3. Check the [tested TVs](tested-tvs.md) and report yours if it is not listed.
 
 Questions and ideas are welcome on the [couchOS Discord](https://discord.gg/9hHAmCfqB); bugs go in the
-[issues](https://github.com/sjh39/cleanyourtv-WebOS/issues).
+[issues](https://github.com/sjh39/couchOS/issues).
 
 ## Disclaimer
 

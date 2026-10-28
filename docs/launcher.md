@@ -39,7 +39,7 @@ Back on the home screen lists the apps that are open, as LG's Home does with its
 
 It lists the apps the launcher knows, including the ones you hid from the grid; Home itself, couchOS's own apps and the TV's
 system apps are never in it. The list is read when it opens and closes when you leave Home. Suggested and first built by
-[Steefzar](https://github.com/sjh39/cleanyourtv-WebOS/issues/16).
+[Steefzar](https://github.com/sjh39/couchOS/issues/16).
 
 ![Running apps](screenshots/running.jpg)
 
@@ -103,7 +103,7 @@ off again; that is also in the Inputs list. A tile of an input with nothing conn
 In the [Inputs picker](input-key.md) of the Input key, holding OK on an HDMI input does the same: it is added to Home, or taken off
 when it already is. An input in the dock also shows in the picker's row of dock apps.
 
-Suggested and first built by [ibexes](https://github.com/sjh39/cleanyourtv-WebOS/pull/25).
+Suggested and first built by [ibexes](https://github.com/sjh39/couchOS/pull/25).
 
 ![Inputs menu](screenshots/inputs.jpg)
 
@@ -116,7 +116,7 @@ A picture on one flat colour (a logo on black) gives that colour to its tile, ta
 not show as a square. A transparent logo drawn in near-black (made for a white background) gets a light tile, where it would hardly be seen.
 
 An icon that is an opaque square with a transparent margin around it (many LG icons) is enlarged so it fills its tile, and a
-gradient icon in the dock gets a tile with the same gradient ([#3](https://github.com/sjh39/cleanyourtv-WebOS/issues/3)).
+gradient icon in the dock gets a tile with the same gradient ([#3](https://github.com/sjh39/couchOS/issues/3)).
 
 ## Language
 
@@ -142,5 +142,5 @@ Settings are stored on the TV in `/media/developer/cleanyourtv/config.json`:
 | `clock` | `auto`, `12` or `24`. |
 | `runDots` | `true` shows a green dot on open apps (off by default). |
 
-See [`config.example.json`](https://github.com/sjh39/cleanyourtv-WebOS/blob/main/config.example.json). Change settings in
+See [`config.example.json`](https://github.com/sjh39/couchOS/blob/main/config.example.json). Change settings in
 the launcher; the file is read and written by the service.

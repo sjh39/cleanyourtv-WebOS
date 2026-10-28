@@ -37,6 +37,6 @@
 An AI assistant can help you read the report and find the cause: see [Working on problems with an AI assistant](ai.md).
 
 
-Open an [issue](https://github.com/sjh39/cleanyourtv-WebOS/issues) and attach the output of **Share log**
+Open an [issue](https://github.com/sjh39/couchOS/issues) and attach the output of **Share log**
 (manager app, see [The manager app](manager.md#share-log)). It is masked, so it does not contain your addresses or keys. Say which
 TV and firmware you have and what you expected.

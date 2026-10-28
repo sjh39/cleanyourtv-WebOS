@@ -15,11 +15,11 @@ without a release.
 | `<id>/<wallpaper>` | The wallpaper, if the theme uses one. |
 | `<id>/<typeface>` | A typeface (`type.fontFile`), if the theme uses one, with its licence file. |
 
-Every setting, with its range and default, is in the [Themes page of the documentation](https://sjh39.github.io/cleanyourtv-WebOS/themes/).
+Every setting, with its range and default, is in the [Themes page of the documentation](https://sjh39.github.io/couchOS/themes/).
 
 ## Make your own
 
-A step-by-step guide, including how to make one with an AI assistant, is on the [Themes page](https://sjh39.github.io/cleanyourtv-WebOS/themes/#making-a-theme-with-an-ai-assistant). The short version:
+A step-by-step guide, including how to make one with an AI assistant, is on the [Themes page](https://sjh39.github.io/couchOS/themes/#making-a-theme-with-an-ai-assistant). The short version:
 
 1. Copy a folder, for example `classic/`, to `<id>/` (lower-case letters, digits and `-`).
 2. Change only what you want to change in `theme.json`. A missing value keeps the default, or the value of the theme named in `"extends"`.

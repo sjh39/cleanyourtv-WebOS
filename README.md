@@ -1,7 +1,7 @@
 <p align="center">
-  <a href="https://github.com/sjh39/cleanyourtv-WebOS/stargazers"><img src="https://img.shields.io/github/stars/sjh39/cleanyourtv-WebOS?style=flat&cacheSeconds=1800&color=ffc857&labelColor=101218" alt="Stars"></a>
-  <a href="https://github.com/sjh39/cleanyourtv-WebOS/pulls?q=is%3Amerged"><img src="https://img.shields.io/github/issues-search?query=repo%3Asjh39%2Fcleanyourtv-WebOS%20is%3Apr%20is%3Amerged&style=flat&cacheSeconds=1800&color=7c6cff&labelColor=101218&label=merged%20PRs" alt="Merged PRs"></a>
-  <a href="https://github.com/sjh39/cleanyourtv-WebOS/network/members"><img src="https://img.shields.io/github/forks/sjh39/cleanyourtv-WebOS?style=flat&cacheSeconds=1800&color=2fd3c0&labelColor=101218" alt="Forks"></a>
+  <a href="https://github.com/sjh39/couchOS/stargazers"><img src="https://img.shields.io/github/stars/sjh39/couchOS?style=flat&cacheSeconds=1800&color=ffc857&labelColor=101218" alt="Stars"></a>
+  <a href="https://github.com/sjh39/couchOS/pulls?q=is%3Amerged"><img src="https://img.shields.io/github/issues-search?query=repo%3Asjh39%2FcouchOS%20is%3Apr%20is%3Amerged&style=flat&cacheSeconds=1800&color=7c6cff&labelColor=101218&label=merged%20PRs" alt="Merged PRs"></a>
+  <a href="https://github.com/sjh39/couchOS/network/members"><img src="https://img.shields.io/github/forks/sjh39/couchOS?style=flat&cacheSeconds=1800&color=2fd3c0&labelColor=101218" alt="Forks"></a>
   <a href="https://discord.gg/9hHAmCfqB"><img src="https://img.shields.io/badge/Discord-join-f5f6f8?style=flat&logo=discord&logoColor=white&labelColor=101218" alt="Discord"></a>
 </p>
 
@@ -16,7 +16,7 @@ picture notifications, optional on-device voice recognition and an optional debl
 > **LG's system files are not modified.** The launcher takes over Home with a mount that exists only in RAM, so a reboot without the
 > boot scripts brings LG's Home back. Everything we install is stored in `/media/developer/cleanyourtv` (plus two boot scripts and
 > the key binds), and the uninstall removes it. It runs on the TV: no server and no account of ours, and the project collects no
-> data. Optional features contact the services you choose; [Security](https://sjh39.github.io/cleanyourtv-WebOS/security/) lists them.
+> data. Optional features contact the services you choose; [Security](https://sjh39.github.io/couchOS/security/) lists them.
 
 **couchOS** replaces LG's Home with a launcher: a dock of four apps, a top shelf, an app grid sorted by use, an Inputs
 picker, a Settings shortcut and a clock. A small service runs on the TV as root and adds the rest. A manager app on the TV
@@ -27,14 +27,14 @@ sets up, updates and removes everything.
 ### Compatibility at a glance
 
 * **webOS**: 5 and newer (2020 models and later). webOS 4 and older have no systemd and an old Node.js; the setup stops before it
-  changes anything. LG names its versions two ways: [webOS version numbers](https://sjh39.github.io/cleanyourtv-WebOS/tested-tvs/#webos-version-numbers) gives both.
+  changes anything. LG names its versions two ways: [webOS version numbers](https://sjh39.github.io/couchOS/tested-tvs/#webos-version-numbers) gives both.
 * **Access**: a TV rooted with the [Homebrew Channel](https://webosbrew.org) ([rootmy.tv](https://rootmy.tv)) and internet access
   on the TV for the download. Install from the Homebrew Channel, or with one command over SSH as `root`.
 * **Tested hardware**: LG OLED65G26LA on webOS 25. Other TVs are reported in
-  [Tested TVs](https://sjh39.github.io/cleanyourtv-WebOS/tested-tvs/); an unlisted firmware is set up when LG's Home is of the
+  [Tested TVs](https://sjh39.github.io/couchOS/tested-tvs/); an unlisted firmware is set up when LG's Home is of the
   flutter or web kind, and otherwise the setup stops and offers **Set up anyway**.
 
-**[Read the documentation](https://sjh39.github.io/cleanyourtv-WebOS/)** for the features, installation, updates and security.
+**[Read the documentation](https://sjh39.github.io/couchOS/)** for the features, installation, updates and security.
 
 ---
 
@@ -45,51 +45,51 @@ sets up, updates and removes everything.
    - **From the Homebrew Channel.** Open the Homebrew Channel, the gear at the top, **Add repository**, and enter
 
      ```text
-     https://github.com/sjh39/cleanyourtv-WebOS/releases/latest/download/apps.json
+     https://github.com/sjh39/couchOS/releases/latest/download/apps.json
      ```
 
      **couchOS** then shows in the channel's list: open it and choose **Install**. New releases show there as updates.
    - **From your computer**, with your TV's IP address:
 
      ```sh
-     ssh root@192.168.1.50 'curl -fsSL https://raw.githubusercontent.com/sjh39/cleanyourtv-WebOS/main/install.sh | sh'
+     ssh root@192.168.1.50 'curl -fsSL https://raw.githubusercontent.com/sjh39/couchOS/main/install.sh | sh'
      ```
 
 3. On the TV, open **couchOS**, choose the options and **Set up now**. It takes about a minute and the screen blinks once.
 
 That's it. The launcher is LG's Home from then on. If the new Home does not come up, the setup removes the boot scripts and
-restarts the TV with LG's Home. The [installation guide](https://sjh39.github.io/cleanyourtv-WebOS/install/) has the details
+restarts the TV with LG's Home. The [installation guide](https://sjh39.github.io/couchOS/install/) has the details
 and troubleshooting.
 
 ---
 
 ## What it's for
 
-1. **[A launcher that is quick and yours](https://sjh39.github.io/cleanyourtv-WebOS/launcher/).** A dock of four apps, an app
+1. **[A launcher that is quick and yours](https://sjh39.github.io/couchOS/launcher/).** A dock of four apps, an app
    grid sorted by how often you use each app, top buttons you choose, an Inputs list and a clock; menus in English, Dutch, German,
-   French, Spanish, Russian, Turkish and Arabic ([more languages welcome](https://sjh39.github.io/cleanyourtv-WebOS/languages/)); [themes](https://sjh39.github.io/cleanyourtv-WebOS/themes/) for colours, layout and wallpaper, and
-   [Wallpapers](https://sjh39.github.io/cleanyourtv-WebOS/wallpapers/): your own photos behind Home, uploaded from a phone or synced
+   French, Spanish, Russian, Turkish and Arabic ([more languages welcome](https://sjh39.github.io/couchOS/languages/)); [themes](https://sjh39.github.io/couchOS/themes/) for colours, layout and wallpaper, and
+   [Wallpapers](https://sjh39.github.io/couchOS/wallpapers/): your own photos behind Home, uploaded from a phone or synced
    from Immich albums.
 
-2. **[Live TV from your own playlist](https://sjh39.github.io/cleanyourtv-WebOS/live-tv/).** Plays an M3U playlist (HLS) with a
+2. **[Live TV from your own playlist](https://sjh39.github.io/couchOS/live-tv/).** Plays an M3U playlist (HLS) with a
    channel list, a programme guide (XMLTV) and number entry. It does not use LG's tuner, and the project provides no channels.
 
-3. **[An Inputs list on the Input key](https://sjh39.github.io/cleanyourtv-WebOS/input-key/).** The remote's Input button opens
+3. **[An Inputs list on the Input key](https://sjh39.github.io/couchOS/input-key/).** The remote's Input button opens
    the dock apps, the HDMI inputs (with what is connected) and Live TV over the running app.
 
-4. **[Picture notifications](https://sjh39.github.io/cleanyourtv-WebOS/notifications/).** A card with a photo over whatever is on
+4. **[Picture notifications](https://sjh39.github.io/couchOS/notifications/).** A card with a photo over whatever is on
    screen, sent from your network with a POST request, for example from Home Assistant.
 
-5. **[Voice, on the TV](https://sjh39.github.io/cleanyourtv-WebOS/voice/) (optional).** Speech recognition from the remote's
+5. **[Voice, on the TV](https://sjh39.github.io/couchOS/voice/) (optional).** Speech recognition from the remote's
    microphone with a local model (Moonshine), answers from Home Assistant's Assist, a language model through OpenRouter or your own server, shown as
    text. No audio is recorded or sent anywhere.
 
-6. **[Removing LG's ads and telemetry](https://sjh39.github.io/cleanyourtv-WebOS/debloat/) (optional).** Stops LG's ad and
+6. **[Removing LG's ads and telemetry](https://sjh39.github.io/couchOS/debloat/) (optional).** Stops LG's ad and
    telemetry services and blocks a few ad servers, only while the launcher is Home, and undoes cleanly.
 
-7. **[Setting up, updating and removing it from the TV](https://sjh39.github.io/cleanyourtv-WebOS/manager/).** The manager app
+7. **[Setting up, updating and removing it from the TV](https://sjh39.github.io/couchOS/manager/).** The manager app
    checks every download against a SHA-256 file, rolls back a launcher or service that does not start, and can follow a
-   [dev build](https://sjh39.github.io/cleanyourtv-WebOS/managing/#dev-builds) to get changes before the daily release.
+   [dev build](https://sjh39.github.io/couchOS/managing/#dev-builds) to get changes before the daily release.
 
 ---
 
@@ -97,7 +97,7 @@ and troubleshooting.
 
 Pick how Home looks in the manager app: colours, the position and size of the clock, buttons, dock and grid, a wallpaper, animation
 speed. The themes are in [`themes/`](themes/) of this repository: the TV reads them from GitHub and downloads one when you choose it,
-so a new theme needs a pull request and no release ([how](https://sjh39.github.io/cleanyourtv-WebOS/themes/#contributing-a-theme)).
+so a new theme needs a pull request and no release ([how](https://sjh39.github.io/couchOS/themes/#contributing-a-theme)).
 
 <p align="center"><a href="themes/"><img src="docs/screenshots/themes-readme.jpg" alt="Classic, Midnight, Pixel and Bloom themes" width="800"></a></p>
 
@@ -117,23 +117,23 @@ so a new theme needs a pull request and no release ([how](https://sjh39.github.i
   <sub>Live TV guide, the Inputs picker, the app grid and the manager app.</sub>
 </p>
 
-[More screenshots](https://sjh39.github.io/cleanyourtv-WebOS/#screenshots).
+[More screenshots](https://sjh39.github.io/couchOS/#screenshots).
 
 ---
 
 ## Documentation
 
-* [Installing](https://sjh39.github.io/cleanyourtv-WebOS/install/) and [tested TVs](https://sjh39.github.io/cleanyourtv-WebOS/tested-tvs/)
-* [Updating and uninstalling](https://sjh39.github.io/cleanyourtv-WebOS/managing/), including dev builds
-* Using it: [the launcher](https://sjh39.github.io/cleanyourtv-WebOS/launcher/), [Live TV](https://sjh39.github.io/cleanyourtv-WebOS/live-tv/),
-  [the Input key](https://sjh39.github.io/cleanyourtv-WebOS/input-key/), [picture notifications](https://sjh39.github.io/cleanyourtv-WebOS/notifications/),
-  [voice](https://sjh39.github.io/cleanyourtv-WebOS/voice/), [debloat](https://sjh39.github.io/cleanyourtv-WebOS/debloat/) and
-  [the manager app](https://sjh39.github.io/cleanyourtv-WebOS/manager/)
-* [Security](https://sjh39.github.io/cleanyourtv-WebOS/security/)
-* [What it changes on the TV](https://sjh39.github.io/cleanyourtv-WebOS/tv-changes/)
-* [Service API](https://sjh39.github.io/cleanyourtv-WebOS/api/) and [troubleshooting](https://sjh39.github.io/cleanyourtv-WebOS/troubleshooting/)
-* [Contributing](https://sjh39.github.io/cleanyourtv-WebOS/development/), [testing and CI](https://sjh39.github.io/cleanyourtv-WebOS/development/testing/)
-  and [internals](https://sjh39.github.io/cleanyourtv-WebOS/development/internals/)
+* [Installing](https://sjh39.github.io/couchOS/install/) and [tested TVs](https://sjh39.github.io/couchOS/tested-tvs/)
+* [Updating and uninstalling](https://sjh39.github.io/couchOS/managing/), including dev builds
+* Using it: [the launcher](https://sjh39.github.io/couchOS/launcher/), [Live TV](https://sjh39.github.io/couchOS/live-tv/),
+  [the Input key](https://sjh39.github.io/couchOS/input-key/), [picture notifications](https://sjh39.github.io/couchOS/notifications/),
+  [voice](https://sjh39.github.io/couchOS/voice/), [debloat](https://sjh39.github.io/couchOS/debloat/) and
+  [the manager app](https://sjh39.github.io/couchOS/manager/)
+* [Security](https://sjh39.github.io/couchOS/security/)
+* [What it changes on the TV](https://sjh39.github.io/couchOS/tv-changes/)
+* [Service API](https://sjh39.github.io/couchOS/api/) and [troubleshooting](https://sjh39.github.io/couchOS/troubleshooting/)
+* [Contributing](https://sjh39.github.io/couchOS/development/), [testing and CI](https://sjh39.github.io/couchOS/development/testing/)
+  and [internals](https://sjh39.github.io/couchOS/development/internals/)
 
 The pages are built with [Zensical](https://zensical.org) from [docs/](docs/), so they can also be read there.
 
@@ -144,7 +144,7 @@ The pages are built with [Zensical](https://zensical.org) from [docs/](docs/), s
 The service runs as root on the TV and listens on `127.0.0.1:8765` only. A few short-lived pages open on the local network on
 request (Live TV pairing, share log, voice setup) and the notification endpoint is off until you switch it on. Everything it
 installs comes from this repository's GitHub releases and carries a SHA-256 file, which detects corruption but **not a compromised
-repository**: download only from this repository's release page. [Security](https://sjh39.github.io/cleanyourtv-WebOS/security/)
+repository**: download only from this repository's release page. [Security](https://sjh39.github.io/couchOS/security/)
 covers the ports, the token for notifications, voice and dev builds. To report a vulnerability, see [SECURITY.md](SECURITY.md).
 
 ---
@@ -152,7 +152,7 @@ covers the ports, the token for notifications, voice and dev builds. To report a
 ## Community
 
 Questions, ideas and showing off your home screen: join the [couchOS Discord](https://discord.gg/9hHAmCfqB). Bugs and reports of TVs
-that work go in the [issues](https://github.com/sjh39/cleanyourtv-WebOS/issues), so they stay findable.
+that work go in the [issues](https://github.com/sjh39/couchOS/issues), so they stay findable.
 
 ---
 
@@ -160,11 +160,11 @@ that work go in the [issues](https://github.com/sjh39/cleanyourtv-WebOS/issues),
 
 Troubleshooting and fixing with an AI assistant (Claude, ChatGPT, a local model) is supported: [`AGENTS.md`](AGENTS.md) is the briefing,
 [`tools/diagnose.sh`](tools/diagnose.sh) collects a read-only report from the TV, and the
-[documentation](https://sjh39.github.io/cleanyourtv-WebOS/ai/) has the prompts and the rules.
+[documentation](https://sjh39.github.io/couchOS/ai/) has the prompts and the rules.
 
 Translations are welcome too: a language is one file in [`i18n/`](i18n/), no programming needed
-([how](https://sjh39.github.io/cleanyourtv-WebOS/languages/)). Reports from other TVs are the most useful contribution: open an [issue](https://github.com/sjh39/cleanyourtv-WebOS/issues)
-with the output of **Share log** in the manager app. For code, see [Contributing](https://sjh39.github.io/cleanyourtv-WebOS/development/):
+([how](https://sjh39.github.io/couchOS/languages/)). Reports from other TVs are the most useful contribution: open an [issue](https://github.com/sjh39/couchOS/issues)
+with the output of **Share log** in the manager app. For code, see [Contributing](https://sjh39.github.io/couchOS/development/):
 the service runs on Node.js 8 (webOS 5), `sh tools/check.sh` runs every check, every push to `dev` publishes a dev build, and a release goes out daily from `dev`.
 
 ---
@@ -178,5 +178,5 @@ and use it at your own risk. Live TV plays only the playlists you add.
 ## Licence
 
 MIT. See `LICENSE`. The package also contains third-party files, listed with their licences in
-[`THIRD-PARTY.md`](THIRD-PARTY.md) and in [Credits and licences](https://sjh39.github.io/cleanyourtv-WebOS/credits/). The home-screen
+[`THIRD-PARTY.md`](THIRD-PARTY.md) and in [Credits and licences](https://sjh39.github.io/couchOS/credits/). The home-screen
 design follows the Android TV project [couchOS](https://github.com/Gathin23/cleanyourtv) (MIT); no code from it is used.

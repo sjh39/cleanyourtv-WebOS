@@ -1,6 +1,6 @@
 # Contributing
 
-The code is on [GitHub](https://github.com/sjh39/cleanyourtv-WebOS). Issues and pull requests are welcome, especially
+The code is on [GitHub](https://github.com/sjh39/couchOS). Issues and pull requests are welcome, especially
 reports from TVs that are not in the [tested list](../tested-tvs.md).
 
 ## Layout
@@ -38,7 +38,7 @@ when they differ). Run `node tools/build-pages.js` after changing a page's sourc
 
 The screens are written in English and translated from `i18n/<language>.json` (English text as the key); `tools/build-pages.js`
 puts what each page uses into it, and `node tools/i18n.js` shows how complete each language is. See
-[`i18n/README.md`](https://github.com/sjh39/cleanyourtv-WebOS/blob/dev/i18n/README.md) for adding a language or a text.
+[`i18n/README.md`](https://github.com/sjh39/couchOS/blob/main/i18n/README.md) for adding a language or a text.
 
 ## Branches and releases
 

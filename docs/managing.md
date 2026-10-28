@@ -32,7 +32,7 @@ next stable release. The stable updater never sees pre-releases.
 |---|---|
 | Follow the dev builds | **Update channel** > **Dev builds** (it shows the commit and date), then install with the **Launcher** and **Service** rows. Expect updates several times a day. |
 | Back to the stable releases | **Update channel** > **Stable releases**. The stable release is offered again, also when it is older than the dev build. |
-| Install from scratch | `ssh root@<tv-ip> 'curl -fsSL https://raw.githubusercontent.com/sjh39/cleanyourtv-WebOS/main/install.sh \| CYTV_CHANNEL=dev sh'`. The manager then follows the dev builds. |
+| Install from scratch | `ssh root@<tv-ip> 'curl -fsSL https://raw.githubusercontent.com/sjh39/couchOS/main/install.sh \| CYTV_CHANNEL=dev sh'`. The manager then follows the dev builds. |
 | Same version number | A dev build records its commit in a `BUILD` file, so a newer push of the same version is still offered. |
 | Old test builds | Before service 1.6.9 every branch had its own test build (`test-<branch>`). A TV that followed one follows the dev builds now. |
 

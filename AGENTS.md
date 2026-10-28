@@ -1,7 +1,7 @@
 # couchOS for LG webOS: briefing for AI assistants
 
 Read this first when you help someone with this project, either to find out what is wrong on their TV or to fix a bug in the code.
-The full documentation is in `docs/` (published at https://sjh39.github.io/cleanyourtv-WebOS/); the page for you is `docs/ai.md`.
+The full documentation is in `docs/` (published at https://sjh39.github.io/couchOS/); the page for you is `docs/ai.md`.
 
 ## What it is
 

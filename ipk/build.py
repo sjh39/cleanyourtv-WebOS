@@ -108,7 +108,7 @@ ipk = ar([('debian-binary', b'2.0\n'), ('control.tar.gz', tgz([('control', ctl, 
 write(ipk_name, ipk)
 
 # ---- the Homebrew Channel repository (Settings > Add repository: https://github.com/<repo>/releases/latest/download/apps.json) ----
-REPO = os.environ.get('CYTV_REPO') or 'sjh39/cleanyourtv-WebOS'
+REPO = os.environ.get('CYTV_REPO') or 'sjh39/couchOS'
 TAG = os.environ.get('CYTV_TAG') or 'v' + version
 if not re.fullmatch(r'[\w.-]+/[\w.-]+', REPO) or not re.fullmatch(r'[\w.-]+', TAG):
     sys.exit('CYTV_REPO must be owner/repo and CYTV_TAG a release tag')

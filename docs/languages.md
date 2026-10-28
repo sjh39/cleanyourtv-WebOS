@@ -19,7 +19,7 @@ are very welcome.
 Translations are plain text files in the repository, one per language, so no programming is needed. Anyone can add a language or
 fix a translation with a pull request; the next daily release then brings it to every TV.
 
-1. Open [`i18n/en.json`](https://github.com/sjh39/cleanyourtv-WebOS/blob/dev/i18n/en.json). It lists every English text the
+1. Open [`i18n/en.json`](https://github.com/sjh39/couchOS/blob/main/i18n/en.json). It lists every English text the
    screens use, as `"English text": "English text"`.
 2. Copy it to `i18n/<code>.json`, where `<code>` is the two-letter code of the language (`it` for Italian, `pl` for Polish). Set
    `_name` to the language's name in that language (`"Italiano"`) and `_dir` to `ltr`, or `rtl` for a right-to-left language.
@@ -32,7 +32,7 @@ fix a translation with a pull request; the next daily release then brings it to 
 6. Keep translations short where you can: the TV is read from a few metres away, and a text too long for its row or button ends
    in "...".
 7. Open a pull request against the `dev` branch. If you cannot use git, open a
-   [New language issue](https://github.com/sjh39/cleanyourtv-WebOS/issues/new?template=new_language.yml) and attach the file.
+   [New language issue](https://github.com/sjh39/couchOS/issues/new?template=new_language.yml) and attach the file.
 
 The checks of the pull request run `node tools/i18n.js`: it shows how complete each language is, and it fails only when a file is
 not valid JSON or a placeholder does not match the English text. To try a language on a TV before it is released, install the
@@ -47,5 +47,5 @@ Right on the remote follow the mirrored layout. Live TV keeps its left-to-right 
 
 New texts are written in English and passed through `t('...')` in the launcher and the picker, `tr()` in the manager, and
 `i18n.tr()` in the service's phone pages. `node tools/i18n.js --sync` adds texts from `t('...')` calls to `en.json`, and
-`node tools/build-pages.js` puts each page's translations into it. [`i18n/README.md`](https://github.com/sjh39/cleanyourtv-WebOS/blob/dev/i18n/README.md)
+`node tools/build-pages.js` puts each page's translations into it. [`i18n/README.md`](https://github.com/sjh39/couchOS/blob/main/i18n/README.md)
 has the details.

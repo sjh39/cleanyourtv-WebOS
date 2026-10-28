@@ -93,5 +93,5 @@ the package and launcher names the updater already expects.
 
 ## Reporting
 
-Open a private security advisory on the [GitHub repository](https://github.com/sjh39/cleanyourtv-WebOS/security/advisories),
+Open a private security advisory on the [GitHub repository](https://github.com/sjh39/couchOS/security/advisories),
 or an issue that does not include exploit details.
