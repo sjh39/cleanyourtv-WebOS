@@ -1,0 +1,87 @@
+{
+  "name": "Couch",
+  "author": "couchOS",
+  "description": "A phone-style lock screen: a big floating glass clock over a full-screen photo, with a frosted dock of rounded apps along the bottom. Down reveals the rest of your apps. Turn Wallpapers on for your own photos.",
+  "colors": {
+    "night": "#070b14",
+    "panel": "#121824",
+    "ink": "#ffffff",
+    "accent": "#ffffff"
+  },
+  "surface": {
+    "pillAlpha": 0.14,
+    "pillRing": 0.2
+  },
+  "type": {
+    "scale": 0.95
+  },
+  "clock": {
+    "layout": "stack",
+    "align": "center",
+    "anchor": "top",
+    "x": 0,
+    "y": 56,
+    "scale": 5.2,
+    "dateScale": 1.1,
+    "glass": true,
+    "dateAbove": true,
+    "greeting": false
+  },
+  "shelf": {
+    "show": false
+  },
+  "bar": {
+    "style": "round",
+    "anchor": "top",
+    "align": "right",
+    "x": 72,
+    "y": 56,
+    "size": 56,
+    "gap": 14
+  },
+  "dock": {
+    "anchor": "bottom",
+    "align": "center",
+    "x": 0,
+    "y": 52,
+    "count": 7,
+    "w": 132,
+    "h": 112,
+    "gap": 20,
+    "radius": 26,
+    "tileAlpha": 1,
+    "tileFrost": 0,
+    "panel": 0.22,
+    "panelPad": 16,
+    "blur": 30,
+    "lift": 8,
+    "focusScale": 1.08
+  },
+  "grid": {
+    "mode": "push",
+    "dockUp": 240,
+    "clipTop": 220,
+    "cols": 10,
+    "tileH": 132,
+    "gapX": 22,
+    "gapY": 22,
+    "radius": 26,
+    "align": "center"
+  },
+  "tile": {
+    "border": 0.14,
+    "ringWidth": 3,
+    "ringOffset": 4
+  },
+  "slots": [
+    { "id": "watch-1", "anchor": "bottom", "align": "left", "x": 645, "y": 200, "w": 300, "h": 168, "card": "watch", "grid": "hide" },
+    { "id": "watch-2", "anchor": "bottom", "align": "left", "x": 975, "y": 200, "w": 300, "h": 168, "card": "watch", "grid": "hide" }
+  ],
+  "effects": {
+    "glow": 0,
+    "wallpaper": "couch-01.jpg",
+    "foreground": "couch-01-fg.webp",
+    "wallpaperDim": 0.16,
+    "scrim": 0.7
+  }
+}

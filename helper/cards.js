@@ -143,6 +143,17 @@ const TYPES = [
       },
     ],
   },
+  {
+    type: 'watch',
+    name: 'Keep watching',
+    fields: [
+      { key: 'app', kind: 'text', label: 'App id (e.g. com.webos.app.youtube)' },
+      { key: 'title', kind: 'text', label: 'Title' },
+      { key: 'art', kind: 'text', label: 'Artwork URL (optional)' },
+      { key: 'progress', kind: 'text', label: 'Progress %, 0–100 (optional)' },
+      { key: 'params', kind: 'text', label: 'Deep-link params the app opens to (optional)' },
+    ],
+  },
 ];
 // the usual slot ids, named as in the launcher
 const SLOT_NAMES = { greeting: 'Above the clock', 'clock-side': 'Beside the clock', side: 'Right column', row: 'Above the dock' };

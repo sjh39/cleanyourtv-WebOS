@@ -76,8 +76,22 @@ const SCHEMA = [
   ['clock.align', 'enum', POS, 'left', 'Which side `clock.x` counts from; `center` centres it.'],
   ['clock.x', 'int', [0, 900], 96, 'Distance from that side, in px (on a 1920 x 1080 canvas). Not used when centred.'],
   ['clock.y', 'int', [0, 900], 54, 'Distance from the top or bottom edge, in px.'],
-  ['clock.scale', 'num', [0.6, 2.5], 1, 'Scale of the time.'],
+  ['clock.scale', 'num', [0.6, 6], 1, 'Scale of the time. A big floating clock (a phone-style lock screen) wants 5 or more.'],
   ['clock.dateScale', 'num', [0.6, 2], 1, 'Scale of the date.'],
+  [
+    'clock.glass',
+    'bool',
+    null,
+    false,
+    'Render the time as translucent "glass": a soft top-to-bottom gradient fill with a drop shadow, so a big clock floats over a photo wallpaper and stays readable.',
+  ],
+  [
+    'clock.dateAbove',
+    'bool',
+    null,
+    false,
+    'In the stacked layout (`clock.layout` = `stack`), put the date above the time instead of below it.',
+  ],
   ['bar.show', 'bool', null, true, 'Show the top buttons (Inputs, Settings, Customise, ...).'],
   [
     'bar.style',
@@ -116,6 +130,13 @@ const SCHEMA = [
   ['dock.radius', 'int', [0, 80], 36, 'Corner radius of dock tiles.'],
   ['dock.panel', 'num', [0, 0.6], 0, 'Opacity of a translucent panel behind the dock tiles; 0 for none.'],
   ['dock.panelPad', 'int', [0, 60], 24, 'Space between the panel and the tiles, in px.'],
+  [
+    'dock.blur',
+    'int',
+    [0, 60],
+    0,
+    'Frosted-glass blur of the wallpaper behind the dock panel, in px; 0 for none. Needs a translucent panel (`dock.panel` above 0). Only webOS 6.5 and newer (Chromium 79+) blur; older TVs just show the plain panel.',
+  ],
   ['dock.tileAlpha', 'num', [0, 1], 1, 'Opacity of the dock tile background; below 1 lets the wallpaper show through the tiles.'],
   [
     'dock.tileFrost',
@@ -175,6 +196,20 @@ const SCHEMA = [
     'A file name in `themes/wallpapers/`: `.jpg`, `.png` or `.webp`, at most 1.5 MB; drawn at 1920 x 1080.',
   ],
   ['effects.wallpaperDim', 'num', [0, 0.9], 0.4, 'How far the wallpaper is darkened with the background colour.'],
+  [
+    'effects.scrim',
+    'num',
+    [0, 1],
+    0,
+    'A dark vignette at the top and bottom over the wallpaper, so a floating clock and the dock stay readable on a bright photo; 0 for none.',
+  ],
+  [
+    'effects.foreground',
+    'file',
+    null,
+    '',
+    'A cut-out of the wallpaper with the sky made transparent (`.png` or `.webp` with an alpha channel, at most 1.5 MB, 1920 x 1080), drawn over the clock so the scenery rises in front of it. Pair it with the matching `wallpaper`.',
+  ],
 ];
 const DEFAULTS = {};
 for (const r of SCHEMA) DEFAULTS[r[0]] = r[3];
@@ -259,6 +294,14 @@ function normalize(raw, id, base, wallDir) {
       if (imageOk(b, w, MAX_WALLPAPER)) v['effects.wallpaper'] = w;
     } catch (_) {}
   } else if (w === '') v['effects.wallpaper'] = '';
+  // the depth cut-out, read from the same folder as the wallpaper and checked the same way
+  const fg = getPath(raw, 'effects.foreground');
+  if (typeof fg === 'string' && FILE.test(fg)) {
+    try {
+      const b = fs.readFileSync(path.join(wallDir || path.join(dir(), id), fg));
+      if (imageOk(b, fg, MAX_WALLPAPER)) v['effects.foreground'] = fg;
+    } catch (_) {}
+  } else if (fg === '') v['effects.foreground'] = '';
   // a typeface: kept with the id of the theme whose folder holds it, so a theme that extends this one uses the same file
   const f = getPath(raw, 'type.fontFile');
   if (typeof f === 'string' && FONT_FILE.test(f)) {
@@ -381,6 +424,7 @@ function resolve(t, accent) {
     '--clock-ai': { left: 'flex-start', center: 'center', right: 'flex-end' }[v['clock.align']],
     '--clock-s': String(v['clock.scale']),
     '--date-s': String(v['clock.dateScale']),
+    '--date-order': v['clock.dateAbove'] ? '-1' : '0',
     '--clock-d': v['clock.show'] ? 'flex' : 'none',
     '--date-d': v['clock.date'] ? 'block' : 'none',
     '--greet-d': v['clock.greeting'] ? 'block' : 'none',
@@ -406,6 +450,7 @@ function resolve(t, accent) {
     '--dock-gap': px(v['dock.gap']),
     '--dock-rad': px(v['dock.radius']),
     '--dock-panel': String(v['dock.panel']),
+    '--dock-blur': px(v['dock.blur']),
     '--dock-tile-alpha': String(v['dock.tileAlpha']),
     '--dock-tile-frost': String(v['dock.tileFrost']),
     '--dock-frost-rgb': rgb(v['dock.tileFrostColor']).join(','),
@@ -429,13 +474,15 @@ function resolve(t, accent) {
     '--ring-off': px(v['tile.ringOffset']),
     '--glow-op': String(v['effects.glow']),
     '--spd': String(v['effects.speed']),
+    '--scrim': String(v['effects.scrim']),
   };
   const w = v['effects.wallpaper'];
+  const fg = v['effects.foreground'];
   const out = {
     id: t.id,
     name: t.name,
     vars,
-    attrs: { bar: v['bar.style'], labels, clock: v['clock.layout'], grid: mode, galign: v['grid.align'] },
+    attrs: { bar: v['bar.style'], labels, clock: v['clock.layout'], clockstyle: v['clock.glass'] ? 'glass' : 'solid', grid: mode, galign: v['grid.align'] },
     cols: v['grid.cols'],
     tileH: v['grid.tileH'],
     gapY: v['grid.gapY'],
@@ -448,6 +495,7 @@ function resolve(t, accent) {
     glowRgb: v['effects.glowColor'] === 'accent' ? rgb(A).join(',') : '',
     nightRgb: night.join(','),
     wallpaper: w ? { id: t.id, file: w, dim: v['effects.wallpaperDim'] } : null,
+    foreground: fg ? { id: t.id, file: fg } : null,
   };
   // only a theme with slots has this key (the same reason)
   if (v.slots && v.slots.length)

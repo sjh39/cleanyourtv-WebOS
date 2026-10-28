@@ -76,6 +76,11 @@
   --tile-border: 0;
   --ring-w: 4px;
   --ring-off: 4px;
+  /* couchOS lock-screen look: a big glass clock, a legibility scrim and a frosted dock. Defaults keep every other theme as it was. */
+  --date-order: 0;
+  --dock-blur: 0px;
+  --scrim: 0;
+  --fg: none;
 }
 * {
   box-sizing: border-box;
@@ -168,6 +173,29 @@ body {
 [data-clock="stack"] #date {
   margin: 8px 0 0 6px;
   padding: 0;
+}
+/* couchOS: date above the time (clock.dateAbove) in the stacked layout; the date box keeps its spacing below, so flip the margin up */
+[data-clock="stack"] #date {
+  order: var(--date-order);
+}
+[data-clock="stack"][data-clockstyle="glass"] #date {
+  margin: 0 0 14px 6px;
+}
+/* couchOS: glass clock (clock.glass) — a soft white gradient fill with a drop shadow so a big clock floats over a photo and stays legible.
+   -webkit-background-clip:text works back to Chromium's old webkit (webOS 5); drop-shadow is a filter on the element, GPU-cheap here. */
+[data-clockstyle="glass"] #time {
+  /* frosted glass: a light-weight, translucent face so the sky and its colours show through the digits and the clock sits in the scene
+     instead of on top of it. A soft shadow keeps the edges legible without making it opaque. */
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.5);
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.005em;
+  white-space: nowrap;
+  text-shadow: 0 2px 44px rgba(0, 0, 0, 0.22);
+}
+[data-clockstyle="glass"] #date,
+[data-clockstyle="glass"] #greet {
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.45);
 }
 #bar {
   pointer-events: auto;
@@ -280,8 +308,20 @@ body {
   z-index: 4;
   padding: var(--dock-pad);
   border-radius: calc(var(--dock-rad) + var(--dock-pad));
-  background: rgba(255, 255, 255, var(--dock-panel));
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, calc(var(--dock-panel) * 1.4));
+  /* couchOS: white-to-clear frosted glass. A white gradient (brighter at the top, fading down) over a backdrop blur reads as a light frost
+     that blends into a photo, instead of a dark bar. When dock.panel is 0 (every other theme) the whole panel is transparent, as before. */
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, calc(var(--dock-panel) * 1.7)) 0%,
+    rgba(255, 255, 255, calc(var(--dock-panel) * 0.85)) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, calc(var(--dock-panel) * 2)),
+    inset 0 0 0 1px rgba(255, 255, 255, calc(var(--dock-panel) * 1.1));
+  /* the frost: blurs the wallpaper behind the panel. webOS 6.5+/Chromium 79+ only; older TVs ignore backdrop-filter and show the plain
+     translucent white panel, so nothing breaks. Default blur is 0px. */
+  -webkit-backdrop-filter: blur(var(--dock-blur));
+  backdrop-filter: blur(var(--dock-blur));
 }
 #dock > * + * {
   margin-left: var(--dock-gap);
@@ -601,6 +641,44 @@ body {
 body.wpon {
   background-image: none;
 }
+/* couchOS: legibility scrim (effects.scrim) — a top+bottom vignette over the wallpaper, above it but below all content (clock, dock, cards),
+   so a floating clock and the dock stay readable on a bright photo. Opacity-only, GPU-cheap; 0 by default so other themes are untouched. */
+#scrim {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1920px;
+  height: 1080px;
+  z-index: 1;
+  pointer-events: none;
+  opacity: var(--scrim);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0) 34%, rgba(0, 0, 0, 0) 56%, rgba(0, 0, 0, 0.6) 100%);
+}
+/* depth cut-out: the wallpaper with the sky made transparent (effects.foreground), drawn over the clock so the scenery rises in front of it.
+   Present only when the theme ships one (body[data-depth]); the stack is then wallpaper < scrim < clock < foreground < dock < cards/bar.
+   Opacity/compositing only, no filters, so the weak GPU is fine. */
+#fg {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1920px;
+  height: 1080px;
+  pointer-events: none;
+  display: none;
+  background-image: var(--fg);
+  background-size: 1920px 1080px;
+  background-repeat: no-repeat;
+}
+body[data-depth] #fg {
+  display: block;
+  z-index: 3;
+}
+body[data-depth] #top {
+  z-index: 2;
+}
+body[data-depth] #view {
+  z-index: 4;
+}
 /* cards: small widgets in the theme's slots (app/src/js/cards.js); placed like the clock, from the slot's edges */
 #cards {
   position: absolute;
@@ -843,6 +921,105 @@ body.wpon {
 }
 .card-ha-camera .ha-n {
   padding: 22px 26px;
+}
+/* "Keep watching" tiles (cards.js watch): a 16:9 artwork shortcut with a title and an optional resume bar; a theme puts a row above the dock */
+.card-watch {
+  border-radius: calc(var(--tile-r) * 1.2);
+  background: rgba(0, 0, 0, 0.35);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  color: var(--ink);
+}
+.card-watch.w-plain {
+  background: var(--panel2);
+}
+.card-watch .w-art {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-position: center;
+  background-size: cover;
+  transition: transform calc(0.18s * var(--spd)) ease-out;
+}
+.card-watch.w-plain .w-art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.card-watch .w-ic {
+  width: 44%;
+  max-width: 92px;
+  border-radius: 22%;
+}
+/* a shade at the bottom so the title reads over any artwork */
+.card-watch .w-sh {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 58%;
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.78) 0%, rgba(0, 0, 0, 0) 100%);
+}
+.card-watch .w-tx {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 15px;
+}
+.card-watch .w-t {
+  display: block;
+  font-size: calc(21px * var(--fs));
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
+}
+.card-watch .w-bar {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 50px;
+  height: 4px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.28);
+  overflow: hidden;
+}
+.card-watch .w-bar i {
+  display: block;
+  height: 100%;
+  background: var(--acc);
+}
+.card-watch .w-none {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 18px;
+  text-align: center;
+  color: var(--ink2);
+  font-size: calc(16px * var(--fs));
+}
+/* focus: a bright ring (its own radius for Chromium < 94) and a gentle zoom of the artwork, so the slot's own centring transform is untouched */
+.card-watch.f .w-art {
+  transform: scale(1.06);
+}
+.card-watch.f::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 3px var(--focus);
+  pointer-events: none;
 }
 /* OLED care (cards.js): dimmed after three minutes without a key; the slow shift of the whole layer is not animated */
 .cards-idle .card {

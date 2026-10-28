@@ -165,8 +165,10 @@ when the focus moves down into it (Back or Up closes it); a dock at the top leav
 | `clock.align` | `left`, `center`, `right` | `left` | Which side `clock.x` counts from; `center` centres it. |
 | `clock.x` | 0 to 900 | `96` | Distance from that side, in px (on a 1920 x 1080 canvas). Not used when centred. |
 | `clock.y` | 0 to 900 | `54` | Distance from the top or bottom edge, in px. |
-| `clock.scale` | 0.6 to 2.5 | `1` | Scale of the time. |
+| `clock.scale` | 0.6 to 6 | `1` | Scale of the time. A big floating clock (a phone-style lock screen) wants 5 or more. |
 | `clock.dateScale` | 0.6 to 2 | `1` | Scale of the date. |
+| `clock.glass` | `true` or `false` | `false` | Render the time as translucent "glass": a soft top-to-bottom gradient fill with a drop shadow, so a big clock floats over a photo wallpaper and stays readable. |
+| `clock.dateAbove` | `true` or `false` | `false` | In the stacked layout (`clock.layout` = `stack`), put the date above the time instead of below it. |
 | **bar** | | | |
 | `bar.show` | `true` or `false` | `true` | Show the top buttons (Inputs, Settings, Customise, ...). |
 | `bar.style` | `pill`, `round`, `flat` | `pill` | `pill`: icon and label on a rounded button; `round`: icon only in a circle; `flat`: no background. |
@@ -196,6 +198,7 @@ when the focus moves down into it (Back or Up closes it); a dock at the top leav
 | `dock.radius` | 0 to 80 | `36` | Corner radius of dock tiles. |
 | `dock.panel` | 0 to 0.6 | `0` | Opacity of a translucent panel behind the dock tiles; 0 for none. |
 | `dock.panelPad` | 0 to 60 | `24` | Space between the panel and the tiles, in px. |
+| `dock.blur` | 0 to 60 | `0` | Frosted-glass blur of the wallpaper behind the dock panel, in px; 0 for none. Needs a translucent panel (`dock.panel` above 0). Only webOS 6.5 and newer (Chromium 79+) blur; older TVs just show the plain panel. |
 | `dock.tileAlpha` | 0 to 1 | `1` | Opacity of the dock tile background; below 1 lets the wallpaper show through the tiles. |
 | `dock.tileFrost` | 0 to 1 | `0` | Frost over the resting (unfocused) dock tiles and their icons; 0 for none. Calms loud tile colours without leaving a floating icon square, because the tile and its icon dim together. The focused tile keeps its full colour. |
 | `dock.tileFrostColor` | `#rrggbb` | `#ffffff` | Tint of the dock-tile frost (`dock.tileFrost`): a light colour for a glassy frost, a dark one to deepen the tiles. |
@@ -228,6 +231,8 @@ when the focus moves down into it (Back or Up closes it); a dock at the top leav
 | `effects.speed` | 0 to 2 | `1` | Animation speed multiplier; 0 switches the animations off. |
 | `effects.wallpaper` | a file name | none | A file name in `themes/wallpapers/`: `.jpg`, `.png` or `.webp`, at most 1.5 MB; drawn at 1920 x 1080. |
 | `effects.wallpaperDim` | 0 to 0.9 | `0.4` | How far the wallpaper is darkened with the background colour. |
+| `effects.scrim` | 0 to 1 | `0` | A dark vignette at the top and bottom over the wallpaper, so a floating clock and the dock stay readable on a bright photo; 0 for none. |
+| `effects.foreground` | a file name | none | A cut-out of the wallpaper with the sky made transparent (`.png` or `.webp` with an alpha channel, at most 1.5 MB, 1920 x 1080), drawn over the clock so the scenery rises in front of it. Pair it with the matching `wallpaper`. |
 <!-- schema:end -->
 
 ### Slots for cards

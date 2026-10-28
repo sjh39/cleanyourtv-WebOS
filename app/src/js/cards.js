@@ -379,6 +379,54 @@ var CARD_TYPES = {
       el.setAttribute('data-size', o.size === 'small' || o.size === 'large' ? o.size : 'medium');
     },
   },
+  /* "Keep watching": a show tile — artwork, a title and an optional progress bar — that opens an app (optionally with deep-link
+     params) when OK is pressed. One tile per slot; a theme puts a row of them above the dock. Set up on the phone cards page. */
+  watch: {
+    name: function () {
+      return t('Keep watching');
+    },
+    draw: function (el, o) {
+      var app = String(o.app || '').trim(),
+        ttl = String(o.title || '').slice(0, 60),
+        art = String(o.art || '').trim(),
+        pct = Math.max(0, Math.min(100, Math.round(+o.progress || 0))),
+        has = !!app,
+        name = ttl || (has ? title(app) : ''),
+        key = app + '|' + ttl + '|' + art + '|' + pct;
+      el._o = { action: 'card', label: name || t('Keep watching') };
+      if (el._k === key) return;
+      el._k = key;
+      el.classList.toggle('w-plain', !art);
+      if (!has) {
+        el.innerHTML = '<div class="w-none"></div>';
+        el.firstChild.textContent = t('Set up Keep watching from your phone');
+        return;
+      }
+      el.innerHTML =
+        '<div class="w-art"></div><div class="w-sh"></div>' +
+        (pct > 0 ? '<div class="w-bar"><i></i></div>' : '') +
+        '<div class="w-tx"><span class="w-t"></span></div>';
+      var artEl = el.querySelector('.w-art');
+      if (art) artEl.style.backgroundImage = 'url("' + art.replace(/"/g, '%22') + '")';
+      else {
+        var im = document.createElement('img');
+        im.alt = '';
+        im.className = 'w-ic';
+        im.src = API + '/icon/' + encodeURIComponent(app);
+        artEl.appendChild(im);
+      }
+      if (pct > 0) el.querySelector('.w-bar i').style.width = pct + '%';
+      el.querySelector('.w-t').textContent = name;
+    },
+    /* OK is always offered (the slot is a launch shortcut); it opens the app, with optional deep-link params */
+    can: function (o) {
+      return !!String(o.app || '').trim();
+    },
+    act: function (el, o) {
+      var app = String(o.app || '').trim();
+      if (app) launch(app, o.params);
+    },
+  },
 };
 /* the usual slot ids have a name in every language; another id shows as it is */
 function slotName(id) {

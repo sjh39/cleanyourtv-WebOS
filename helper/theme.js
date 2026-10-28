@@ -7,7 +7,7 @@
 // ignored, so a theme can change how Home looks but nothing else. A new setting is one row in SCHEMA plus the CSS that reads its variable;
 // docs/themes.md is generated from SCHEMA (tools/theme-docs.js).
 // API (loopback only): GET /api/theme/list, POST /api/theme/set {id, accent}, POST /api/theme/revert, GET /api/theme/preview/<id>,
-// GET /api/theme/wallpaper/<id>/<file>, GET /api/theme/font/<id>/<file>.
+// GET /api/theme/wallpaper/<id>/<file>, GET /api/theme/foreground/<id>/<file>, GET /api/theme/font/<id>/<file>.
 const fs = require('fs'),
   path = require('path');
 const nc = require('./netcompat'),
@@ -293,6 +293,22 @@ function create(ctx) {
     if (m) {
       const t = load()[m[1]];
       if (!t || t.v['effects.wallpaper'] !== m[2]) {
+        res.writeHead(404);
+        return res.end();
+      }
+      try {
+        const b = fs.readFileSync(path.join(dir(), m[1], m[2]));
+        res.writeHead(200, { 'content-type': imageType(m[2]), 'cache-control': 'max-age=3600' });
+        return res.end(b);
+      } catch (_) {
+        res.writeHead(404);
+        return res.end();
+      }
+    }
+    m = /^foreground\/([a-z0-9-]{1,30})\/([\w-]{1,40}\.(?:jpg|png|webp))$/.exec(act);
+    if (m) {
+      const t = load()[m[1]];
+      if (!t || t.v['effects.foreground'] !== m[2]) {
         res.writeHead(404);
         return res.end();
       }

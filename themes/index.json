@@ -23,6 +23,13 @@
    "preview": "compact/preview.jpg"
   },
   {
+   "id": "couch",
+   "name": "Couch",
+   "author": "couchOS",
+   "description": "A phone-style lock screen: a big floating glass clock over a full-screen photo, with a frosted dock of rounded apps along the bottom. Down reveals the rest of your apps. Turn Wallpapers on for your own photos.",
+   "preview": ""
+  },
+  {
    "id": "horizon",
    "name": "Horizon",
    "author": "couchOS",

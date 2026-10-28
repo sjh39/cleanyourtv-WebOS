@@ -82,7 +82,7 @@ run(async () => {
       bad.v['type.scale'] === 1 &&
       bad.v['type.font'] === 'default' &&
       bad.v['clock.layout'] === 'inline' &&
-      bad.v['clock.scale'] === 2.5,
+      bad.v['clock.scale'] === 6, // cap raised from 2.5 to 6 for the big "glass" lock-screen clock (clock.glass)
     'numbers are clamped, enums and types are checked'
   );
   ok(

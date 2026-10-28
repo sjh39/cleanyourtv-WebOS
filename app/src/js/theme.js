@@ -15,7 +15,7 @@ var TH0 = {
   },
   TH = TH0,
   themeKeys = [],
-  themeAttrs = ['data-bar', 'data-labels', 'data-clock', 'data-grid', 'data-galign'];
+  themeAttrs = ['data-bar', 'data-labels', 'data-clock', 'data-clockstyle', 'data-grid', 'data-galign', 'data-depth'];
 function applyTheme(t) {
   var st = document.documentElement.style,
     b = document.body,
@@ -54,6 +54,13 @@ function applyTheme(t) {
     var d = 'rgba(' + t.nightRgb + ',' + w.dim + ')';
     st.setProperty('--wall', 'linear-gradient(' + d + ',' + d + '),url("' + API + '/api/theme/wallpaper/' + w.id + '/' + w.file + '")');
     themeKeys.push('--wall');
+  }
+  /* the depth cut-out: the sky-removed copy of the wallpaper, drawn over the clock (no dim, so the front plane stays crisp) */
+  var fg = t.foreground;
+  if (fg) {
+    st.setProperty('--fg', 'url("' + API + '/api/theme/foreground/' + fg.id + '/' + fg.file + '")');
+    themeKeys.push('--fg');
+    b.setAttribute('data-depth', 'on');
   }
   for (k in t.attrs) b.setAttribute('data-' + k, t.attrs[k]);
   TH = {
