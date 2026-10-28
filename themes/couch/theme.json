@@ -73,10 +73,6 @@
     "ringWidth": 3,
     "ringOffset": 4
   },
-  "slots": [
-    { "id": "watch-1", "anchor": "bottom", "align": "left", "x": 645, "y": 200, "w": 300, "h": 168, "card": "watch", "grid": "hide" },
-    { "id": "watch-2", "anchor": "bottom", "align": "left", "x": 975, "y": 200, "w": 300, "h": 168, "card": "watch", "grid": "hide" }
-  ],
   "effects": {
     "glow": 0,
     "wallpaper": "couch-01.jpg",
